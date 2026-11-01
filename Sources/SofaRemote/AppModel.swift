@@ -87,7 +87,7 @@ import ServiceManagement
             guard let self else { return }
             self.port = port
             self.awake.set(self.keepAwake)
-            self.message = "Ready. Pair a phone to control this Mac."
+            self.message = "Sharing is running. Choose Show pairing code to connect a phone."
         }
         // A port failure must not leave a misleading Sharing label forever.
         DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self, weak server] in

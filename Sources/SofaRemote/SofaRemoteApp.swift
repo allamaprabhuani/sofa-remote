@@ -164,30 +164,66 @@ private typealias ViewState<Value> = SwiftUI.State<Value>
 private struct SetupView: View {
     @ObservedObject var model: AppModel
     let showHelp: () -> Void
+    private var inputStatusText: String {
+        if !model.accessibilityAllowed { return "Input blocked — Accessibility is not allowed." }
+        if !model.sharing { return "Sharing is stopped — no phone can send input." }
+        if model.port == nil { return "Starting the local server…" }
+        if model.inputPaused { return "Input paused on this Mac." }
+        return "Input ready. Paired phones can send pointer and keystrokes."
+    }
+    private var inputStatusSymbol: String {
+        if !model.accessibilityAllowed { return "exclamationmark.triangle.fill" }
+        if !model.sharing { return "stop.circle.fill" }
+        if model.port == nil { return "hourglass.circle.fill" }
+        if model.inputPaused { return "pause.circle.fill" }
+        return "checkmark.circle.fill"
+    }
+    private var inputStatusTint: Color {
+        if !model.accessibilityAllowed { return .orange }
+        if !model.sharing { return .secondary }
+        if model.port == nil { return .secondary }
+        if model.inputPaused { return .yellow }
+        return .green
+    }
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 14) {
-                    Image(systemName: "cursorarrow.rays").font(.system(size: 36)).foregroundStyle(.blue)
-                    VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .top, spacing: 16) {
+                    Image(systemName: "cursorarrow.rays")
+                        .font(.system(size: 34, weight: .regular))
+                        .foregroundStyle(.primary)
+                        .frame(width: 44, height: 44)
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("Sofa Remote").font(.largeTitle.bold())
-                        Text("Control your Mac from your phone.")
-                            .foregroundStyle(.secondary)
+                        Text("A touchpad, keyboard and media remote for this Mac, served to your phone's browser.")
+                            .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 HStack {
-                    Text(SupportInfo.versionLabel).font(.caption).foregroundStyle(.secondary)
+                    Text(SupportInfo.versionLabel).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                     Spacer()
                     Button("About & Help…", action: showHelp)
                 }
-                HStack {
-                    Label(model.sharing ? "Sharing\(model.port.map { " on port \($0)" } ?? "…")" : "Sharing stopped",
-                          systemImage: model.sharing ? "circle.fill" : "circle")
-                        .foregroundStyle(model.sharing ? .green : .secondary)
+                HStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: model.sharing ? "circle.fill" : "circle")
+                            .foregroundStyle(model.sharing ? .green : .secondary)
+                            .accessibilityHidden(true)
+                        Text(model.sharing ? "Sharing\(model.port.map { " on port \($0)" } ?? "…")" : "Sharing stopped")
+                    }
                     Spacer()
                     Button(model.sharing ? "Stop sharing" : "Start sharing") {
                         if model.sharing { model.stopSharing() } else { model.startSharing() }
                     }
+                }
+                HStack(spacing: 8) {
+                    Image(systemName: inputStatusSymbol)
+                        .foregroundStyle(inputStatusTint).accessibilityHidden(true)
+                    Text(inputStatusText).foregroundStyle(.secondary).font(.callout)
+                    Spacer()
+                    Button("Check again") { model.objectWillChange.send() }
+                        .controlSize(.small)
+                        .help("Re-reads the Accessibility permission from macOS. Does not grant it.")
                 }
                 if !model.accessibilityAllowed {
                     GroupBox("Allow mouse and keyboard control") {
@@ -384,12 +420,12 @@ private struct AboutHelpView: View {
     private func helpLink(_ title: String, symbol: String, destination: URL) -> some View {
         Link(destination: destination) {
             Image(systemName: symbol)
-                .font(.system(size: 19, weight: .medium))
+                .font(.system(size: 19, weight: .regular))
                 .frame(width: 44, height: 44)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 13))
+                .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.blue)
+        .foregroundStyle(.primary)
         .help(title)
         .accessibilityLabel(title)
         .accessibilityHint("Opens a website in your browser")

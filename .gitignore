@@ -5,3 +5,7 @@ work/
 .DS_Store
 .swiftpm/
 .cleanup/
+
+# Disposable UI review artefacts
+.taste-skill/
+.playwright-cli/

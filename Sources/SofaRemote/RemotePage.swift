@@ -230,6 +230,7 @@ enum RemotePage {
         max-width: 480px;
         max-height: 90dvh;
         overflow: auto;
+        overscroll-behavior: contain;
         margin: auto auto 0;
         padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
         display: flex;
@@ -395,7 +396,8 @@ enum RemotePage {
       }
       .support-icons { display: grid; grid-template-columns: repeat(6, minmax(44px, 1fr)); gap: 8px; margin: 18px 0; }
       .support-icons a { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 14px; background: var(--card); color: var(--ink); border: 1px solid var(--line); touch-action: manipulation; }
-      .support-icons a:hover, .support-icons a:active { background: var(--pressed); }
+      .support-icons a:active { background: var(--pressed); }
+      @media (hover: hover) { .support-icons a:hover { background: var(--pressed); } }
       .support-icons a:focus-visible, .help-disclosure summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .help-disclosure { margin: 12px 0; }
       .help-disclosure summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
@@ -840,6 +842,13 @@ enum RemotePage {
       function diagnosticSummary() {
         const state = supportState || {};
         const yesNo = (v) => v === true ? "Yes" : v === false ? "No" : "Unavailable";
+        const inputStatus = (() => {
+          if (state.accessibility === false) return "blocked (Accessibility not allowed)";
+          if (state.sharing === false) return "stopped (Sharing off)";
+          if (state.sessionLocked === true) return "paused";
+          if (state.accessibility === true && state.sharing === true) return "ready";
+          return "Unavailable";
+        })();
         return [
           "Sofa Remote diagnostic summary",
           `App version: ${safeVersion(state.appVersion)}`,
@@ -849,6 +858,7 @@ enum RemotePage {
           `Accessibility allowed: ${yesNo(state.accessibility)}`,
           `Sharing enabled: ${yesNo(state.sharing)}`,
           `Input paused: ${yesNo(state.sessionLocked)}`,
+          `Input: ${inputStatus}`,
           supportState ? "Mac status is from the last successful connection." : "Connect to the Mac to include its version and status.",
         ].join("\n");
       }

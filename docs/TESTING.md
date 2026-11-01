@@ -1,5 +1,9 @@
 # Validation and manual acceptance
 
+## Beta 5 UI checks
+
+The local integration run passed 34 Swift tests plus transport and mocked-browser checks. Isolated Playwright CLI checks covered all seven website preview themes, custom colour, pointer and keyboard interaction, 44-pixel controls, 320/390/768/1440-pixel layouts, 200% text reflow, reduced motion and a JavaScript-disabled download/setup fallback. These are Chromium checks. Physical iPhone Safari, VoiceOver and fresh installation/permission acceptance remain separate. The UI reports permission denial; it does not grant access.
+
 Automated checks use fake input sinks, loopback connections and isolated browser profiles. They do not prove physical iPhone smoothness, third-party playback or every macOS permission/session state. Manual input checks must use empty/disposable windows; never type into personal documents. Use isolated data on a test account/VM for fresh-install, upgrade or corrupt-settings checks, rather than replacing the owner's pairing/settings files.
 
 ## Recorded evidence before the public-beta release

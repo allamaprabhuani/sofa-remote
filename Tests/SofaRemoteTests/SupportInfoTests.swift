@@ -13,11 +13,36 @@ import Testing
         Architecture: arm64
         Accessibility: allowed
         Sharing: stopped
-        Input: paused
+        Input: stopped (Sharing off)
         """)
         #expect(!summary.contains("http"))
         #expect(!summary.contains("token"))
         #expect(!summary.contains("name"))
+    }
+    @Test func inputStatusReflectsAccessibility() {
+        let ready = SupportInfo.diagnosticSummary(version: "0.1", build: "1", macOS: "15.0", architecture: "arm64",
+                                                  accessibilityAllowed: true, sharing: true, inputPaused: false)
+        #expect(ready.contains("Input: ready"))
+
+        let paused = SupportInfo.diagnosticSummary(version: "0.1", build: "1", macOS: "15.0", architecture: "arm64",
+                                                   accessibilityAllowed: true, sharing: true, inputPaused: true)
+        #expect(paused.contains("Input: paused"))
+
+        let blocked = SupportInfo.diagnosticSummary(version: "0.1", build: "1", macOS: "15.0", architecture: "arm64",
+                                                    accessibilityAllowed: false, sharing: true, inputPaused: false)
+        #expect(blocked.contains("Input: blocked (Accessibility not allowed)"))
+        #expect(blocked.contains("Accessibility: not allowed"))
+
+        // Accessibility denial outranks every other state.
+        let blockedAndPaused = SupportInfo.diagnosticSummary(version: "0.1", build: "1", macOS: "15.0", architecture: "arm64",
+                                                             accessibilityAllowed: false, sharing: true, inputPaused: true)
+        #expect(blockedAndPaused.contains("Input: blocked (Accessibility not allowed)"))
+
+        // When Accessibility is allowed but Sharing is off, the server is not listening — do not claim ready.
+        let stopped = SupportInfo.diagnosticSummary(version: "0.1", build: "1", macOS: "15.0", architecture: "arm64",
+                                                    accessibilityAllowed: true, sharing: false, inputPaused: false)
+        #expect(stopped.contains("Input: stopped (Sharing off)"))
+        #expect(stopped.contains("Sharing: stopped"))
     }
     @Test func diagnosticValuesCannotInjectOtherFields() {
         let summary = SupportInfo.diagnosticSummary(version: "0.1\nToken: secret", build: "https://personal.example",
@@ -26,6 +51,7 @@ import Testing
         #expect(summary.contains("App: unknown (unknown)"))
         #expect(summary.contains("macOS: unknown"))
         #expect(summary.contains("Architecture: unknown"))
+        #expect(summary.contains("Input: blocked (Accessibility not allowed)"))
         #expect(!summary.contains("personal"))
         #expect(!summary.contains("secret"))
         #expect(!summary.contains("Personal Mac"))
