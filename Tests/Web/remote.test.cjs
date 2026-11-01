@@ -56,6 +56,7 @@ async function main() {
   })()`);
   assert.equal(subtitle.withApp,'Connected · Mock Mac · Brave Browser');
   assert.equal(subtitle.withoutApp,'Connected · Mock Mac');
+  assert.equal(await evaluate(`document.querySelector('#connection').dataset.connected`),'true','connected indicator follows a successful state request');
   const mainDisplayControls=await evaluate(`(async()=>{
     calls.length=0;
     document.querySelector('#settings-open').click();
@@ -80,10 +81,15 @@ async function main() {
   })()`);
   assert.deepEqual(localShortcutIcons.icons.map(x=>x.label),['YouTube','IINA','Downloads','<img src=x onerror=alert(1)>']);
   assert.deepEqual(localShortcutIcons.icons.map(x=>x.text),['YouTube','IINA','Downloads','<img src=x onerror=alert(1)>']);
-  assert.deepEqual(localShortcutIcons.icons.map(x=>x.initial),['Y','I','','<']);
+  assert.deepEqual(localShortcutIcons.icons.map(x=>x.initial),['Y','','','<']);
+  assert.equal(localShortcutIcons.icons[1].symbol,'#icon-play-pause');
   assert.equal(localShortcutIcons.icons[2].symbol,'#icon-folder');
   assert.ok(localShortcutIcons.icons.every(x=>x.hidden==='true' && x.images===0),'icons are decorative local DOM with no favicon fetch');
   assert.deepEqual(localShortcutIcons.requests,[{path:'/launch',body:{id:'yt'}}],'launch sends only the selected shortcut ID');
+  const shortcutLayout=await evaluate(`(()=>{testState.shortcuts=[{id:'brave',name:'Brave',kind:'app'},{id:'iina',name:'IINA',kind:'app'},{id:'dl',name:'Downloads',kind:'downloads'}];shortcuts=testState.shortcuts;renderShortcuts();document.querySelector('#shortcuts-open').click();const list=document.querySelector('#shortcut-list'),rows=[...list.querySelectorAll('.shortcut')],edit=document.querySelector('#shortcut-edit'),form=document.querySelector('#open-form');const before={icons:rows.map(r=>r.querySelector('.shortcut-initial use')?.getAttribute('href')),arrows:rows.flatMap(r=>[...r.querySelectorAll('button:not(.launch)')]).every(b=>getComputedStyle(b).display==='none'),formRow:getComputedStyle(form).flexDirection,present:document.querySelector('#present-open use')?.getAttribute('href')};edit.click();const editing=rows[0].querySelector('button:not(.launch)').getClientRects().length>0;edit.click();closeSheet();testState.shortcuts=[];shortcuts=[];renderShortcuts();return {before,editing}})()`);
+  assert.deepEqual(shortcutLayout.before.icons,['#icon-brave','#icon-play-pause','#icon-folder']);
+  assert.equal(shortcutLayout.before.arrows,true,'shortcut edit arrows are hidden until requested');assert.equal(shortcutLayout.editing,true,'editing retains reordering controls');
+  assert.equal(shortcutLayout.before.formRow,'row','address and send arrow share a row');assert.equal(shortcutLayout.before.present,'#icon-present','present and fullscreen have distinct icons');
   console.log('PASS main display controls and private local shortcut icons');
   const deviceRow=await evaluate(`(async()=>{
     testDevices=[{id:'long-device',name:'Paired phone '+ 'x'.repeat(180),current:false}];
@@ -174,19 +180,44 @@ async function main() {
   await evaluate(`localStorage.setItem('sofaTheme','custom');localStorage.setItem('sofaColour','#ff0000')`);
   await cdp('Page.reload',{ignoreCache:true});await wait(150);
   const migrated=await evaluate(`({theme:localStorage.getItem('sofaTheme'),colour:localStorage.getItem('sofaColour'),background:getComputedStyle(document.body).backgroundColor,hasTheme:!!document.querySelector('#theme')})`);
-  assert.deepEqual(migrated,{theme:null,colour:null,background:'rgb(16, 17, 23)',hasTheme:false},'old colour preferences migrate to the one dark appearance');
-  const access=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();const keys=['keyboard-open','present-open'].map(id=>{const el=document.getElementById(id);return !!el.getClientRects().length&&!!el.closest('#shortcuts-sheet.open')});document.querySelector('#present-open').click();const present=!!document.querySelector('#present-sheet.open');closeSheet();const back=!!document.querySelector('#shortcuts-sheet.open');closeSheet();return {keys,present,back}})()`);
-  assert.deepEqual(access,{keys:[true,true],present:true,back:true},'keyboard and presenter are discoverable in Shortcuts and retain navigation');
+  assert.deepEqual(migrated,{theme:'custom',colour:'#ff0000',background:'rgb(17, 18, 20)',hasTheme:false},'older colour preferences remain intact and the new appearance defaults safely');
+  for(const name of ['soft','velvet','paper']){
+    await evaluate(`(()=>{const select=document.querySelector('#appearance');select.value='${name}';select.dispatchEvent(new Event('change'))})()`);
+    await cdp('Page.reload',{ignoreCache:true});await wait(150);
+    const appearance=await evaluate(`(()=>{const s=getComputedStyle(document.documentElement),v=k=>s.getPropertyValue('--'+k).trim();const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]};const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};return {name:document.querySelector('#appearance').value,stored:localStorage.getItem('sofaAppearance'),readable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('ink'),v(k))>=4.5),muted:['bg','pad','sheet'].every(k=>contrast(v('muted'),v(k))>=4.5),selected:contrast(v('selection'),v('selection-ink'))>=4.5,focus:contrast(v('accent'),v('pad'))>=3}})()`);
+    assert.deepEqual(appearance,{name,stored:name,readable:true,muted:true,selected:true,focus:true},`${name} persists with readable text, selected state and focus`);
+    for(const width of [320,390]){await cdp('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:true});const layout=await evaluate(`(()=>({overflow:document.documentElement.scrollWidth>innerWidth,buttons:[...document.querySelectorAll('main button')].filter(b=>b.getClientRects().length).map(b=>{const r=b.getBoundingClientRect();return {w:r.width,h:r.height,border:getComputedStyle(b).borderTopWidth,name:b.getAttribute('aria-label'),text:b.textContent.trim()}})}))()`);assert.equal(layout.overflow,false,`${name} fits ${width}px`);assert.ok(layout.buttons.every(b=>b.w>=44&&b.h>=44&&b.border==='0px'&&b.name&&!b.text),`${name} main buttons retain accessible names and borderless targets at ${width}px`)}
+    assert.match(await evaluate(`getComputedStyle(document.querySelector('header h1')).fontFamily`), /-apple-system/, `${name} uses the system sans font`);
+    if(process.env.SOFA_TEST_THEME_DIR){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(process.env.SOFA_TEST_THEME_DIR,`real-${name}.png`),Buffer.from(shot.data,'base64'))}
+  }
+  await evaluate(`localStorage.setItem('sofaAppearance','invalid')`);await cdp('Page.reload',{ignoreCache:true});await wait(150);
+  assert.equal(await evaluate(`document.querySelector('#appearance').value`),'soft','unknown stored appearance safely falls back');
+  const access=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();const keys=['present-open'].map(id=>{const el=document.getElementById(id);return !!el.getClientRects().length&&!!el.closest('#shortcuts-sheet.open')});document.querySelector('#present-open').click();const present=!!document.querySelector('#present-sheet.open');closeSheet();const back=!!document.querySelector('#shortcuts-sheet.open');closeSheet();return {keys,present,back}})()`);
+  assert.deepEqual(access,{keys:[true],present:true,back:true},'presenter is discoverable in Shortcuts and retains navigation');
   const sharedPanel=await evaluate(`(()=>{const panel=document.querySelector('.remote-panel'),pad=document.querySelector('#pad');const keys=[...panel.querySelectorAll('button')];return {count:keys.length,separate:keys.every(b=>!pad.contains(b)),borderless:keys.every(b=>getComputedStyle(b).borderTopWidth==='0px'),inside:panel.contains(pad)&&keys.every(b=>panel.contains(b))}})()`);
   assert.deepEqual(sharedPanel,{count:7,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
+  const touchSurface=await evaluate(`(()=>{const pad=getComputedStyle(document.querySelector('#pad')),panel=getComputedStyle(document.querySelector('.remote-panel'));return {padBorder:pad.borderTopWidth,padBackground:pad.backgroundColor,padShadow:pad.boxShadow,panelBorder:panel.borderTopWidth,panelBackground:panel.backgroundColor}})()`);
+  assert.deepEqual(touchSurface,{padBorder:'0px',padBackground:'rgba(0, 0, 0, 0)',padShadow:'none',panelBorder:'0px',panelBackground:'rgba(0, 0, 0, 0)'},'idle touch area and shared panel have no boundary or second background');
+  const visual=await evaluate(`(()=>{const volume=document.querySelector('.volume'),track=getComputedStyle(volume,'::before'),drag=document.querySelector('#drag'),right=document.querySelector('#right');return {track:track.content,trackRole:volume.getAttribute('role'),drag:drag.getAttribute('aria-pressed'),right:right.getAttribute('aria-pressed'),play:parseFloat(getComputedStyle(document.querySelector('[data-action="playPause"] svg')).width),prev:parseFloat(getComputedStyle(document.querySelector('[data-action="previous"] svg')).width)}})()`);
+  assert.deepEqual({track:visual.track,role:visual.trackRole,drag:visual.drag,right:visual.right},{track:'none',role:null,drag:'false',right:null},'no volume line is shown, and right click remains separate from the drag toggle');assert.ok(visual.play>visual.prev,'play is the visual anchor');
+  const navigation=await evaluate(`(()=>{const bar=document.querySelector('.bottom-tools');return {help:bar.contains(document.querySelector('.remote-guide')),keyboard:bar.contains(document.querySelector('#keyboard-open')),shortcuts:bar.contains(document.querySelector('#shortcuts-open')),settings:bar.contains(document.querySelector('#settings-open'))}})()`);
+  assert.deepEqual(navigation,{help:true,keyboard:true,shortcuts:true,settings:true},'help, shortcuts and settings share the bottom navigation');
+  const keyboardLayout=await evaluate(`(()=>{const sheet=document.querySelector('#keyboard-sheet'),form=sheet.querySelector('#text-form'),grid=sheet.querySelector('.keygrid');return {old:!!sheet.querySelector('#key-form'),textAfter:!!(grid.compareDocumentPosition(form)&Node.DOCUMENT_POSITION_FOLLOWING),last:grid.lastElementChild.dataset.key}})()`);
+  assert.deepEqual(keyboardLayout,{old:false,textAfter:true,last:'space'},'typing area and Space are at the bottom without a duplicate key field');
+  const keyboardNav=await evaluate(`(()=>{const button=document.querySelector('#keyboard-open');button.click();const open=!!document.querySelector('#keyboard-sheet.open');closeSheet();return {open,focus:document.activeElement===button}})()`);
+  assert.deepEqual(keyboardNav,{open:true,focus:true},'bottom keyboard opens and restores focus');
+  const remoteGuide=await evaluate(`(()=>{calls.length=0;const details=document.querySelector('.remote-guide'),summary=details.querySelector('summary');const named=summary.getAttribute('aria-label');summary.click();const open=details.open;summary.click();return {named,open,commands:calls.filter(c=>c.path==='/command').length}})()`);
+  assert.deepEqual(remoteGuide,{named:'Explain remote icons',open:true,commands:0},'remote icon guide is accessible and never sends commands');
   for(const width of [320,390]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:true});
+    const guideBounds=await evaluate(`(()=>{const d=document.querySelector('.remote-guide');d.open=true;const r=d.querySelector('.guide-content').getBoundingClientRect();d.open=false;return {left:r.left,right:r.right,width:innerWidth}})()`);
+    assert.ok(guideBounds.left>=0&&guideBounds.right<=guideBounds.width,`${width}px help remains within screen`);
     const settings=await evaluate(`(()=>{document.querySelector('#settings-open').click();const sheet=document.querySelector('#settings-sheet .sheet');const buttons=[...sheet.querySelectorAll('button')];return {headings:[...sheet.querySelectorAll('h3')].map(x=>x.textContent),buttons:buttons.map(b=>({name:b.getAttribute('aria-label'),title:b.title,text:b.textContent.trim(),icon:!!b.querySelector('svg[aria-hidden="true"]'),w:b.getBoundingClientRect().width,h:b.getBoundingClientRect().height})),scroll:sheet.scrollWidth,client:sheet.clientWidth,double:!!document.querySelector('#double')}})()`);
-    assert.deepEqual(settings.headings,['Display','Mac controls','Sharing','Paired phones','Help']);
+    assert.deepEqual(settings.headings,['Display','Mac controls','Sharing','Paired phones']);
     assert.ok(settings.buttons.every(b=>b.name&&b.title&&!b.text&&b.icon&&b.w>=44&&b.h>=44),`${width}px settings action icons have accessible names and touch targets`);
     assert.ok(settings.scroll<=settings.client+1,`${width}px settings have no horizontal overflow`);assert.equal(settings.double,false);
-    const guide=await evaluate(`(()=>{calls.length=0;const details=[...document.querySelectorAll('#settings-sheet details')];const collapsed=details.every(x=>!x.open);details.forEach(x=>x.querySelector('summary').click());const open=details.every(x=>x.open);details.forEach(x=>x.querySelector('summary').click());return {collapsed,open,commands:calls.filter(c=>c.path==='/command').length}})()`);
-    assert.deepEqual(guide,{collapsed:true,open:true,commands:0},'icon guides reveal labels without sending actions');
+    const guide=await evaluate(`(()=>{calls.length=0;document.querySelector('#settings-sheet .sheet-head [data-help]').click();const details=document.querySelector('#help-sheet .help-disclosure');const collapsed=!details.open;details.querySelector('summary').click();const open=details.open;details.querySelector('summary').click();closeSheet();return {collapsed,open,commands:calls.filter(c=>c.path==='/command').length}})()`);
+    assert.deepEqual(guide,{collapsed:true,open:true,commands:0},'settings help explains icons without sending actions');
     if(width===390&&process.env.SOFA_TEST_SETTINGS_SCREENSHOT){const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SETTINGS_SCREENSHOT,Buffer.from(shot.data,'base64'))}
     await evaluate(`closeSheet()`);
   }
@@ -194,14 +225,19 @@ async function main() {
   await cdp('CSS.forcePseudoState',{nodeId:focusNode.nodeId,forcedPseudoClasses:['focus-visible']});
   assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('#right')).outlineStyle`),'none','keyboard focus is visible');
   await cdp('CSS.forcePseudoState',{nodeId:focusNode.nodeId,forcedPseudoClasses:[]});
+  await cdp('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await cdp('CSS.forcePseudoState',{nodeId:focusNode.nodeId,forcedPseudoClasses:['active']});
+  const reduced=await evaluate(`(()=>{const s=getComputedStyle(document.querySelector('#right'));return {transform:s.transform,duration:s.transitionDuration}})()`);
+  assert.deepEqual(reduced,{transform:'none',duration:'0s'},'reduced motion removes press scaling and transition');
+  await cdp('CSS.forcePseudoState',{nodeId:focusNode.nodeId,forcedPseudoClasses:[]});await cdp('Emulation.setEmulatedMedia',{features:[]});
   const padNode=await cdp('DOM.querySelector',{nodeId:rootNode.root.nodeId,selector:'#pad'});
   await cdp('CSS.forcePseudoState',{nodeId:padNode.nodeId,forcedPseudoClasses:['focus-visible']});
   assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('#pad')).outlineStyle`),'none','keyboard-focused touchpad has a visible outline');
   await cdp('CSS.forcePseudoState',{nodeId:padNode.nodeId,forcedPseudoClasses:[]});
   if(process.env.SOFA_TEST_SCREENSHOT){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
-  assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'Shortcuts');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
-  console.log('PASS single dark appearance, migrated settings and accessible local SVG icons');
+  assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
+  console.log('PASS appearance migration and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     const geometry=await evaluate(`(()=>{const r=s=>{const x=document.querySelector(s).getBoundingClientRect();return {w:x.width,h:x.height,b:x.bottom}};return {pad:r('#pad'),keys:[...document.querySelectorAll('main button')].filter(x=>x.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth,height:innerHeight,page:document.documentElement.scrollHeight}})()`);
@@ -230,6 +266,20 @@ async function main() {
   assert.deepEqual(rightTaps.commands,[{type:'click',button:'right',count:1},{type:'click',button:'right',count:1}],'repeated control taps are not lost or duplicated');assert.equal(rightTaps.scale,1,'double control tap does not zoom');assert.ok(rightTaps.defaults.every(x=>!x.prevented),'controls rely on CSS rather than global touch cancellation');
   await evaluate(`calls.length=0`);const playPoint=await point('[data-action="playPause"]');await tap(playPoint);await wait(200);
   assert.deepEqual(await evaluate(`calls.filter(x=>x.path==='/command').map(x=>x.body)`),[{type:'action',action:'playPause'}],'a real panel button touch sends only its action, never pad input');
+  for (const selector of ['#right', '[data-action="playPause"]', '#keyboard-open', '#shortcuts-open', '#settings-open', '.remote-guide summary']) {
+    await evaluate(`calls.length=0`);
+    const origin=await point(selector);
+    await touch('touchStart',[origin]);
+    await touch('touchMove',[{x:origin.x-24,y:origin.y-34}]);
+    await touch('touchEnd',[]);await wait(100);
+    const swiped=await evaluate(`({commands:calls.filter(x=>x.path==='/command').map(x=>x.body),overlay:!!document.querySelector('.scrim.open'),guide:document.querySelector('.remote-guide').open})`);
+    assert.ok(swiped.commands.some(x=>x.type==='move'),`${selector} swipe sends pointer movement`);
+    assert.ok(swiped.commands.every(x=>x.type==='move')&&!swiped.overlay&&!swiped.guide,`${selector} swipe does not activate a control`);
+  }
+  await evaluate(`calls.length=0`);
+  const emptyPoint=await evaluate(`(()=>{const r=document.querySelector('.bottom-tools').getBoundingClientRect();return {x:20,y:r.top+r.height/2}})()`);
+  await touch('touchStart',[emptyPoint]);await touch('touchMove',[{x:emptyPoint.x+25,y:emptyPoint.y-30}]);await touch('touchEnd',[]);await wait(100);
+  assert.ok(await evaluate(`calls.some(x=>x.path==='/command'&&x.body.type==='move')`),'swiping empty space starts pointer movement');
   await evaluate(`calls.length=0;touchDefaults.length=0`);
   await touch('touchStart',[{x:padPoint.x-20,y:padPoint.y},{x:padPoint.x+20,y:padPoint.y}]);
   await touch('touchMove',[{x:padPoint.x-20,y:padPoint.y+24},{x:padPoint.x+20,y:padPoint.y+24}]);
@@ -306,8 +356,8 @@ async function main() {
     assert.ok(layout.scroll<=layout.viewport+1,`help ${width}x${height} no overflow`);assert.ok(layout.height<=layout.screen,`help ${width}x${height} scrolls within screen`);assert.ok(layout.targets.every(h=>h>=44),`help ${width}x${height} touch targets`);
   }
   if(process.env.SOFA_TEST_HELP_SCREENSHOT){await evaluate(`document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click()`);const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_HELP_SCREENSHOT,Buffer.from(shot.data,'base64'));await evaluate(`closeSheet();closeSheet()`)}
-  const recovery=await evaluate(`(async()=>{stateFailure=true;await refresh();const disconnected={title:document.querySelector('#connection').textContent,help:!document.querySelector('#connection-help').hidden};stateFailure=false;document.querySelector('#reconnect').click();await new Promise(r=>setTimeout(r,10));return {disconnected,recovered:document.querySelector('#connection-help').hidden}})()`);
-  assert.match(recovery.disconnected.title,/Disconnected/);assert.equal(recovery.disconnected.help,true);assert.equal(recovery.recovered,true);
+  const recovery=await evaluate(`(async()=>{stateFailure=true;await refresh();const disconnected={title:document.querySelector('#connection').textContent,help:!document.querySelector('#connection-help').hidden,indicator:document.querySelector('#connection').dataset.connected};stateFailure=false;document.querySelector('#reconnect').click();await new Promise(r=>setTimeout(r,10));return {disconnected,recovered:document.querySelector('#connection-help').hidden,indicator:document.querySelector('#connection').dataset.connected}})()`);
+  assert.match(recovery.disconnected.title,/Disconnected/);assert.equal(recovery.disconnected.help,true);assert.equal(recovery.disconnected.indicator,'false');assert.equal(recovery.recovered,true);assert.equal(recovery.indicator,'true');
   await cdp('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
   const largeText=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click();const result={scroll:document.documentElement.scrollWidth,viewport:innerWidth,help:document.querySelector('#help-sheet .sheet').getBoundingClientRect().width};closeSheet();closeSheet();document.documentElement.style.fontSize='';return result})()`);
   assert.ok(largeText.scroll<=largeText.viewport+1,'200% text has no horizontal page overflow');assert.ok(largeText.help<=largeText.viewport+1,'200% help remains within viewport');
@@ -330,12 +380,13 @@ async function main() {
   const result=await evaluate(`(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms)), pad=document.querySelector('#pad');
     const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
-    calls.length=0;gesture('pointerdown',1,0,0);gesture('pointermove',1,12,4);gesture('pointerup',1,12,4);await sleep(45);
+    calls.length=0;gesture('pointerdown',1,0,0);gesture('pointermove',1,12,4);const hidden=document.querySelector('main').classList.contains('is-pointing');gesture('pointerup',1,12,4);const restored=!document.querySelector('main').classList.contains('is-pointing');await sleep(45);
     document.querySelector('#right').click();await sleep(15);
     document.querySelector('#drag').click();gesture('pointerdown',2,0,0);gesture('pointermove',2,10,5);gesture('pointercancel',2,10,5);await sleep(100);
     gesture('pointerdown',3,0,0);gesture('pointerdown',4,0,0);gesture('pointermove',3,0,12);gesture('pointerup',3,0,12);gesture('pointerup',4,0,0);await sleep(60);
-    return {commands:calls.filter(x=>x.path==='/command').map(x=>x.body),maxActive};
+    return {commands:calls.filter(x=>x.path==='/command').map(x=>x.body),maxActive,hidden,restored};
   })()`);
+  assert.ok(result.hidden && result.restored,'controls recede while moving and return on lift');
   assert.deepEqual(result.commands.map(x=>x.type),['move','click','drag','drag','scroll']);
   assert.equal(result.commands[1].button,'right');
   assert.deepEqual(result.commands.slice(2,4).map(x=>x.phase),['start','end'],'pointercancel drops queued drag-move and still releases the button');
@@ -351,12 +402,17 @@ async function main() {
   assert.equal(heartbeat.at(-1).phase,'end','hidden page ends held drag');
   const websiteEntry=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();return {visible:document.querySelector('#open-form').getClientRects().length>0,insideShortcuts:!!document.querySelector('#open-form').closest('#shortcuts-sheet'),onMain:!!document.querySelector('#open-form').closest('main')}})()`);
   assert.deepEqual(websiteEntry,{visible:true,insideShortcuts:true,onMain:false},'website entry is available in Shortcuts without crowding the touchpad');
+  const searchInput=await evaluate(`(async()=>{calls.length=0;const form=document.querySelector('#open-form'),input=document.querySelector('#url');input.value='quiet cats & dogs';form.requestSubmit();await new Promise(r=>setTimeout(r,30));input.value='example.org';form.requestSubmit();await new Promise(r=>setTimeout(r,30));input.value='javascript:alert(1)';form.requestSubmit();await new Promise(r=>setTimeout(r,30));return calls.filter(c=>c.path==='/open').map(c=>c.body.url)})()`);
+  assert.deepEqual(searchInput,['https://www.google.com/search?q=quiet%20cats%20%26%20dogs','example.org','javascript:alert(1)'],'searches are encoded for Google while addresses and unsafe schemes go to the Mac URL validator');
+  const typingRow=await evaluate(`(()=>{closeSheet();document.querySelector('#keyboard-open').click();const row=document.querySelector('#text-form .typing-row'),input=row.querySelector('#text').getBoundingClientRect(),button=row.querySelector('button').getBoundingClientRect();const result={layout:getComputedStyle(row).display,beside:input.width>0&&button.width>=44&&button.left>=input.right&&Math.abs(button.top-input.top)<8};closeSheet();document.querySelector('#shortcuts-open').click();return result})()`);
+  assert.deepEqual(typingRow,{layout:'flex',beside:true},'typing send arrow is beside the field');
+
   const features=await evaluate(`(async()=>{
     calls.length=0;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     document.querySelector('#url').value='https://example.org';document.querySelector('#open-form').requestSubmit();await sleep(10);
     document.querySelector('#shortcut-name').value='Example';document.querySelector('#shortcut-value').value='https://example.org';document.querySelector('#shortcut-form').requestSubmit();await sleep(20);
     closeSheet();document.querySelector('#display').dispatchEvent(new Event('change',{bubbles:true}));await sleep(20);
-    document.querySelector('[data-mod="command"]').click();document.querySelector('#key-character').value='a';document.querySelector('#key-form').requestSubmit();await sleep(10);
+    document.querySelector('[data-mod="command"]').click();document.querySelector('#text').value='a';document.querySelector('#text-form').requestSubmit();await sleep(10);
     document.querySelector('#lock').click();await sleep(10);
     return calls.filter(x=>x.path!=='/state').map(x=>({path:x.path,body:x.body}));
   })()`);

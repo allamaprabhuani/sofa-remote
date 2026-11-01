@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Sofa Remote — a remote for your Mac</title>
 <meta name="description" content="A free Mac helper: use your phone as a touchpad, keyboard and presentation remote. Input only, with no screen streaming." />
-<meta name="theme-color" content="#F6F3EC" />
+<meta name="theme-color" content="#111214" />
 <link rel="icon" href="./assets/icon.png" type="image/png" />
 <link rel="apple-touch-icon" href="./assets/icon.png" />
 <link rel="preload" href="./assets/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="./styles.css?v=dark-ui-1" />
+<link rel="stylesheet" href="./styles.css?v=studio-dark-1" />
 <meta property="og:title" content="Sofa Remote" />
 <meta property="og:description" content="A free remote for your Mac. Input only, from your phone's browser." />
 <meta property="og:image" content="https://sofa-remote.doublehoney1.chatgpt.site/assets/preview.jpg?v=beta6" />
@@ -40,13 +40,12 @@
 <section class="hero" aria-labelledby="hero-h">
   <div class="hero-grid">
     <div class="hero-copy">
-      <h1 id="hero-h"><span class="hero-sans">A phone remote</span><br /><span class="hero-serif">for your Mac.</span></h1>
+      <h1 id="hero-h"><span class="hero-sans">Your Mac. Your remote.</span></h1>
       <p class="lede">
-        Use your phone as a touchpad, keyboard, media and presentation remote.
-        Install the Mac helper, scan its QR code and open the remote in your browser.
+        Touchpad, keyboard, media and presentation controls. Right on your phone.
       </p>
       <div class="cta-row">
-        <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.7/Sofa-Remote-preview.dmg">
+        <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.9/Sofa-Remote-preview.dmg">
           <svg class="apple-glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
           <span>Download for Mac</span>
         </a>
@@ -63,55 +62,55 @@
       <div class="live-shell">
         <div class="live-head">
           <span id="live-h" class="live-title">Sofa Remote</span>
-          <button class="live-btn live-shortcuts" type="button" data-act="shortcuts" aria-label="Shortcuts, preview only" title="Shortcuts, preview only">Shortcuts</button>
-          <button class="live-btn live-settings" type="button" data-act="settings" aria-label="Settings, preview only" title="Settings, preview only"><span aria-hidden="true">⚙</span></button>
         </div>
         <div class="live-panel">
         <div class="live-pad" id="touchpad"
              tabindex="0"
              role="application"
              aria-label="Preview touchpad. Drag to move the cursor. Arrow keys also work; Space or Enter clicks.">
-          <span class="live-pad-title">Touchpad</span>
           <span class="live-hint">Drag to move · tap to click</span>
           <div class="live-cursor" id="cursor" aria-hidden="true">
             <svg viewBox="0 0 16 20" width="18" height="22"><path d="M1 1 L1 15 L5 11 L7.5 17 L10 16 L7.5 10 L13 10 Z" fill="#111" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></svg>
           </div>
         </div>
-        <div class="live-divider" aria-hidden="true"></div>
         <div class="live-row clicks">
-          <button class="live-btn" type="button" data-act="right" aria-label="Right click" title="Right click">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 1 7 7v4a7 7 0 0 1-14 0v-4a7 7 0 0 1 7-7Zm1 1.07V11h5.93A6.01 6.01 0 0 0 13 4.07Z" fill="currentColor"/></svg>
-            <span>Right click</span>
-          </button>
-          <button class="live-btn" type="button" data-act="drag" title="Drag" aria-pressed="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4m-9-9h4m10 0h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></svg>
-            <span>Drag</span>
-          </button>
+          <button class="live-btn" type="button" data-act="right" aria-label="Right click" title="Right click"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 2v8h6m-6 0H6"/><path d="M13 4h2l1 2v2h-3Z" fill="currentColor" stroke="none"/></svg></button>
+          <button class="live-btn" type="button" data-act="drag" aria-label="Drag" title="Drag" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g fill="currentColor" stroke="none"><path d="M10.5 1.875a1.125 1.125 0 0 1 2.25 0v8.219c.517.162 1.02.382 1.5.659V3.375a1.125 1.125 0 0 1 2.25 0v10.937a4.505 4.505 0 0 0-3.25 2.373 8.963 8.963 0 0 1 4-.935A.75.75 0 0 0 18 15v-2.266a3.368 3.368 0 0 1 .988-2.37 1.125 1.125 0 0 1 1.591 1.59 1.118 1.118 0 0 0-.329.79v3.006h-.005a6 6 0 0 1-1.752 4.007l-1.736 1.736a6 6 0 0 1-4.242 1.757H10.5a7.5 7.5 0 0 1-7.5-7.5V6.375a1.125 1.125 0 0 1 2.25 0v5.519c.46-.452.965-.832 1.5-1.141V3.375a1.125 1.125 0 0 1 2.25 0v6.526c.495-.1.997-.151 1.5-.151V1.875Z" />
+</g></svg></button>
         </div>
         <div class="live-row media">
-          <button class="live-btn icon" type="button" data-act="prev" aria-label="Previous track">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14l-11-7z" fill="currentColor"/></svg>
-          </button>
-          <button class="live-btn icon" type="button" data-act="play" id="playBtn" aria-label="Play or pause">
-            <svg viewBox="0 0 24 24" aria-hidden="true" id="playIcon"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>
-          </button>
-          <button class="live-btn icon" type="button" data-act="next" aria-label="Next track">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z" fill="currentColor"/></svg>
-          </button>
+          <button class="live-btn icon" type="button" data-act="prev" aria-label="Previous track"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g fill="currentColor" stroke="none"><path d="M9.195 18.44c1.25.714 2.805-.189 2.805-1.629v-2.34l6.945 3.968c1.25.715 2.805-.188 2.805-1.628V8.69c0-1.44-1.555-2.343-2.805-1.628L12 11.029v-2.34c0-1.44-1.555-2.343-2.805-1.628l-7.108 4.061c-1.26.72-1.26 2.536 0 3.256l7.108 4.061Z" />
+</g></svg></button>
+          <button class="live-btn icon" type="button" data-act="play" id="playBtn" aria-label="Play or pause"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="playIcon"><g fill="currentColor" stroke="none"><path d="M15 6.75a.75.75 0 0 0-.75.75V18a.75.75 0 0 0 .75.75h.75a.75.75 0 0 0 .75-.75V7.5a.75.75 0 0 0-.75-.75H15ZM20.25 6.75a.75.75 0 0 0-.75.75V18c0 .414.336.75.75.75H21a.75.75 0 0 0 .75-.75V7.5a.75.75 0 0 0-.75-.75h-.75ZM5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256L5.055 7.061Z" />
+</g></svg></button>
+          <button class="live-btn icon" type="button" data-act="next" aria-label="Next track"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g fill="currentColor" stroke="none"><path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z" />
+</g></svg></button>
         </div>
         <div class="live-row volume">
-          <button class="live-btn icon" type="button" data-act="voldown" aria-label="Volume down">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3.5l5-4v14l-5-4H4zM17 11h4v2h-4z" fill="currentColor"/></svg>
-          </button>
-          <button class="live-btn icon" type="button" data-act="volup" aria-label="Volume up">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3.5l5-4v14l-5-4H4zM17 11h4v2h-4zM18 7h2v10h-2z" fill="currentColor"/></svg>
-          </button>
+          <button class="live-btn icon" type="button" data-act="voldown" aria-label="Volume down"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 5-5 4H3v6h3l5 4V5m5 7h6"/></svg></button>
+          <button class="live-btn icon" type="button" data-act="volup" aria-label="Volume up"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m11 5-5 4H3v6h3l5 4V5m5 7h6m-3-3v6"/></svg></button>
         </div>
         </div>
+        <nav class="live-bottom" aria-label="Remote navigation preview">
+          <button class="live-btn" type="button" data-act="help" aria-label="Explain remote icons, preview only" title="Explain remote icons, preview only">?</button>
+          <button class="live-btn" type="button" data-act="keyboard" aria-label="Keyboard, preview only" title="Keyboard, preview only"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></svg></button>
+          <button class="live-btn live-shortcuts" type="button" data-act="shortcuts" aria-label="Shortcuts, preview only" title="Shortcuts, preview only"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M3 6a3 3 0 0 1 3-3h2.25a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Zm9.75 0a3 3 0 0 1 3-3H18a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3h-2.25a3 3 0 0 1-3-3V6ZM3 15.75a3 3 0 0 1 3-3h2.25a3 3 0 0 1 3 3V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-2.25Zm9.75 0a3 3 0 0 1 3-3H18a3 3 0 0 1 3 3V18a3 3 0 0 1-3 3h-2.25a3 3 0 0 1-3-3v-2.25Z" clip-rule="evenodd" />
+</g></svg></button>
+          <button class="live-btn live-settings" type="button" data-act="settings" aria-label="Settings, preview only" title="Settings, preview only"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd" />
+</g></svg></button>
+        </nav>
         <p class="live-status" id="phoneStatus" aria-live="polite">Preview — not connected.</p>
+        <button class="demo-replay" id="demoReplay" type="button">Show touchpad gesture ↗</button>
       </div>
 
     </aside>
+    <div class="desktop-demo" aria-label="Illustrated Mac desktop preview">
+      <p>Move the touchpad to try the pointer.</p>
+      <div class="desktop-demo-screen" id="desktopDemo" aria-hidden="true">
+        <span class="desktop-demo-label">MAC DESKTOP · PREVIEW</span>
+        <div class="desktop-demo-cursor" id="desktopCursor"><svg viewBox="0 0 16 20" width="18" height="22"><path d="M1 1 L1 15 L5 11 L7.5 17 L10 16 L7.5 10 L13 10 Z" fill="#111" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -125,15 +124,15 @@
   <ul class="feature-grid" role="list">
     <li class="feature">
       <h3>Touchpad across every display</h3>
-      <p>Move the pointer across connected displays. Tap to click, scroll with two fingers, or use the right-click, double-click and drag controls. Occasional pointer stepping remains in this beta.</p>
+      <p>Point across displays, tap, double-tap, scroll or drag. Occasional pointer stepping remains in this beta.</p>
     </li>
     <li class="feature">
       <h3>Keystrokes into the active app</h3>
-      <p>Type text or use keyboard shortcuts, including Command, Control, Option and Shift. Your input goes to the Mac window that has focus.</p>
+      <p>Type and use shortcuts in the active Mac window.</p>
     </li>
     <li class="feature">
       <h3>System media and volume</h3>
-      <p>Pause music, skip a track, mute or change the volume with the system media controls. Individual apps decide how they respond to these keys.</p>
+      <p>Play, pause, skip and adjust volume. Apps decide how they respond to media keys.</p>
     </li>
     <li class="feature">
       <h3>Switch displays and move windows</h3>
@@ -141,7 +140,7 @@
     </li>
     <li class="feature">
       <h3>Saved shortcuts</h3>
-      <p>Keep shortcuts for your favourite apps and websites. Open them with one tap, and add, rename or remove shortcuts from the phone.</p>
+      <p>Open saved apps and websites from your phone.</p>
     </li>
     <li class="feature">
       <h3>Present from your phone</h3>
@@ -153,7 +152,7 @@
     </li>
     <li class="feature">
       <h3>Reconnect when you need to</h3>
-      <p>Open Sofa Remote on the Mac to show the pairing code, manage paired phones or stop sharing.</p>
+      <p>Show the pairing code, manage phones or stop sharing on your Mac.</p>
     </li>
   </ul>
 </section>
@@ -204,15 +203,15 @@
     </p>
 
     <div class="cta-row">
-      <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.7/Sofa-Remote-preview.dmg">
+      <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.9/Sofa-Remote-preview.dmg">
         <svg class="apple-glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
         <span>Sofa-Remote-preview.dmg</span>
       </a>
-      <a class="btn link" href="https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.7">Release notes →</a>
+      <a class="btn link" href="https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.9">Release notes →</a>
     </div>
 
     <p class="meta">
-      v0.1.0 beta 7 · build 18 · Intel &amp; Apple Silicon ·
+      v0.1.0 beta 9 · build 26 · Intel &amp; Apple Silicon ·
       <strong>certificate-signed preview, not notarised</strong>.
       The first launch may be blocked by Gatekeeper; follow the
       <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md">setup guide</a>
@@ -257,7 +256,7 @@
     </details>
     <details>
       <summary>Which phone or browser do I need?</summary>
-      <p>Any current mobile browser that supports Pointer Events — recent Safari on iOS and Chrome on Android are the ones tested. Older browsers may not pair. There is nothing to install on the phone; adding it to the Home Screen just gives it an icon.</p>
+      <p>Recent Safari on iPhone has been tested. Chrome on Android may work but has not been tested on a physical device. Older browsers may not pair. There is nothing to install on the phone; adding it to the Home Screen gives it an icon.</p>
     </details>
     <details>
       <summary>Any paid tier, upsell or ads?</summary>
@@ -291,6 +290,6 @@
   <span class="right">© 2026</span>
 </footer>
 
-<script src="./demo.js?v=dark-ui-1" defer></script>
+<script src="./demo.js?v=studio-dark-1" defer></script>
 </body>
 </html>

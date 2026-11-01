@@ -1,6 +1,5 @@
 Sofa Remote is free software under the MIT licence.
-Selected networking, pairing, display-wake and touchpad motion code is adapted from Mac TV:
-https://github.com/Arunprakaash/mac-tv
+Selected networking, pairing, display-wake and touchpad motion code includes third-party contributions.
 Copyright (c) 2026 Arunprakaash. MIT licence retained in LICENSE.
 No streaming-service assets, browser profiles, user configuration, or analytics are included.
 
@@ -29,3 +28,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Brave icon from Simple Icons, CC0 1.0. Brave is a trademark of Brave Software, Inc.
+https://simpleicons.org/

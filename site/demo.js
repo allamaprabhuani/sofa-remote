@@ -9,6 +9,34 @@
   var playIcon = document.getElementById('playIcon');
   if (!touchpad || !cursor) return;
 
+  // A local, replayable illustration; this does not connect to a Mac.
+  var desktop = document.getElementById('desktopDemo');
+  var desktopCursor = document.getElementById('desktopCursor');
+  var replay = document.getElementById('demoReplay');
+  if (replay) {
+    replay.addEventListener('click', function () {
+      touchpad.classList.remove('is-demonstrating');
+      if (desktop) desktop.classList.remove('is-demonstrating');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (status) status.textContent = 'Move a finger on the touchpad to move the pointer. Preview only.';
+        return;
+      }
+      // Restart on a fresh frame, including if the animation is already running.
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        touchpad.classList.add('is-demonstrating');
+        if (desktop) desktop.classList.add('is-demonstrating');
+      }); });
+      if (status) status.textContent = 'Gesture demonstration. Preview only.';
+    });
+    touchpad.addEventListener('animationend', function (event) {
+      if (event.animationName === 'demo-swipe') {
+        touchpad.classList.remove('is-demonstrating');
+        if (desktop) desktop.classList.remove('is-demonstrating');
+        if (status) status.textContent = 'Preview — not connected.';
+      }
+    });
+  }
+
   var cx = 0.5, cy = 0.5;
   var dragging = false;
   var activePointerId = null;
@@ -24,6 +52,11 @@
     var x = clamp(cx * rect.width, 6, rect.width - 6);
     var y = clamp(cy * rect.height, 6, rect.height - 6);
     cursor.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    if (desktop && desktopCursor) {
+      var desktopRect = desktop.getBoundingClientRect();
+      desktopCursor.style.left = (cx * Math.max(0, desktopRect.width - 18)) + 'px';
+      desktopCursor.style.top = (cy * Math.max(0, desktopRect.height - 22)) + 'px';
+    }
   }
   placeCursor();
   window.addEventListener('resize', placeCursor);
@@ -93,6 +126,8 @@
     acts[i].addEventListener('click', function (ev) {
       var act = ev.currentTarget.getAttribute('data-act');
       switch (act) {
+        case 'help': setStatus('Help is available in the connected remote.'); break;
+        case 'keyboard': setStatus('Keyboard is available in the connected remote.'); break;
         case 'shortcuts': setStatus('Shortcuts are available in the connected remote.'); break;
         case 'settings': setStatus('Settings are available in the connected remote.'); break;
         case 'right':   setStatus('Right click'); markMoved(); break;

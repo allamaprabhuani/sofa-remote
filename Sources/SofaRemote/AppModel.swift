@@ -319,10 +319,31 @@ import ServiceManagement
                 case .app:
                     guard let bundleID = item.bundleID,
                           let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { throw RemoteError("This app is not installed on the Mac.") }
-                    guard !openingApp else { throw RemoteError("Wait for the current app to open.") }
-                    openingApp = true
-                    defer { openingApp = false }
-                    _ = try await NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+                    if bundleID == "com.brave.Browser" {
+                        guard !openingApp else { throw RemoteError("Wait for the current app to open.") }
+                        openingApp = true
+                        defer { openingApp = false }
+                        let credential = request.headers["x-sofa-key"]
+                        let generation = controlGeneration
+                        let wasRunning = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).contains { !$0.isTerminated }
+                        try await BraveWindowCoordinator.open(
+                            launch: {
+                                let config = NSWorkspace.OpenConfiguration()
+                                config.activates = true
+                                let running = try await NSWorkspace.shared.openApplication(at: app, configuration: config)
+                                return (running.processIdentifier, wasRunning)
+                            },
+                            frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier },
+                            allowed: { self.sharing && !Task.isCancelled && !self.inputPaused && self.accessibilityAllowed
+                                && self.controlGeneration == generation && self.store.authenticate(credential) != nil },
+                            sendNewWindow: { try self.input.handle(.key("n", ["command"])) }
+                        )
+                    } else {
+                        guard !openingApp else { throw RemoteError("Wait for the current app to open.") }
+                        openingApp = true
+                        defer { openingApp = false }
+                        _ = try await NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+                    }
                 }
             case "/shortcuts/add":
                 guard let name = body["name"] as? String, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -381,6 +402,7 @@ import ServiceManagement
         defer { openingApp = false }
         if let brave = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.brave.Browser") {
             let config = NSWorkspace.OpenConfiguration()
+            config.activates = true
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 NSWorkspace.shared.open([url], withApplicationAt: brave, configuration: config) { _, error in
                     if let error { continuation.resume(throwing: error) } else { continuation.resume() }

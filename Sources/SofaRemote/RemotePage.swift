@@ -31,6 +31,11 @@ enum RemotePage {
         --danger: #ffb4ab;
         --error: #ffb4ab;
       }
+      html[data-appearance="velvet"] { --bg:#191417; --card:#302329; --pad:#302329; --online:#59db88; --sheet:#191417; --line:#9d8583; --muted:#dec9ba; --accent:#ddb65e; --ink:#f7ede1; --pressed:#49393a; --selection:#f7ede1; --selection-ink:#191417; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="paper"] { --bg:#f6f3ec; --card:#f6f3ec; --pad:#ebe5d9; --online:#187544; --sheet:#f6f3ec; --line:#71665d; --muted:#5b534c; --accent:#a22f1d; --ink:#252322; --pressed:#ded5c7; --selection:#252322; --selection-ink:#f6f3ec; --danger:#9d1e2c; --error:#9d1e2c; color-scheme:light; }
+      html[data-appearance="soft"] { --bg:#111214; --card:#28272f; --pad:#28272f; --online:#59db88; --sheet:#111214; --line:#8e8c9c; --muted:#d4cdec; --accent:#c4b8ff; --ink:#f7f6fb; --pressed:#3d3b49; --selection:#f7f6fb; --selection-ink:#111214; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="paper"] .remote-panel { border-radius:24px; }
+      html[data-appearance="soft"] .remote-panel { border-radius:38px; }
       * {
         box-sizing: border-box;
         -webkit-tap-highlight-color: transparent;
@@ -85,18 +90,22 @@ enum RemotePage {
         display: flex;
         flex-direction: column;
         gap: 10px;
+        touch-action: none;
       }
       header {
         display: flex;
         align-items: center;
         gap: 10px;
+        padding: 8px 4px 14px;
       }
-      header button { border-radius: 24px; }
+      header button { border-radius: 24px; background: transparent; }
+      header button:active { background: var(--pressed); }
       header h1 {
-        font-family: ui-rounded, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-        font-weight: 700;
-        font-size: 1.1875rem;
-        letter-spacing: -0.02em;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-weight: 650;
+        font-size: 1.5rem;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
         margin: 0;
         flex: 1;
         min-width: 0;
@@ -104,10 +113,14 @@ enum RemotePage {
       }
       header small {
         display: block;
-        font-size: 0.75rem;
+        margin-top: 7px;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        letter-spacing: normal;
         color: var(--muted);
-        font-weight: 500;
+        font-weight: 400;
       }
+      #connection[data-connected="true"]::before { content:""; display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%; background:var(--online); vertical-align:1px; }
       button,
       .field {
         border: 1px solid var(--line);
@@ -118,6 +131,7 @@ enum RemotePage {
         min-height: 44px;
         padding: 0 13px;
         overflow-wrap: anywhere;
+        border: 0;
       }
       button:active {
         background: var(--pressed);
@@ -154,8 +168,8 @@ enum RemotePage {
         flex-direction: column;
         gap: 4px;
         padding: 0 10px 12px;
-        background: var(--pad);
-        border: 1px solid var(--line);
+        background: transparent;
+        border: 0;
         border-radius: 36px;
       }
       #pad {
@@ -170,21 +184,14 @@ enum RemotePage {
       #pad:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
       #pad .hint {
         position: absolute;
-        bottom: 15px;
+        top: 50%;
+        transform: translateY(-50%);
         left: 8px;
         right: 8px;
         text-align: center;
         color: var(--muted);
         font-size: 12px;
-        pointer-events: none;
-      }
-      .pad-title {
-        position: absolute;
-        top: 15px;
-        left: 18px;
-        font-size: 12px;
-        color: var(--muted);
-        font-weight: 700;
+        opacity: .65;
         pointer-events: none;
       }
       .row {
@@ -193,6 +200,8 @@ enum RemotePage {
       }
       .clicks {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: min(100%, 230px);
+        align-self: center;
       }
       .media {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -211,14 +220,33 @@ enum RemotePage {
       .media button {
         font-size: 1.25rem;
       }
-      .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .panel-divider { width: 42px; height: 1px; align-self: center; flex: 0 0 auto; background: var(--line); opacity: 0.5; }
-      .media .control-icon, .volume .control-icon { width: 25px; height: 25px; }
-      main .row button { min-height: 52px; border-radius: 28px; }
+      .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); position:relative; }
+      .bottom-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+      .bottom-tools button { background: transparent; border-radius: 12px; }
+      .bottom-tools button:active { background: var(--pressed); }
+      .bottom-tools .control-icon { width: 23px; height: 23px; }
+      .remote-guide { position: relative; }
+      .guide-content { position: absolute; right: -156px; bottom: calc(100% + 8px); width: min(310px, calc(100vw - 32px)); max-height: 50dvh; overflow: auto; z-index: 3; padding: 16px; border-radius: 16px; background: var(--sheet); box-shadow: 0 4px 24px rgba(0,0,0,.2); }
+      .remote-guide summary { min-height: 44px; display: flex; align-items: center; justify-content: center; width: 44px; border-radius: 50%; cursor: pointer; }
+      .remote-guide summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .remote-guide p { margin: 0 0 12px; color: var(--muted); font-size: 0.875rem; }
+      .remote-guide p:last-child { margin-bottom: 0; }
+      .remote-panel .control-icon { width: 25px; height: 25px; }
+      .media [data-action="playPause"] .control-icon { width: 30px; height: 30px; }
+      header .control-icon { width: 23px; height: 23px; }
+      main .row button { min-height: 52px; border-radius: 12px; }
       main .row { gap: 10px; }
       main .remote-panel .row button { border: 0; background: transparent; }
       main .remote-panel .row button:active { background: var(--pressed); }
       main .remote-panel .row button.on { background: var(--selection); color: var(--selection-ink); }
+      main.is-pointing header, main.is-pointing .row,
+      main.is-pointing .bottom-tools, main.is-pointing #pad .hint { opacity: 0; }
+      main.is-pointing .bottom-tools, main.is-pointing .row button { pointer-events: none; }
+      @media (prefers-reduced-motion: no-preference) {
+        main header, main .row, main .bottom-tools, main #pad .hint { transition: opacity 160ms ease; }
+        main .remote-panel .row button { transition: transform 100ms ease-out; }
+        main .remote-panel .row button:active:not(:disabled) { transform:scale(.96); }
+      }
       .present-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .present-nav button { min-height: 78px; font-size: 1.125rem; font-weight: 700; }
       #present-sheet .sheet-status:empty { display: none; }
@@ -274,6 +302,7 @@ enum RemotePage {
         border: 1px solid var(--line);
         border-radius: 24px 24px 0 0;
       }
+      :is(#settings-sheet, #shortcuts-sheet) .sheet { max-height: 78dvh; }
       #settings-sheet .settings-actions { display: flex; gap: 10px; flex-wrap: wrap; }
       #settings-sheet .settings-actions button, #settings-sheet .settings-close, #devices button { flex: 0 0 48px; width: 48px; height: 48px; min-width: 48px; padding: 0; border-radius: 50%; }
       #settings-sheet .settings-close { min-width: 48px; }
@@ -349,6 +378,9 @@ enum RemotePage {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
       }
+      .shortcut-add summary { min-height: 44px; width: 48px; display: grid; place-items: center; cursor: pointer; font-size: 1.5rem; border-radius: 12px; }
+      .shortcut-add summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .shortcut-add[open] form { margin-top: 8px; }
       .shortcut {
         display: flex;
         gap: 6px;
@@ -456,6 +488,64 @@ enum RemotePage {
       .help-disclosure { margin: 12px 0; }
       .help-disclosure summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
       @media (max-width: 380px) { .support-icons { grid-template-columns: repeat(3, minmax(44px, 1fr)); } }
+      /* Match the open, icon-led remote while keeping fields and focus states distinct. */
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) .sheet {
+        background: var(--bg);
+        border: 0;
+        border-radius: 28px 28px 0 0;
+        padding: 24px 22px calc(28px + env(safe-area-inset-bottom));
+        gap: 14px;
+      }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) .sheet-head h2 {
+        font-size: 1.4rem;
+        letter-spacing: -0.03em;
+      }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) .sheet-head button,
+      #settings-sheet .settings-actions button,
+      #shortcuts-sheet .sheet-row button,
+      #shortcuts-sheet .shortcut button,
+      #shortcuts-sheet #shortcut-form button,
+      #help-sheet #copy-diagnostics {
+        background: transparent;
+        border: 0;
+      }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) button[data-icon] .control-icon,
+      #help-sheet .support-icons .control-icon { width: 27px; height: 27px; }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) button:active,
+      #help-sheet .support-icons a:active { background: var(--pressed); }
+      #shortcuts-sheet .shortcut-initial { background: transparent; color: var(--ink); }
+      #shortcuts-sheet .shortcut { min-height: 52px; }
+      #shortcuts-sheet .shortcut-heading { display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:.875rem; }
+      #shortcuts-sheet .shortcut-heading button { width:48px; padding:0; background:transparent; }
+      #shortcut-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(60px,1fr)); gap:8px; }
+      #shortcut-list .shortcut { justify-content:center; }
+      #shortcut-list .launch { flex:0 0 60px; min-height:52px; justify-content:center; padding:0; border-radius:12px; }
+      #shortcut-list .shortcut-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+      #shortcut-list .shortcut > button:not(.launch) { display:none; }
+      #shortcut-list.editing { display:flex; flex-direction:column; }
+      #shortcut-list.editing .shortcut { justify-content:initial; }
+      #shortcut-list.editing .launch { flex:1; justify-content:flex-start; }
+      #shortcut-list.editing .shortcut-label { position:static; width:auto; height:auto; clip-path:none; }
+      #shortcut-list.editing .shortcut > button:not(.launch) { display:inline-flex; }
+      #keyboard-sheet .typing-row { display:flex; align-items:center; gap:8px; }
+      #keyboard-sheet .typing-row input { flex:1; min-width:0; }
+      #keyboard-sheet .typing-row button { flex:0 0 48px; width:48px; padding:0; }
+      #shortcuts-sheet #open-form { flex-direction:row; align-items:center; width:100%; }
+      #open-form button { flex:0 0 48px; width:48px; padding:0; }
+
+      :is(#settings-sheet, #shortcuts-sheet) .field { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding-inline: 4px; }
+      #shortcuts-sheet .shortcut-actions { display: grid; grid-template-columns: repeat(4, minmax(44px, 1fr)); gap: 8px; }
+      #shortcuts-sheet .shortcut-actions button { min-height: 52px; border-radius: 12px; }
+      #settings-sheet .settings-actions { justify-content: space-between; gap: 4px; }
+      #settings-sheet .settings-actions button { border-radius: 12px; }
+      #settings-sheet .sheet p, #shortcuts-sheet .sheet p { line-height: 1.45; }
+      #awake { flex: 0 0 auto; width: 24px; height: 24px; margin: 0; accent-color: var(--accent); }
+
+      #settings-sheet h3 { margin-top: 14px; }
+      #help-sheet .support-icons { gap: 4px; margin: 14px 0; }
+      #help-sheet .support-icons a { border: 0; background: transparent; border-radius: 50%; }
+      #help-sheet .help-disclosure { margin: 0; }
+      #help-sheet .help-disclosure summary { padding: 15px 0; }
     </style>
   </head>
   <body>
@@ -481,12 +571,23 @@ enum RemotePage {
       <symbol id="icon-volume-up" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5m5 7h6m-3-3v6"/></symbol>
       <symbol id="icon-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></symbol>
       <symbol id="icon-apps" viewBox="0 0 24 24"><rect x="2" y="6" width="15" height="15" rx="2"/><path d="M7 6V3h15v15h-5M2 11h15"/></symbol>
+      <symbol id="icon-present" viewBox="0 0 24 24"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/><path d="m10 8 5 2.5L10 13z"/></symbol>
       <symbol id="icon-fullscreen" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
       <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></symbol>
       <symbol id="icon-desktop" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd" />
 </g></symbol>
       <symbol id="icon-folder" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
 </g></symbol>
+      <symbol id="icon-send" viewBox="0 0 24 24"><path d="M3 12h17m-6-6 6 6-6 6"/></symbol>
+      <symbol id="icon-add" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+      <symbol id="icon-retry" viewBox="0 0 24 24"><path d="M20 7V3m0 4h-4M20 7a9 9 0 1 0 1 8"/></symbol>
+      <symbol id="icon-slide-previous" viewBox="0 0 24 24"><path d="M14 4 6 12l8 8M6 12h14"/></symbol>
+      <symbol id="icon-slide-next" viewBox="0 0 24 24"><path d="m10 4 8 8-8 8M18 12H4"/></symbol>
+      <symbol id="icon-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/></symbol>
+      <symbol id="icon-laser" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></symbol>
+      <symbol id="icon-pen" viewBox="0 0 24 24"><path d="m4 20 1-5L16 4l4 4L9 19l-5 1ZM14 6l4 4"/></symbol>
+      <symbol id="icon-highlight" viewBox="0 0 24 24"><path d="m5 16 9-10 4 4-9 10H5v-4ZM3 22h18"/></symbol>
+      <symbol id="icon-undo" viewBox="0 0 24 24"><path d="m8 6-5 5 5 5M3 11h10a7 7 0 0 1 7 7"/></symbol>
       <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
       <symbol id="icon-remove" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6"/></symbol>
       <symbol id="icon-move-display" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4M7 10h10m-3-3 3 3-3 3"/></symbol>
@@ -509,6 +610,7 @@ enum RemotePage {
       <symbol id="icon-chat" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 0 0-1.032-.211 50.89 50.89 0 0 0-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 0 0 2.433 3.984L7.28 21.53A.75.75 0 0 1 6 21v-4.03a48.527 48.527 0 0 1-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979Z" />
   <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 0 0 1.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0 0 15.75 7.5Z" />
 </g></symbol>
+      <symbol id="icon-brave" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M15.68 0l2.096 2.38s1.84-.512 2.709.358c.868.87 1.584 1.638 1.584 1.638l-.562 1.381.715 2.047s-2.104 7.98-2.35 8.955c-.486 1.919-.818 2.66-2.198 3.633-1.38.972-3.884 2.66-4.293 2.916-.409.256-.92.692-1.38.692-.46 0-.97-.436-1.38-.692a185.796 185.796 0 01-4.293-2.916c-1.38-.973-1.712-1.714-2.197-3.633-.247-.975-2.351-8.955-2.351-8.955l.715-2.047-.562-1.381s.716-.768 1.585-1.638c.868-.87 2.708-.358 2.708-.358L8.321 0h7.36zm-3.679 14.936c-.14 0-1.038.317-1.758.69-.72.373-1.242.637-1.409.742-.167.104-.065.301.087.409.152.107 2.194 1.69 2.393 1.866.198.175.489.464.687.464.198 0 .49-.29.688-.464.198-.175 2.24-1.759 2.392-1.866.152-.108.254-.305.087-.41-.167-.104-.689-.368-1.41-.741-.72-.373-1.617-.69-1.757-.69zm0-11.278s-.409.001-1.022.206-1.278.46-1.584.46c-.307 0-2.581-.434-2.581-.434S4.119 7.152 4.119 7.849c0 .697.339.881.68 1.243l2.02 2.149c.192.203.59.511.356 1.066-.235.555-.58 1.26-.196 1.977.384.716 1.042 1.194 1.464 1.115.421-.08 1.412-.598 1.776-.834.364-.237 1.518-1.19 1.518-1.554 0-.365-1.193-1.02-1.413-1.168-.22-.15-1.226-.725-1.247-.95-.02-.227-.012-.293.284-.851.297-.559.831-1.304.742-1.8-.089-.495-.95-.753-1.565-.986-.615-.232-1.799-.671-1.947-.74-.148-.068-.11-.133.339-.175.448-.043 1.719-.212 2.292-.052.573.16 1.552.403 1.632.532.079.13.149.134.067.579-.081.445-.5 2.581-.541 2.96-.04.38-.12.63.288.724.409.094 1.097.256 1.333.256s.924-.162 1.333-.256c.408-.093.329-.344.288-.723-.04-.38-.46-2.516-.541-2.961-.082-.445-.012-.45.067-.579.08-.129 1.059-.372 1.632-.532.573-.16 1.845.009 2.292.052.449.042.487.107.339.175-.148.069-1.332.508-1.947.74-.615.233-1.476.49-1.565.986-.09.496.445 1.241.742 1.8.297.558.304.624.284.85-.02.226-1.026.802-1.247.95-.22.15-1.413.804-1.413 1.169 0 .364 1.154 1.317 1.518 1.554.364.236 1.355.755 1.776.834.422.079 1.08-.4 1.464-1.115.384-.716.039-1.422-.195-1.977-.235-.555.163-.863.355-1.066l2.02-2.149c.341-.362.68-.546.68-1.243 0-.697-2.695-3.96-2.695-3.96s-2.274.436-2.58.436c-.307 0-.972-.256-1.585-.461-.613-.205-1.022-.206-1.022-.206z" /></symbol>
       <symbol id="icon-globe" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M21.721 12.752a9.711 9.711 0 0 0-.945-5.003 12.754 12.754 0 0 1-4.339 2.708 18.991 18.991 0 0 1-.214 4.772 17.165 17.165 0 0 0 5.498-2.477ZM14.634 15.55a17.324 17.324 0 0 0 .332-4.647c-.952.227-1.945.347-2.966.347-1.021 0-2.014-.12-2.966-.347a17.515 17.515 0 0 0 .332 4.647 17.385 17.385 0 0 0 5.268 0ZM9.772 17.119a18.963 18.963 0 0 0 4.456 0A17.182 17.182 0 0 1 12 21.724a17.18 17.18 0 0 1-2.228-4.605ZM7.777 15.23a18.87 18.87 0 0 1-.214-4.774 12.753 12.753 0 0 1-4.34-2.708 9.711 9.711 0 0 0-.944 5.004 17.165 17.165 0 0 0 5.498 2.477ZM21.356 14.752a9.765 9.765 0 0 1-7.478 6.817 18.64 18.64 0 0 0 1.988-4.718 18.627 18.627 0 0 0 5.49-2.098ZM2.644 14.752c1.682.971 3.53 1.688 5.49 2.099a18.64 18.64 0 0 0 1.988 4.718 9.765 9.765 0 0 1-7.478-6.816ZM13.878 2.43a9.755 9.755 0 0 1 6.116 3.986 11.267 11.267 0 0 1-3.746 2.504 18.63 18.63 0 0 0-2.37-6.49ZM12 2.276a17.152 17.152 0 0 1 2.805 7.121c-.897.23-1.837.353-2.805.353-.968 0-1.908-.122-2.805-.353A17.151 17.151 0 0 1 12 2.276ZM10.122 2.43a18.629 18.629 0 0 0-2.37 6.49 11.266 11.266 0 0 1-3.746-2.504 9.754 9.754 0 0 1 6.116-3.985Z" />
 </g></symbol>
       <symbol id="icon-heart" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
@@ -519,8 +621,6 @@ enum RemotePage {
     <main>
       <header>
         <h1>Sofa Remote<small id="connection">Connecting…</small></h1>
-        <button class="icon icon-caption toolbar-caption" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"><span>Shortcuts</span></button
-        ><button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </header>
       <div class="remote-panel">
       <div
@@ -529,13 +629,11 @@ enum RemotePage {
         tabindex="0"
         aria-label="Touchpad. Drag to move, tap to click, use two fingers to scroll. With a keyboard, use arrow keys to move and Enter or Space to click."
       >
-        <span class="pad-title">Touchpad</span
-        ><span class="hint">Tap to click · Two fingers to scroll</span>
+        <span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
-      <div class="panel-divider" aria-hidden="true"></div>
       <div class="row clicks">
-        <button id="right" data-icon="right-click" class="icon-caption" title="Right click"><span>Right click</span></button>
-        <button id="drag" data-icon="drag" class="icon-caption" aria-pressed="false" title="Drag: toggle to hold or release"><span>Drag</span></button>
+        <button id="right" data-icon="right-click" aria-label="Right click" title="Right click"></button>
+        <button id="drag" data-icon="drag" aria-label="Drag" aria-pressed="false" title="Drag: toggle to hold or release"></button>
       </div>
       <div class="row media">
         <button data-icon="previous" data-action="previous" aria-label="Previous track" title="Previous track"></button>
@@ -547,28 +645,40 @@ enum RemotePage {
         <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
       </div>
       </div>
+      <nav class="bottom-tools" aria-label="Remote navigation">
+        <details class="remote-guide"><summary aria-label="Explain remote icons" title="Explain remote icons">?</summary><div class="guide-content">
+          <p>The mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
+          <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
+          <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
+          <p>Appearance is saved on this phone. The touchpad moves across connected displays. Brightness uses Mac keys and external display support varies. Keeping the Mac awake prevents idle system sleep, but displays can still sleep. Wake does not unlock the Mac; unlock on the Mac, or use Apple Watch unlock if configured.</p>
+        </div></details>
+        <button class="icon" data-icon="keyboard" id="keyboard-open" aria-label="Keyboard" title="Keyboard"></button>
+        <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button>
+        <button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
+      </nav>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
         <p>Keep your Mac awake and Sofa Remote sharing. Check that both devices are on the same Wi-Fi or Tailscale network. If the Mac's address changed, open Sofa Remote on the Mac and scan its new QR code.</p>
-        <div class="sheet-row"><button id="reconnect">Try reconnecting</button><button data-help data-icon="help" title="About and Help">About &amp; Help</button></div>
+        <div class="sheet-row"><button id="reconnect" data-icon="retry" aria-label="Try reconnecting" title="Try reconnecting"></button><button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button></div>
       </aside>
     </main>
     <div class="scrim" id="present-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Presenter controls">
-        <div class="sheet-head"><h2>Present</h2><button data-close>Done</button></div>
+        <div class="sheet-head"><h2>Present</h2><button data-close data-icon="close" aria-label="Close" title="Close"></button></div>
         <p>Start your slideshow on the Mac. Previous and Next send arrow keys to the active app.</p>
-        <div class="present-nav"><button id="present-previous" aria-label="Previous slide">← Previous</button><button id="present-next" aria-label="Next slide">Next →</button></div>
-        <div class="present-tools"><button id="present-exit">End slideshow</button></div>
+        <div class="present-nav"><button id="present-previous" data-icon="slide-previous" aria-label="Previous slide" title="Previous slide"></button><button id="present-next" data-icon="slide-next" aria-label="Next slide" title="Next slide"></button></div>
+        <div class="present-tools"><button id="present-exit" data-icon="stop" aria-label="End slideshow" title="End slideshow"></button></div>
         <label for="present-display">Presentation display</label><select class="field" id="present-display" aria-label="Presentation display"></select>
         <p>Choose the screen showing your slides. Changing display clears marks.</p>
+        <details class="help-disclosure"><summary>About presenter icons</summary><p>Top row: previous slide, next slide, end slideshow. Tools: laser, pen, highlight; then red, blue, green and yellow. Below the pad: undo and clear marks.</p></details>
         <div class="present-mode" role="group" aria-label="Pointer and annotation tools">
-          <button id="present-laser" aria-pressed="true">Laser</button><button id="present-pen" aria-pressed="false">Pen</button><button id="present-highlight" aria-pressed="false">Highlight</button>
+          <button id="present-laser" data-icon="laser" aria-label="Laser" title="Laser" aria-pressed="true"></button><button id="present-pen" data-icon="pen" aria-label="Pen" title="Pen" aria-pressed="false"></button><button id="present-highlight" data-icon="highlight" aria-label="Highlight" title="Highlight" aria-pressed="false"></button>
         </div>
         <div class="present-colours" role="group" aria-label="Pointer and ink colour">
-          <button data-present-colour="red" aria-pressed="true"><span class="present-chip" aria-hidden="true" style="--chip: #e21b2d"></span>Red</button>
-          <button data-present-colour="blue" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #2476ed"></span>Blue</button>
-          <button data-present-colour="green" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #138748"></span>Green</button>
-          <button data-present-colour="yellow" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #f4cd16"></span>Yellow</button>
+          <button data-present-colour="red" aria-label="Red" title="Red" aria-pressed="true"><span class="present-chip" aria-hidden="true" style="--chip: #e21b2d"></span></button>
+          <button data-present-colour="blue" aria-label="Blue" title="Blue" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #2476ed"></span></button>
+          <button data-present-colour="green" aria-label="Green" title="Green" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #138748"></span></button>
+          <button data-present-colour="yellow" aria-label="Yellow" title="Yellow" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #f4cd16"></span></button>
         </div>
         <details id="present-options"><summary>Stroke options</summary>
           <p>Optional for pen and highlight. Choose before drawing.</p>
@@ -578,7 +688,7 @@ enum RemotePage {
         </details>
         <p>Your touch position maps to the entire selected display. The ring shows your last touch position; look at the screen to aim. This pad does not show the slide.</p>
         <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch the position matching the selected screen and move to point or draw. The ring shows your last position. Keyboard: move with arrow keys, hold Space to point or draw."><span id="present-dot" aria-hidden="true"></span></div>
-        <div class="present-tools"><button id="present-undo">Undo</button><button id="present-clear">Clear</button></div>
+        <div class="present-tools"><button id="present-undo" data-icon="undo" aria-label="Undo" title="Undo"></button><button id="present-clear" data-icon="remove" aria-label="Clear marks" title="Clear marks"></button></div>
         <p>Laser appears while touching. Pen marks stay until cleared; highlights disappear after about 2.5 seconds. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
       </div>
     </div>
@@ -586,70 +696,45 @@ enum RemotePage {
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard">
         <div class="sheet-head">
           <h2>Keyboard</h2>
-          <button data-close>Done</button>
+          <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <form id="text-form">
-          <label for="text">Type on your Mac</label
-          ><input
-            class="field"
-            id="text"
-            maxlength="1000"
-            autocomplete="off"
-            aria-label="Text to send"
-          /><button>Send text</button>
-        </form>
-        <p>Modifiers apply to the next key.</p>
+        <p>Modifiers apply to the next key or single typed letter or number.</p>
         <div class="modifiers">
           <button data-mod="command" aria-pressed="false">⌘ Command</button
           ><button data-mod="control" aria-pressed="false">⌃ Control</button
           ><button data-mod="option" aria-pressed="false">⌥ Option</button
           ><button data-mod="shift" aria-pressed="false">⇧ Shift</button>
         </div>
-        <form id="key-form">
-          <label for="key-character">Letter or number key</label>
-          <div class="sheet-row">
-            <input
-              class="field"
-              id="key-character"
-              maxlength="1"
-              aria-label="Letter or number key"
-              autocapitalize="off"
-              autocomplete="off"
-            /><button>Send key</button>
-          </div>
-        </form>
         <div class="keygrid">
           <button data-key="escape">Esc</button><button data-key="tab">Tab</button
           ><button data-key="backspace" aria-label="Backspace">⌫</button><button data-key="delete">Delete</button
           ><button data-key="left" aria-label="Left arrow">←</button><button data-key="up" aria-label="Up arrow">↑</button><button data-key="down" aria-label="Down arrow">↓</button
-          ><button data-key="right" aria-label="Right arrow">→</button><button data-key="space">Space</button
-          ><button data-key="enter">Return</button>
+          ><button data-key="right" aria-label="Right arrow">→</button><button data-key="enter">Return</button
+          ><button data-key="space">Space</button>
         </div>
+        <form id="text-form">
+          <label for="text">Type on your Mac</label>
+          <div class="typing-row"><input
+            class="field"
+            id="text"
+            maxlength="1000"
+            autocomplete="off"
+            aria-label="Text to send"
+          /><button data-icon="send" aria-label="Send text" title="Send text"></button></div>
+        </form>
       </div>
     </div>
     <div class="scrim" id="shortcuts-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Shortcuts">
         <div class="sheet-head">
           <h2>Shortcuts</h2>
-          <button data-close>Done</button>
+          <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
+          <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" title="Slideshow controls">Present</button><button id="keyboard-open" data-icon="keyboard" title="Keyboard">Keyboard</button></div>
-        <div class="sheet-row"><button data-icon="apps" data-action="appSwitcher" title="App switcher">Apps</button><button data-icon="fullscreen" data-action="fullscreen" title="Full screen">Full screen</button><button data-icon="search" data-action="spotlight" title="Spotlight search">Spotlight</button></div>
-        <label for="url">Open a website on your Mac</label>
-      <form class="address" id="open-form">
-        <input
-          class="field"
-          id="url"
-          inputmode="url"
-          aria-label="Website address"
-          placeholder="Website address"
-          autocapitalize="off"
-          autocorrect="off"
-          spellcheck="false"
-        /><button>Open</button>
-      </form>
-        <p>Open a saved website or app. Changes are saved on your Mac.</p>
+        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="present" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
+        <div class="shortcut-heading"><span>Saved on your Mac</span><button id="shortcut-edit" data-icon="pen" aria-label="Edit shortcuts" title="Edit shortcuts" aria-pressed="false"></button></div>
         <div id="shortcut-list"></div>
+        <details class="shortcut-add"><summary aria-label="Add shortcut" title="Add shortcut">+</summary>
         <form id="shortcut-form">
           <label for="shortcut-name">Add shortcut</label
           ><input
@@ -668,16 +753,31 @@ enum RemotePage {
           /><select class="field" id="shortcut-kind" aria-label="Shortcut type">
             <option value="url">Website</option>
             <option value="bundleID">Mac app bundle ID</option></select
-          ><button>Add shortcut</button>
+          ><button data-icon="add" aria-label="Add shortcut" title="Add shortcut"></button>
         </form>
+        </details>
+        <label for="url">Open a website or search Google</label>
+      <form class="address" id="open-form">
+        <input
+          class="field"
+          id="url"
+          inputmode="text"
+          enterkeyhint="go"
+          aria-label="Website address or Google search"
+          placeholder="Website address or Google search"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        /><button data-icon="send" aria-label="Open website" title="Open website"></button>
+      </form>
       </div>
     </div>
     <div class="scrim" id="settings-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
-        <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
+        <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-help data-icon="help" aria-label="About and Help" title="About and Help"></button><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
+        <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option></select>
         <h3>Display</h3>
         <label for="display">Jump pointer to display</label><select class="field" id="display"></select>
-        <p>The touchpad can move across all connected displays.</p>
         <div class="settings-actions" role="group" aria-label="Display controls">
           <button data-icon="move-display" data-action="moveWindow" aria-label="Move front window to selected display" title="Move front window to selected display"></button>
           <button id="brightness-down" data-icon="brightness-down" data-action="brightnessDown" aria-label="Decrease Mac brightness" title="Decrease Mac brightness"></button>
@@ -685,8 +785,7 @@ enum RemotePage {
           <button id="screen-off-main" data-icon="screen-off" data-action="screenOff" aria-label="Turn screens off" title="Turn screens off"></button>
           <button id="wake-main" data-icon="wake" data-action="screenOn" aria-label="Wake screens" title="Wake screens"></button>
         </div>
-        <p>Brightness uses Mac keys; external display support varies. Screen off may lock the Mac.</p>
-        <details class="help-disclosure"><summary>About display icons</summary><p>In order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p></details>
+        <p>Screen off may lock your Mac. Wake does not unlock it.</p>
         <h3>Mac controls</h3>
         <div class="settings-actions" role="group" aria-label="Mac controls">
           <button data-icon="desktop" data-action="showDesktop" aria-label="Show desktop" title="Show desktop"></button>
@@ -694,18 +793,14 @@ enum RemotePage {
           <button data-icon="mute" data-action="mute" aria-label="Mute" title="Mute"></button>
           <button class="danger" data-icon="lock" id="lock" aria-label="Lock Mac" title="Lock Mac"></button>
         </div>
-        <details class="help-disclosure"><summary>About Mac control icons</summary><p>In order: show desktop, open Downloads, mute, and lock the Mac.</p></details>
-        <p>Waking does not unlock your Mac. Unlock on the Mac; Apple Watch unlock is a separate macOS setting.</p>
         <h3>Sharing</h3>
         <label class="sheet-row"><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake" /></label>
-        <p>Prevents idle system sleep; the display can still sleep.</p>
         <h3>Paired phones</h3><div id="devices"></div>
-        <h3>Help</h3><div class="settings-actions"><button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button></div>
       </div>
     </div>
     <div class="scrim" id="help-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="About and Help">
-        <div class="sheet-head"><h2>About &amp; Help</h2><button data-close>Done</button></div>
+        <div class="sheet-head"><h2>About &amp; Help</h2><button data-close data-icon="close" aria-label="Close" title="Close"></button></div>
         <p id="app-version">Sofa Remote · connect to see the Mac app version</p>
         <p>Control your Mac from your phone. By Allamaprabhu Ani · Free and open source.</p>
         <nav class="support-icons" aria-label="Support and project links">
@@ -716,6 +811,12 @@ enum RemotePage {
           <a data-icon="heart" href="https://sofa-remote.doublehoney1.chatgpt.site/#support" target="_blank" rel="noopener noreferrer" aria-label="Support this project" title="Support this project"></a>
           <a data-icon="updates" href="https://github.com/allamaprabhuani/sofa-remote/releases" target="_blank" rel="noopener noreferrer" aria-label="Check for updates and release notes" title="Check for updates and release notes"></a>
         </nav>
+        <details class="help-disclosure"><summary>Remote and settings icons</summary>
+          <p>The mouse icon is right click and the hand toggles drag. Playback and volume follow below. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
+          <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
+          <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
+          <p>Appearance is saved on this phone. The touchpad moves across connected displays. Brightness uses Mac keys and external display support varies. Keeping the Mac awake prevents idle system sleep, but displays can still sleep. Wake does not unlock the Mac; unlock on the Mac, or use Apple Watch unlock if configured.</p>
+        </details>
         <details class="help-disclosure"><summary>Setup and connection help</summary>
         <p id="signing-help">Signing: Unknown. Signing type alone does not verify Developer ID or notarisation.</p>
         <p>Allow Accessibility in the Mac app, show its pairing code and scan the QR with your phone Camera. In Safari, use Share → Add to Home Screen. For connection or permission problems, follow the setup guide below.</p>
@@ -740,7 +841,7 @@ enum RemotePage {
         <p>Preview before copying. Only app, macOS and browser versions, signing type and permission/sharing status are included. No typed text, tokens, personal URLs, screenshots, Mac names or network addresses. Nothing is uploaded automatically.</p>
         <label for="diagnostics">Review diagnostic summary</label>
         <textarea class="field" id="diagnostics" readonly spellcheck="false"></textarea>
-        <button id="copy-diagnostics" data-icon="copy" title="Copy diagnostic summary">Copy diagnostic summary</button>
+        <button id="copy-diagnostics" data-icon="copy" aria-label="Copy diagnostic summary" title="Copy diagnostic summary"></button>
         <p id="copy-result" role="status" aria-live="polite"></p>
         </details>
       </div>
@@ -766,9 +867,9 @@ enum RemotePage {
           maxlength="60"
           placeholder="Phone name (optional)"
           aria-label="Phone name"
-        /><button class="primary" id="pair-button">Pair</button>
+        /><button class="primary" id="pair-button" data-icon="send" aria-label="Pair" title="Pair"></button>
         <p class="error" id="pair-error" role="status"></p>
-        <button data-help data-icon="help" title="About and Help">About &amp; Help</button>
+        <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
       </div>
     </div>
     <div id="locked" role="dialog" aria-modal="true" aria-labelledby="locked-title">
@@ -778,9 +879,9 @@ enum RemotePage {
           Mac is locked, using secure text input, or paused. Unlock the Mac and choose Resume input in Sofa
           Remote on the Mac if needed.
         </p>
-        <button class="primary" data-icon="wake" id="wake" title="Wake displays">Wake screen</button>
+        <button class="primary" data-icon="wake" id="wake" aria-label="Wake screen" title="Wake screen"></button>
         <p id="locked-error" role="status"></p>
-        <button data-help data-icon="help" title="About and Help">About &amp; Help</button>
+        <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
       </div>
     </div>
     <script>
@@ -799,8 +900,18 @@ enum RemotePage {
         button.prepend(svg);
       }
       $$('[data-icon]').forEach(addIcon);
-      // Retire old appearance preferences; they never affect pairing or shortcuts.
-      try { localStorage.removeItem("sofaTheme"); localStorage.removeItem("sofaColour"); } catch {}
+      // Older appearance preferences remain untouched for reversible migration.
+      function applyAppearance(value) {
+        const appearance = ["soft", "velvet", "paper"].includes(value) ? value : "soft";
+        document.documentElement.dataset.appearance = appearance;
+        $("#appearance").value = appearance;
+        $("meta[name=theme-color]").content = {soft:"#111214", velvet:"#191417", paper:"#f6f3ec"}[appearance];
+      }
+      try { applyAppearance(localStorage.getItem("sofaAppearance")); } catch { applyAppearance("soft"); }
+      $("#appearance").onchange = (event) => {
+        applyAppearance(event.target.value);
+        try { localStorage.setItem("sofaAppearance", document.documentElement.dataset.appearance); } catch {}
+      };
       const storage = {
         get() {
           try {
@@ -927,6 +1038,7 @@ enum RemotePage {
         else sheet.append(note);
       });
       function showPair() {
+        $("#connection").dataset.connected = "false";
         stopPresenting();
         supportState = null;
         updateSupport();
@@ -1188,6 +1300,7 @@ enum RemotePage {
         command({ type: "drag", phase: "end" });
       }
       const pad = $("#pad"),
+        touchSurface = $("main"),
         fingers = new Map();
       pad.addEventListener("keydown", (e) => {
         if (e.target !== pad || document.activeElement !== pad || locked || !key || document.hidden || activeOverlay()
@@ -1204,7 +1317,9 @@ enum RemotePage {
       });
       let travel = 0,
         down = 0,
-        multi = false;
+        multi = false,
+        beganOnPad = false,
+        swipeClickGuard = null;
       const pointerFraction = { dx: 0, dy: 0 };
       // CSS touch-action handles modern browsers. This local fallback suppresses only
       // the default browser action of a short one-finger pad tap on older Safari.
@@ -1231,18 +1346,19 @@ enum RemotePage {
             && Date.now() - tap.started < 300 && e.cancelable) e.preventDefault();
       }, { passive: false });
       pad.addEventListener("touchcancel", () => { padTouchSequence = null; }, { passive: true });
-      pad.addEventListener("pointerdown", (e) => {
-        if (locked) return;
-        pad.setPointerCapture(e.pointerId);
+      touchSurface.addEventListener("pointerdown", (e) => {
+        if (locked || activeOverlay() || e.target.closest('.guide-content, #connection-help') || (e.pointerType === "mouse" && !pad.contains(e.target))) return;
+        if (pad.contains(e.target)) pad.setPointerCapture(e.pointerId);
         if (!fingers.size) {
           travel = 0;
           down = Date.now();
           multi = false;
+          beganOnPad = pad.contains(e.target);
         }
-        fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        fingers.set(e.pointerId, { x: e.clientX, y: e.clientY, origin: e.target.closest('button, summary, a') });
         if (fingers.size > 1) multi = true;
       });
-      pad.addEventListener("pointermove", (e) => {
+      touchSurface.addEventListener("pointermove", (e) => {
         const f = fingers.get(e.pointerId);
         if (!f || locked) return;
         let dx = e.clientX - f.x,
@@ -1250,13 +1366,18 @@ enum RemotePage {
         f.x = e.clientX;
         f.y = e.clientY;
         travel += Math.abs(dx) + Math.abs(dy);
+        if (travel >= 8) {
+          touchSurface.classList.add("is-pointing");
+          if (f.origin) swipeClickGuard = { target: f.origin, until: Date.now() + 500 };
+          if (!beganOnPad && !touchSurface.hasPointerCapture(e.pointerId)) touchSurface.setPointerCapture(e.pointerId);
+        }
         dx = Math.max(-300, Math.min(300, dx));
         dy = Math.max(-300, Math.min(300, dy));
         if (fingers.size > 1) {
           if (drag) endDrag();
           command({ type: "scroll", dx: -dx / fingers.size, dy: -dy / fingers.size });
         } else {
-          // Match Mac TV's touchpad feel and preserve small movements across samples.
+          // Preserve small movements across samples while applying pointer gain.
           const gain = 1.6 + Math.min(Math.hypot(dx, dy) / 6, 3);
           pointerFraction.dx += dx * gain;
           pointerFraction.dy += dy * gain;
@@ -1277,21 +1398,30 @@ enum RemotePage {
       }
       function lift(e) {
         if (!fingers.delete(e.pointerId)) return;
+        if (!fingers.size || e.type !== "pointerup") $("main").classList.remove("is-pointing");
         if (e.type !== "pointerup") {
           fingers.clear();
+          $("main").classList.remove("is-pointing");
           dropQueuedMotion();
           endDrag();
           return;
         }
         // Ordinary lift flushes: queued motion stays queued, click is appended after it.
-        if (!fingers.size && !multi && !drag && travel < 8 && Date.now() - down < 300)
+        if (!fingers.size && beganOnPad && !multi && !drag && travel < 8 && Date.now() - down < 300)
           command({ type: "tap" });
       }
-      pad.addEventListener("pointerup", lift);
-      pad.addEventListener("pointercancel", lift);
-      pad.addEventListener("lostpointercapture", (e) => {
+      touchSurface.addEventListener("pointerup", lift);
+      touchSurface.addEventListener("pointercancel", lift);
+      touchSurface.addEventListener("click", (e) => {
+        if (e.detail && swipeClickGuard && Date.now() < swipeClickGuard.until && swipeClickGuard.target.contains(e.target)) {
+          e.preventDefault(); e.stopImmediatePropagation();
+        }
+        swipeClickGuard = null;
+      }, true);
+      touchSurface.addEventListener("lostpointercapture", (e) => {
         if (fingers.has(e.pointerId)) {
           fingers.clear();
+          $("main").classList.remove("is-pointing");
           dropQueuedMotion();
           endDrag();
         }
@@ -1321,34 +1451,28 @@ enum RemotePage {
           }),
       );
       function sendKey(key) {
-        command({ type: "key", key, modifiers: [...modifiers] });
+        const pending = command({ type: "key", key, modifiers: [...modifiers] });
         modifiers.clear();
         $$("[data-mod]").forEach((x) => {
           x.classList.remove("on");
           x.setAttribute("aria-pressed", "false");
         });
+        return pending;
       }
       $$("[data-key]").forEach((b) => (b.onclick = () => sendKey(b.dataset.key)));
-      $("#key-form").onsubmit = (e) => {
-        e.preventDefault();
-        const input = $("#key-character"),
-          value = input.value.toLowerCase();
-        if (!/^[a-z0-9]$/.test(value)) {
-          status("Enter one letter or number.", true);
-          return;
-        }
-        sendKey(value);
-        input.value = "";
-      };
       $("#text-form").onsubmit = async (e) => {
         e.preventDefault();
         const input = $("#text"),
           value = input.value,
           button = e.currentTarget.querySelector("button");
         if (!value || locked || button.disabled) return;
+        if (modifiers.size && !/^[a-z0-9]$/i.test(value)) {
+          status("With a modifier, enter one letter or number, or use a key below.", true);
+          return;
+        }
         button.disabled = true;
         try {
-          const sent = await command({ type: "text", value: value.slice(0, 1000) });
+          const sent = modifiers.size ? await sendKey(value.toLowerCase()) : await command({ type: "text", value: value.slice(0, 1000) });
           if (sent && input.value === value) input.value = "";
           else if (!sent && !key) status("Pair with your Mac, then send the text again.", true, "runtime");
           else if (!sent && statusKind !== "runtime" && statusKind !== "permission")
@@ -1530,7 +1654,7 @@ enum RemotePage {
           result.textContent = "Automatic copy is unavailable on this connection. Touch and hold the selected summary, then choose Copy.";
         }
       };
-      $("#reconnect").onclick = () => { $("#connection").textContent = "Reconnecting…"; refresh(); };
+      $("#reconnect").onclick = () => { $("#connection").dataset.connected = "false"; $("#connection").textContent = "Reconnecting…"; refresh(); };
       async function mutate(path, body) {
         if (changing || locked) return;
         changing = true;
@@ -1550,8 +1674,11 @@ enum RemotePage {
       }
       $("#open-form").onsubmit = async (e) => {
         e.preventDefault();
-        const url = $("#url").value.trim();
-        if (!url || locked) return;
+        const input = $("#url").value.trim();
+        if (!input || locked) return;
+        // Explicit schemes are sent to the Mac's strict URL validator, not treated as search.
+        const address = /^(?:[a-z][a-z0-9+.-]*:\/\/|(?:https?|javascript|data|file|ftp|about):)/i.test(input) || /^(?:localhost|[^\s/:]+\.[^\s/:]+)(?::\d+)?(?:[/?#]|$)/i.test(input);
+        const url = address ? input : "https://www.google.com/search?q=" + encodeURIComponent(input);
         const button = e.currentTarget.querySelector("button");
         if (button.disabled) return;
         button.disabled = true;
@@ -1577,6 +1704,10 @@ enum RemotePage {
           $("#shortcut-value").value = "";
         }
       };
+      $("#shortcut-edit").onclick = (e) => {
+        const editing = $("#shortcut-list").classList.toggle("editing");
+        e.currentTarget.setAttribute("aria-pressed", String(editing));
+      };
       function renderShortcuts() {
         const list = $("#shortcut-list");
         list.replaceChildren();
@@ -1589,13 +1720,14 @@ enum RemotePage {
           const icon = document.createElement("span");
           icon.className = "shortcut-initial";
           icon.setAttribute("aria-hidden", "true");
-          if (item.kind === "downloads") {
+          const knownIcon = item.kind === "downloads" ? "folder" : ({ brave: "brave", "brave browser": "brave", iina: "play-pause" })[name.trim().toLowerCase()];
+          if (knownIcon) {
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("class", "control-icon");
             svg.setAttribute("viewBox", "0 0 24 24");
             svg.setAttribute("focusable", "false");
             const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-            use.setAttribute("href", "#icon-folder"); svg.append(use); icon.append(svg);
+            use.setAttribute("href", "#icon-" + knownIcon); svg.append(use); icon.append(svg);
           } else {
             icon.textContent = (Array.from(name.trim())[0] || "•").toUpperCase();
           }
@@ -1697,6 +1829,7 @@ enum RemotePage {
             locked = !!s.sessionLocked;
             if (locked) {
               fingers.clear();
+              $("main").classList.remove("is-pointing");
               stopPresenting();
               drag = false;
               clearInterval(dragHeartbeat);
@@ -1717,6 +1850,7 @@ enum RemotePage {
             else if (!locked && wasLocked && !activeOverlay()) $("#settings-open").focus();
             const appName = typeof s.frontApp === "string" ? s.frontApp.trim() : "";
             $("#connection").textContent = "Connected" + (s.name ? ` · ${s.name}` : "") + (appName ? ` · ${appName}` : "");
+            $("#connection").dataset.connected = "true";
             permissionMissing = s.accessibility === false;
             if (permissionMissing)
               status("Allow Accessibility access for Sofa Remote on your Mac.", true, "permission");
@@ -1753,6 +1887,7 @@ enum RemotePage {
             $("#awake").checked = !!s.keepAwake;
             return true;
           } catch (e) {
+            $("#connection").dataset.connected = "false";
             if (e.message !== "unpaired") {
               $("#connection").textContent = "Disconnected · try reconnecting";
               $("#connection-help").hidden = false;
@@ -1772,6 +1907,7 @@ enum RemotePage {
         if (document.visibilityState === "visible") refresh();
         else {
           fingers.clear();
+          $("main").classList.remove("is-pointing");
           stopPresenting();
           dropQueuedMotion();
           endDrag();
@@ -1779,6 +1915,7 @@ enum RemotePage {
       });
       window.addEventListener("pagehide", () => {
         fingers.clear();
+        $("main").classList.remove("is-pointing");
         stopPresenting();
         dropQueuedMotion();
         endDrag();

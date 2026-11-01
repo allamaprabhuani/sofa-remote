@@ -1,5 +1,20 @@
 # Changelog
 
+## Certificate preview beta 9 — build 26
+
+- Show the Brave icon and request a new window when its app is already running.
+- Search Google from the address field and place the typing send button beside the field.
+- Simplify saved shortcut icons and move reordering to edit mode; group website entry below.
+- Remove the duplicate keyboard key field and move typing to the bottom while retaining modifier shortcuts.
+- Simplify the Shortcuts and Settings panels while keeping safety guidance available.
+- Put Keyboard in the bottom navigation and use the system font across phone appearances.
+- Allow a swipe to begin over any main remote control or empty space without triggering the underlying button.
+- Remove decorative lines and refine the title.
+
+## Certificate preview beta 8 — build 19
+
+- Add Velvet Cinema, Paper & Ink and Soft Machine appearances with borderless icon controls and accessible names.
+
 ## Certificate preview beta 7 — build 18
 
 - Add presenter controls with previous/next, end slideshow, a laser, coloured pen and automatically disappearing highlighter on a chosen display.
