@@ -141,11 +141,13 @@ async function main() {
   assert.equal(heartbeat[0].phase,'start');
   assert.ok(heartbeat.some(x=>x.phase==='move'&&x.dx===0&&x.dy===0),'stationary drag sends heartbeat');
   assert.equal(heartbeat.at(-1).phase,'end','hidden page ends held drag');
+  const websiteEntry=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();return {visible:document.querySelector('#open-form').getClientRects().length>0,insideShortcuts:!!document.querySelector('#open-form').closest('#shortcuts-sheet'),onMain:!!document.querySelector('#open-form').closest('main')}})()`);
+  assert.deepEqual(websiteEntry,{visible:true,insideShortcuts:true,onMain:false},'website entry is available in Shortcuts without crowding the touchpad');
   const features=await evaluate(`(async()=>{
     calls.length=0;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     document.querySelector('#url').value='https://example.org';document.querySelector('#open-form').requestSubmit();await sleep(10);
     document.querySelector('#shortcut-name').value='Example';document.querySelector('#shortcut-value').value='https://example.org';document.querySelector('#shortcut-form').requestSubmit();await sleep(20);
-    document.querySelector('#display').dispatchEvent(new Event('change',{bubbles:true}));await sleep(20);
+    closeSheet();document.querySelector('#display').dispatchEvent(new Event('change',{bubbles:true}));await sleep(20);
     document.querySelector('[data-mod="command"]').click();document.querySelector('#key-character').value='a';document.querySelector('#key-form').requestSubmit();await sleep(10);
     document.querySelector('#lock').click();await sleep(10);
     return calls.filter(x=>x.path!=='/state').map(x=>({path:x.path,body:x.body}));

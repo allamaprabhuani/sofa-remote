@@ -59,8 +59,7 @@ private typealias ViewState<Value> = SwiftUI.State<Value>
     }
     @objc private func show() {
         if window == nil {
-            let view = SetupView(model: model, showHelp: { [weak self] in self?.showHelp() },
-                                 showPractice: { [weak self] in self?.showPractice() })
+            let view = SetupView(model: model, showHelp: { [weak self] in self?.showHelp() })
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 720),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             window.title = "Sofa Remote"
@@ -113,7 +112,7 @@ private typealias ViewState<Value> = SwiftUI.State<Value>
     @objc private func checkUpdates() { NSWorkspace.shared.open(SupportInfo.releases) }
     @objc private func showHelp() {
         if helpWindow == nil {
-            let view = AboutHelpView(model: model)
+            let view = AboutHelpView(model: model, showPractice: { [weak self] in self?.showPractice() })
             let panel = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 580, height: 690),
                                  styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             panel.title = "About & Help — Sofa Remote"
@@ -165,8 +164,6 @@ private typealias ViewState<Value> = SwiftUI.State<Value>
 private struct SetupView: View {
     @ObservedObject var model: AppModel
     let showHelp: () -> Void
-    let showPractice: () -> Void
-    @ViewState<Bool> private var setupExpanded = false
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -174,20 +171,15 @@ private struct SetupView: View {
                     Image(systemName: "cursorarrow.rays").font(.system(size: 36)).foregroundStyle(.blue)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Sofa Remote").font(.largeTitle.bold())
-                        Text("Your phone is the mouse and keyboard. Your Mac does the playing.")
+                        Text("Control your Mac from your phone.")
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text("Input only · No screen capture · No ads or accounts").font(.caption).foregroundStyle(.secondary)
                 HStack {
                     Text(SupportInfo.versionLabel).font(.caption).foregroundStyle(.secondary)
                     Spacer()
                     Button("About & Help…", action: showHelp)
                 }
-                DisclosureGroup("Quick setup and connection help", isExpanded: $setupExpanded) {
-                    SetupInstructions(showPractice: showPractice).padding(.top, 8)
-                }
-
                 HStack {
                     Label(model.sharing ? "Sharing\(model.port.map { " on port \($0)" } ?? "…")" : "Sharing stopped",
                           systemImage: model.sharing ? "circle.fill" : "circle")
@@ -217,7 +209,7 @@ private struct SetupView: View {
                 }
                 GroupBox("Pair your phone") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Use a trusted home network. Direct Wi-Fi HTTP is unencrypted; the Tailscale link uses your encrypted tailnet. Each paired phone can control your desktop.")
+                        Text("Use a trusted network. Local HTTP is unencrypted; paired phones can control this Mac.")
                             .font(.callout).foregroundStyle(.secondary)
                         if let code = model.pairingCode {
                             Text(code).font(.system(size: 34, weight: .semibold, design: .monospaced)).textSelection(.enabled)
@@ -243,37 +235,43 @@ private struct SetupView: View {
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }
-                GroupBox("Paired phones") {
-                    VStack(alignment: .leading, spacing: 10) {
-                        if model.devices.isEmpty { Text("No paired phones yet.").foregroundStyle(.secondary) }
-                        ForEach(model.devices, id: \.id) { device in
-                            HStack { Text(device.name); Spacer(); Button("Remove") { model.revoke(device.id) }.accessibilityLabel("Remove paired phone \(device.name)") }
-                        }
+                if !model.devices.isEmpty {
+                    GroupBox("Paired phones") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(model.devices, id: \.id) { device in
+                                HStack { Text(device.name); Spacer(); Button("Remove") { model.revoke(device.id) }.accessibilityLabel("Remove paired phone \(device.name)") }
+                            }
+                        }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
+                    }
+                }
+                GroupBox("Preferences") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("Keep Mac awake while sharing", isOn: Binding(get: { model.keepAwake }, set: {
+                            do { try model.setKeepAwake($0) } catch { model.message = "Could not save the keep-awake setting." }
+                        }))
+                        Text("Prevents Mac sleep while sharing. Displays can still sleep.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Toggle("Show menu-bar icon", isOn: Binding(get: { model.showMenuBarIcon }, set: { value in
+                            do { try model.setShowMenuBarIcon(value) }
+                            catch { model.message = "Could not save menu-bar visibility." }
+                        }))
+                        Text("Open Sofa Remote from Applications to restore a hidden icon.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Toggle("Open at login", isOn: Binding(get: { SMAppService.mainApp.status == .enabled || SMAppService.mainApp.status == .requiresApproval }, set: { value in
+                            do {
+                                if value { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+                                model.message = SMAppService.mainApp.status == .requiresApproval ? "Allow Sofa Remote in System Settings → General → Login Items." : ""
+                            } catch { model.message = "Could not change login item: \(error.localizedDescription)" }
+                        }))
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }
-                Toggle("Keep Mac awake while sharing", isOn: Binding(get: { model.keepAwake }, set: {
-                    do { try model.setKeepAwake($0) } catch { model.message = "Could not save the keep-awake setting." }
-                }))
-                Text("Allows display sleep. The Mac must stay awake for the phone to reach it.").font(.caption).foregroundStyle(.secondary)
-                Toggle("Show menu-bar icon", isOn: Binding(get: { model.showMenuBarIcon }, set: { value in
-                    do { try model.setShowMenuBarIcon(value) }
-                    catch { model.message = "Could not save menu-bar visibility." }
-                }))
-                Text("Hiding the icon keeps sharing running. Open Sofa Remote from Applications to return here and restore it; Stop sharing or Quit ends access.")
-                    .font(.caption).foregroundStyle(.secondary)
-                Toggle("Open at login", isOn: Binding(get: { SMAppService.mainApp.status == .enabled || SMAppService.mainApp.status == .requiresApproval }, set: { value in
-                    do {
-                        if value { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-                        model.message = SMAppService.mainApp.status == .requiresApproval ? "Allow Sofa Remote in System Settings → General → Login Items." : ""
-                    } catch { model.message = "Could not change login item: \(error.localizedDescription)" }
-                }))
                 if !model.message.isEmpty { Text(model.message).font(.callout).textSelection(.enabled) }
                 Divider()
-                Text("Free and open source · MIT licence\nClosing this window keeps sharing running. Stop sharing or Quit closes the listener.")
+                Text("Closing this window keeps sharing running. Stop sharing or Quit ends access.")
                     .font(.caption).foregroundStyle(.secondary)
                 Button("Quit Sofa Remote") { NSApp.terminate(nil) }
             }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
-        }.onAppear { setupExpanded = model.devices.isEmpty }
+        }
     }
 }
 
@@ -313,6 +311,9 @@ private struct PracticeView: View {
 
 private struct AboutHelpView: View {
     @ObservedObject var model: AppModel
+    let showPractice: () -> Void
+    @ViewState<Bool> private var setupExpanded = false
+    @ViewState<Bool> private var appeared = false
     @ViewState<String> private var summary = ""
     @ViewState<Bool> private var copied = false
     var body: some View {
@@ -321,10 +322,11 @@ private struct AboutHelpView: View {
                 Text("Sofa Remote").font(.largeTitle.bold())
                 Text(SupportInfo.versionLabel).textSelection(.enabled)
                 Text("By \(SupportInfo.developer) · Free and open source")
-                Text("Your phone is the mouse and keyboard. Your Mac does the playing.")
+                DisclosureGroup("Setup and connection help", isExpanded: $setupExpanded) {
+                    SetupInstructions(showPractice: showPractice).padding(.top, 8)
+                }
                 GroupBox("Help and feedback") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Link("Setup and troubleshooting", destination: SupportInfo.setup)
                         Link("Report a bug", destination: SupportInfo.bugReport)
                         Link("Suggest a feature", destination: SupportInfo.featureRequest)
                         Link("Questions and developer contact", destination: SupportInfo.discussions)
@@ -333,9 +335,9 @@ private struct AboutHelpView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }
-                GroupBox("Diagnostic summary — review before copying") {
+                GroupBox("Diagnostic summary") {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Contains only versions, architecture and permission/sharing status. No typed text, tokens, personal URLs, computer or phone names, screenshots or input history. Nothing is uploaded.")
+                        Text("Versions, architecture and permission/sharing status only. No input, tokens, personal URLs, names or screenshots. Nothing is uploaded.")
                             .font(.callout)
                         if !summary.isEmpty {
                             Text(summary).font(.system(.callout, design: .monospaced))
@@ -350,7 +352,7 @@ private struct AboutHelpView: View {
                                 copied = NSPasteboard.general.setString(summary, forType: .string)
                             }.disabled(summary.isEmpty)
                         }
-                        Text("Review this preview, copy it, then paste it into your report if you choose.")
+                        Text("Review the preview before copying it into a report.")
                             .font(.caption).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }
@@ -371,6 +373,11 @@ private struct AboutHelpView: View {
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }
             }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+        }.onAppear {
+            if !appeared {
+                setupExpanded = model.devices.isEmpty
+                appeared = true
+            }
         }
     }
     private func refreshSummary() {

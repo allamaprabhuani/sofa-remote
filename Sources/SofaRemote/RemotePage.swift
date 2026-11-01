@@ -381,18 +381,6 @@ enum RemotePage {
         ><button class="icon" id="shortcuts-open" aria-label="Shortcuts">▦</button
         ><button class="icon" id="settings-open" aria-label="Settings">⚙</button>
       </header>
-      <form class="address" id="open-form">
-        <input
-          class="field"
-          id="url"
-          inputmode="url"
-          aria-label="Website address"
-          placeholder="Open a website…"
-          autocapitalize="off"
-          autocorrect="off"
-          spellcheck="false"
-        /><button>Go</button>
-      </form>
       <div
         id="pad"
         role="group"
@@ -400,7 +388,7 @@ enum RemotePage {
         aria-label="Touchpad. Drag to move, tap to click, use two fingers to scroll. With a keyboard, use arrow keys to move and Enter or Space to click."
       >
         <span class="pad-title">Touchpad</span
-        ><span class="hint">Move · tap · two fingers scroll · spans all displays</span>
+        ><span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
       <div class="row clicks">
         <button id="right">Right click</button><button id="double">Double click</button
@@ -475,6 +463,19 @@ enum RemotePage {
           <h2>Shortcuts</h2>
           <button data-close>Done</button>
         </div>
+        <label for="url">Open a website on your Mac</label>
+      <form class="address" id="open-form">
+        <input
+          class="field"
+          id="url"
+          inputmode="url"
+          aria-label="Website address"
+          placeholder="Website address"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        /><button>Open</button>
+      </form>
         <p>Open a saved website or app. Changes are saved on your Mac.</p>
         <div id="shortcut-list"></div>
         <form id="shortcut-form">
@@ -535,17 +536,8 @@ enum RemotePage {
       <div class="sheet" role="dialog" aria-modal="true" aria-label="About and Help">
         <div class="sheet-head"><h2>About &amp; Help</h2><button data-close>Done</button></div>
         <p id="app-version">Sofa Remote · connect to see the Mac app version</p>
-        <p>By Allamaprabhu Ani. Free and open source under the MIT licence. Your phone is the mouse and keyboard; your Mac does the playing.</p>
-        <h3>Get started</h3>
-        <ol>
-          <li>On your Mac, open Sofa Remote and allow it in System Settings → Privacy &amp; Security → Accessibility.</li>
-          <li>Choose Show pairing code, then scan its QR code with your phone Camera. Use the same trusted Wi-Fi or your own Tailscale network.</li>
-          <li>Slide one finger to move the pointer. Tap to click; use two fingers to scroll. With a hardware keyboard, focus the touchpad and use arrow keys to move, Enter or Space to click. Try clicking a harmless area on your Mac. Drag is a toggle: turn it off to release.</li>
-          <li>In iPhone Safari, use Share → Add to Home Screen. The shortcut opens this Mac's address; rescan if its address changes.</li>
-        </ol>
-        <h3>Connection and permissions</h3>
-        <p>If input is unavailable, allow Accessibility on the Mac. After a manual lock or secure text input, unlock on the Mac and choose Resume input there. Wake screen does not unlock or start a sleeping Mac.</p>
-        <p>For connection problems, keep the Mac awake, start sharing, check the network and scan its current QR code. Reload this page after upgrading the Mac app. Guest Wi-Fi may block devices from reaching each other.</p>
+        <p>Control your Mac from your phone. By Allamaprabhu Ani · Free and open source.</p>
+        <p>Allow Accessibility in the Mac app, show its pairing code and scan the QR with your phone Camera. In Safari, use Share → Add to Home Screen. For connection or permission problems, follow the setup guide below.</p>
         <h3>Privacy</h3>
         <p>No screen streaming, analytics, ads or accounts. Paired phones can control your desktop. Direct local HTTP is unencrypted; use a trusted network or your own Tailscale connection. Stop sharing or revoke a phone on your Mac when needed.</p>
         <nav class="help-links" aria-label="Support and project links">

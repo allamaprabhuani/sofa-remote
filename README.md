@@ -2,7 +2,7 @@
 
 # Sofa Remote
 
-**Your iPhone is the mouse and keyboard. Your Mac does the playing.**
+Control your Mac from your phone.
 
 A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen streaming, Screen Recording permission, accounts, ads, analytics, subscriptions or cloud relay. Keep using your existing browser, Finder and player.
 
