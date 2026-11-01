@@ -6,9 +6,9 @@ Control your Mac from your phone.
 
 A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen streaming, Screen Recording permission, accounts, ads, analytics, subscriptions or cloud relay. Keep using your existing browser, Finder and player.
 
-[Website](https://allamaprabhuani.github.io/sofa-remote/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.5) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
+[Website](https://sofa-remote.doublehoney1.chatgpt.site/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.6) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
 
-**Beta software, macOS 14 or later, Apple silicon and Intel.** Downloads are ad-hoc signed, **not Developer ID notarised**; macOS may block first launch. See the [installation guide](docs/SETUP.md). Direct LAN HTTP is **unencrypted**: use a trusted private network or your own Tailscale connection. Never forward its port to the internet. See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
+**Beta software, macOS 14 or later, Apple silicon and Intel.** Current preview downloads are certificate-signed, **not Apple-verified or Developer ID notarised**; macOS may block first launch. See the [installation guide](docs/SETUP.md). Direct LAN HTTP is **unencrypted**: use a trusted private network or your own Tailscale connection. Never forward its port to the internet. See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
 ## What it does
 
@@ -33,7 +33,17 @@ The Mac must be awake and reachable. Wake screen does not wake a sleeping Mac, p
 
 See [the step-by-step setup and recovery guide](docs/SETUP.md) for permissions, reconnecting, displays and power. Closing the Mac window keeps sharing running; **Stop sharing** or **Quit** ends remote access. Hiding the menu-bar icon does not stop sharing.
 
+## Homebrew
+
+```sh
+brew install --cask allamaprabhuani/tap/sofa-remote
+```
+
+This uses our [independent tap](https://github.com/allamaprabhuani/homebrew-tap), not the official Homebrew catalogue. It installs the same certificate-signed, unnotarised preview. Homebrew does not bypass Gatekeeper; review the [setup instructions](docs/SETUP.md). Quit Sofa Remote before `brew upgrade --cask allamaprabhuani/tap/sofa-remote`. Keep the existing signing key for locally built updates.
+
 ## Build from source
+
+Set up a persistent signing identity once using the [free local signing guide](docs/SIGNING.md). This keeps the identity consistent across local updates; ad-hoc builds cannot do that.
 
 Requires a current Swift toolchain/Apple command-line tools. There are no package dependencies, npm install or iOS build. A paid developer account is not needed for a local build.
 

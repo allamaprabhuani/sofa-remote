@@ -1,4 +1,4 @@
-name: Publish preview or release
+name: Publish signed release
 on:
   push:
     tags: ['v*']
@@ -10,23 +10,96 @@ concurrency:
 jobs:
   release:
     runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      SOFA_PUBLIC_RELEASE: '1'
+      SOFA_TEAM_ID: ${{ vars.SOFA_TEAM_ID }}
+      SOFA_NOTARY_PROFILE: sofa-release
     steps:
+      - name: Require publisher signing credentials before compiling
+        env:
+          SOFA_SIGN_P12_BASE64: ${{ secrets.SOFA_SIGN_P12_BASE64 }}
+          SOFA_SIGN_P12_PASSWORD: ${{ secrets.SOFA_SIGN_P12_PASSWORD }}
+          SOFA_SIGN_IDENTITY: ${{ secrets.SOFA_SIGN_IDENTITY }}
+          SOFA_NOTARY_API_KEY_BASE64: ${{ secrets.SOFA_NOTARY_API_KEY_BASE64 }}
+          SOFA_NOTARY_KEY_ID: ${{ secrets.SOFA_NOTARY_KEY_ID }}
+          SOFA_NOTARY_ISSUER_ID: ${{ secrets.SOFA_NOTARY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for required in SOFA_SIGN_P12_BASE64 SOFA_SIGN_P12_PASSWORD SOFA_SIGN_IDENTITY SOFA_NOTARY_API_KEY_BASE64 SOFA_NOTARY_KEY_ID SOFA_NOTARY_ISSUER_ID SOFA_TEAM_ID; do
+            if [ -z "${!required}" ]; then
+              echo "::error::Missing required signing configuration: $required"
+              exit 1
+            fi
+          done
+          [[ "$SOFA_TEAM_ID" =~ ^[A-Z0-9]{10}$ ]] || { echo '::error::Invalid publisher Team ID.'; exit 1; }
+          test "$SOFA_SIGN_IDENTITY" != '-'
+          {
+            printf 'SOFA_SIGN_KEYCHAIN=%s/sofa-release.keychain-db\n' "$RUNNER_TEMP"
+            printf 'SOFA_BUILD_DIR=%s/sofa-release-build\n' "$RUNNER_TEMP"
+            printf 'SOFA_RELEASE_SECRETS_DIR=%s/sofa-release-secrets\n' "$RUNNER_TEMP"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Test and build
+      - name: Prepare isolated signing keychain
+        env:
+          SOFA_SIGN_P12_BASE64: ${{ secrets.SOFA_SIGN_P12_BASE64 }}
+          SOFA_SIGN_P12_PASSWORD: ${{ secrets.SOFA_SIGN_P12_PASSWORD }}
+          SOFA_NOTARY_API_KEY_BASE64: ${{ secrets.SOFA_NOTARY_API_KEY_BASE64 }}
+          SOFA_NOTARY_KEY_ID: ${{ secrets.SOFA_NOTARY_KEY_ID }}
+          SOFA_NOTARY_ISSUER_ID: ${{ secrets.SOFA_NOTARY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir "$SOFA_RELEASE_SECRETS_DIR"
+          python3 - <<'PY'
+          import base64, os
+          from pathlib import Path
+          folder = Path(os.environ['SOFA_RELEASE_SECRETS_DIR'])
+          for variable, filename in [('SOFA_SIGN_P12_BASE64', 'signing.p12'), ('SOFA_NOTARY_API_KEY_BASE64', 'notary.p8')]:
+              try:
+                  value = base64.b64decode(os.environ[variable], validate=True)
+                  if not value:
+                      raise ValueError()
+              except (ValueError, KeyError):
+                  raise SystemExit('Invalid signing credential encoding; no credentials were printed.')
+              descriptor = os.open(folder / filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+              with os.fdopen(descriptor, 'wb') as output:
+                  output.write(value)
+          PY
+          signing_password="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          security create-keychain -p "$signing_password" "$SOFA_SIGN_KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$SOFA_SIGN_KEYCHAIN"
+          security unlock-keychain -p "$signing_password" "$SOFA_SIGN_KEYCHAIN"
+          security import "$SOFA_RELEASE_SECRETS_DIR/signing.p12" -k "$SOFA_SIGN_KEYCHAIN" -P "$SOFA_SIGN_P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security >/dev/null
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$signing_password" "$SOFA_SIGN_KEYCHAIN" >/dev/null
+          xcrun notarytool store-credentials "$SOFA_NOTARY_PROFILE" --keychain "$SOFA_SIGN_KEYCHAIN" --key "$SOFA_RELEASE_SECRETS_DIR/notary.p8" --key-id "$SOFA_NOTARY_KEY_ID" --issuer "$SOFA_NOTARY_ISSUER_ID" --validate >/dev/null
+          rm -f "$SOFA_RELEASE_SECRETS_DIR/signing.p12" "$SOFA_RELEASE_SECRETS_DIR/notary.p8"
+      - name: Test, sign and notarise public packages
+        env:
+          SOFA_SIGN_IDENTITY: ${{ secrets.SOFA_SIGN_IDENTITY }}
         run: |
           ./scripts/test.sh
           ./build.sh
           ./scripts/package-release.sh
+          ./scripts/verify-signing.sh --mode release --app 'build/Sofa Remote.app' --team "$SOFA_TEAM_ID"
           lipo -archs 'build/Sofa Remote.app/Contents/MacOS/SofaRemote'
-      - name: Publish GitHub assets
+          (cd build && shasum -a 256 -c SHA256SUMS)
+      - name: Publish verified GitHub assets
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          flags=()
-          if [[ "$RELEASE_TAG" == *-* ]]; then flags+=(--prerelease); fi
-          gh release create "$RELEASE_TAG" build/Sofa-Remote.dmg build/Sofa-Remote.zip build/SHA256SUMS \
-            --verify-tag --title "Sofa Remote $RELEASE_TAG" --notes-file docs/RELEASE_NOTES.md "${flags[@]}"
+          set -euo pipefail
+          publish=(gh release create "$RELEASE_TAG" build/Sofa-Remote.dmg build/Sofa-Remote.zip build/SHA256SUMS --verify-tag --title "Sofa Remote $RELEASE_TAG" --notes-file docs/RELEASE_NOTES.md)
+          if [[ "$RELEASE_TAG" == *-* ]]; then publish+=(--prerelease); fi
+          "${publish[@]}"
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          if [ -n "${SOFA_SIGN_KEYCHAIN:-}" ] && [ -f "$SOFA_SIGN_KEYCHAIN" ]; then
+            security delete-keychain "$SOFA_SIGN_KEYCHAIN" >/dev/null 2>&1 || true
+          fi
+          if [ -n "${SOFA_RELEASE_SECRETS_DIR:-}" ]; then rm -rf "$SOFA_RELEASE_SECRETS_DIR"; fi

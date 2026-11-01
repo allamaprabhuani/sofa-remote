@@ -630,15 +630,17 @@ enum RemotePage {
           <a data-icon="bug" href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" aria-label="Report a bug" title="Report a bug"></a>
           <a data-icon="idea" href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=feature_request.yml" target="_blank" rel="noopener noreferrer" aria-label="Suggest a feature" title="Suggest a feature"></a>
           <a data-icon="chat" href="https://github.com/allamaprabhuani/sofa-remote/discussions" target="_blank" rel="noopener noreferrer" aria-label="Questions and developer contact" title="Questions and developer contact"></a>
-          <a data-icon="globe" href="https://allamaprabhuani.github.io/sofa-remote/" target="_blank" rel="noopener noreferrer" aria-label="Project website" title="Project website"></a>
-          <a data-icon="heart" href="https://allamaprabhuani.github.io/sofa-remote/#support" target="_blank" rel="noopener noreferrer" aria-label="Support this project" title="Support this project"></a>
+          <a data-icon="globe" href="https://sofa-remote.doublehoney1.chatgpt.site/" target="_blank" rel="noopener noreferrer" aria-label="Project website" title="Project website"></a>
+          <a data-icon="heart" href="https://sofa-remote.doublehoney1.chatgpt.site/#support" target="_blank" rel="noopener noreferrer" aria-label="Support this project" title="Support this project"></a>
           <a data-icon="updates" href="https://github.com/allamaprabhuani/sofa-remote/releases" target="_blank" rel="noopener noreferrer" aria-label="Check for updates and release notes" title="Check for updates and release notes"></a>
         </nav>
         <details class="help-disclosure"><summary>Setup and connection help</summary>
+        <p id="signing-help">Signing: Unknown. Signing type alone does not verify Developer ID or notarisation.</p>
         <p>Allow Accessibility in the Mac app, show its pairing code and scan the QR with your phone Camera. In Safari, use Share → Add to Home Screen. For connection or permission problems, follow the setup guide below.</p>
           <nav class="help-links" aria-label="Setup links">
             <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md" target="_blank" rel="noopener noreferrer">Setup guide</a>
             <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/SUPPORT.md" target="_blank" rel="noopener noreferrer">Troubleshooting</a>
+            <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SIGNING.md" target="_blank" rel="noopener noreferrer">Signing and permission updates</a>
           </nav>
         </details>
         <details class="help-disclosure"><summary>Privacy and credits</summary>
@@ -653,7 +655,7 @@ enum RemotePage {
           </nav>
         </details>
         <details class="help-disclosure" id="diagnostic-details"><summary>Diagnostic summary</summary>
-        <p>Preview before copying. Only app, macOS and browser versions plus permission and sharing status are included. No typed text, tokens, personal URLs, screenshots, Mac names or network addresses. Nothing is uploaded automatically.</p>
+        <p>Preview before copying. Only app, macOS and browser versions, signing type and permission/sharing status are included. No typed text, tokens, personal URLs, screenshots, Mac names or network addresses. Nothing is uploaded automatically.</p>
         <label for="diagnostics">Review diagnostic summary</label>
         <textarea class="field" id="diagnostics" readonly spellcheck="false"></textarea>
         <button id="copy-diagnostics" data-icon="copy" title="Copy diagnostic summary">Copy diagnostic summary</button>
@@ -839,6 +841,14 @@ enum RemotePage {
         }
         return "Other browser";
       }
+      function signingLabel(value) {
+        switch (value) {
+          case "ad-hoc": return "Ad hoc";
+          case "certificate-signed": return "Certificate-signed";
+          case "unsigned": return "Unsigned";
+          default: return "Unknown";
+        }
+      }
       function diagnosticSummary() {
         const state = supportState || {};
         const yesNo = (v) => v === true ? "Yes" : v === false ? "No" : "Unavailable";
@@ -855,6 +865,7 @@ enum RemotePage {
           `Build: ${safeVersion(state.appBuild)}`,
           `macOS: ${safeVersion(state.macOSVersion)}`,
           `Browser: ${browserVersion()}`,
+          `Signing: ${signingLabel(state.signingStatus)}`,
           `Accessibility allowed: ${yesNo(state.accessibility)}`,
           `Sharing enabled: ${yesNo(state.sharing)}`,
           `Input paused: ${yesNo(state.sessionLocked)}`,
@@ -867,6 +878,10 @@ enum RemotePage {
         $("#app-version").textContent = supportState
           ? `Sofa Remote ${version} · build ${build}`
           : "Sofa Remote · connect to see the Mac app version";
+        const signing = signingLabel(supportState?.signingStatus);
+        $("#signing-help").textContent = (signing === "Ad hoc" || signing === "Unsigned")
+          ? `Signing: ${signing}. This build has no stable signing identity; updates may require Accessibility permission again. Stable signing is needed for permission continuity.`
+          : `Signing: ${signing}. Signing type alone does not verify Developer ID, notarisation or permission continuity.`;
         const summary = diagnosticSummary();
         if ($("#diagnostics").value !== summary) $("#diagnostics").value = summary;
       }
@@ -1503,7 +1518,7 @@ enum RemotePage {
             const s = await request("/state");
             if (generation !== stateSerial) return false;
             supportState = {
-              appVersion: s.appVersion, appBuild: s.appBuild, macOSVersion: s.macOSVersion,
+              appVersion: s.appVersion, appBuild: s.appBuild, macOSVersion: s.macOSVersion, signingStatus: s.signingStatus,
               accessibility: s.accessibility, sharing: s.sharing, sessionLocked: s.sessionLocked,
             };
             updateSupport();

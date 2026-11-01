@@ -5,10 +5,11 @@ import Foundation
 enum SupportInfo {
     static let developer = "Allamaprabhu Ani"
     static let repository = URL(string: "https://github.com/allamaprabhuani/sofa-remote")!
-    static let website = URL(string: "https://allamaprabhuani.github.io/sofa-remote/")!
+    static let website = URL(string: "https://sofa-remote.doublehoney1.chatgpt.site/")!
     static let developerWebsite = URL(string: "https://allamaprabhuani.github.io/")!
-    static let supportProject = URL(string: "https://allamaprabhuani.github.io/sofa-remote/#support")!
+    static let supportProject = URL(string: "https://sofa-remote.doublehoney1.chatgpt.site/#support")!
     static let setup = repository.appendingPathComponent("blob/main/docs/SETUP.md")
+    static let signing = repository.appendingPathComponent("blob/main/docs/SIGNING.md")
     static let privacy = repository.appendingPathComponent("blob/main/docs/PRIVACY.md")
     static let licence = repository.appendingPathComponent("blob/main/LICENSE")
     static let credits = repository.appendingPathComponent("blob/main/NOTICE")
@@ -52,6 +53,7 @@ enum SupportInfo {
     }
     static func diagnosticSummary(version: String = version, build: String = build,
                                   macOS: String = macOSVersion, architecture: String = architecture,
+                                  signing: SigningStatus = .current,
                                   accessibilityAllowed: Bool, sharing: Bool, inputPaused: Bool) -> String {
         let numeric = CharacterSet(charactersIn: "0123456789.")
         let os = !macOS.isEmpty && macOS.utf8.count <= 24 && macOS.unicodeScalars.allSatisfy(numeric.contains) ? macOS : "unknown"
@@ -66,6 +68,7 @@ enum SupportInfo {
         App: \(safeVersion(version)) (\(safeVersion(build)))
         macOS: \(os)
         Architecture: \(arch)
+        Signing: \(signing.label)
         Accessibility: \(accessibilityAllowed ? "allowed" : "not allowed")
         Sharing: \(sharing ? "running" : "stopped")
         Input: \(inputStatus)

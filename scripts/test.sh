@@ -7,6 +7,7 @@ EXTRA=()
 SWIFT_BIN="$(xcrun --find swift)"
 PLUGIN="$(dirname "$SWIFT_BIN")/../lib/swift/host/plugins/testing/libTestingMacros.dylib"
 if [ -f "$PLUGIN" ]; then EXTRA=(-Xswiftc -load-plugin-library -Xswiftc "$PLUGIN"); fi
-swift test "${LOCATION[@]}" --disable-xctest "${EXTRA[@]}"
+swift test "${LOCATION[@]}" --disable-xctest ${EXTRA[@]+"${EXTRA[@]}"}
 node Tests/Web/transport.test.cjs
 node Tests/Web/remote.test.cjs
+python3 Tests/Signing/signing_test.py

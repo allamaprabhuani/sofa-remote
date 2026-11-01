@@ -9,9 +9,11 @@ Keep the app free and MIT-licensed. Building locally does not require a paid dev
 3. Run `./build.sh`, then `./scripts/package-release.sh`. The package script produces the drag-to-Applications disk image, ZIP and SHA256SUMS from `build/Sofa Remote.app`.
 4. Verify both architectures, code signature, bundled licences/icon, archive/checksums and a mounted disk image. Quit before updating an installed bundle. Test the actual downloaded artifact after publication, not just a local build.
 
-For a publisher-signed build, provide `SOFA_SIGN_IDENTITY` with the Developer ID Application identity. Optional `SOFA_NOTARY_PROFILE` refers to a notarytool keychain profile configured by the publisher; the package script requires the signing identity for notarisation. Keep credentials in Keychain/CI secrets and never place them in source, issue reports or command output. Inspect the scripts for exact environment handling.
+Normal public releases require `SOFA_PUBLIC_RELEASE=1`, `SOFA_SIGN_IDENTITY` (Developer ID Application), `SOFA_TEAM_ID` and `SOFA_NOTARY_PROFILE`. Set `SOFA_SIGN_KEYCHAIN` if needed. Missing credentials fail before compilation; ad-hoc signatures cannot be normal public updates. Keep publisher credentials in Keychain/CI secrets and never put them in source, issue reports or command output.
 
-Without those credentials, publish only an explicitly labelled **ad-hoc signed, not notarised beta**. Do not call a strict ad-hoc signature check a Gatekeeper/notarisation pass.
+A free, explicitly selected certificate-signed preview route is described in [Signing](SIGNING.md). It keeps the private signing key on the publisher’s Mac, uses the same certificate across updates, and is not Apple-notarised or Apple-verified publisher identity. Gatekeeper or managed-device policy may block it. Use a `preview-v…` tag and mark it prerelease; it does not use the normal `v*` publishing workflow. Older ad-hoc beta files remain experimental and do not acquire stable identity retroactively.
+
+CI’s explicit ad-hoc development artifacts are separate, differently named files. Do not publish them as updates or call a signature-integrity check a Gatekeeper/notarisation pass.
 
 ## Publish and verify
 

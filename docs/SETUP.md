@@ -2,15 +2,15 @@
 
 ## 1. Install on the Mac
 
-Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.5), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
+Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.6), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
 
-This beta is ad-hoc signed, **not Developer ID notarised**. macOS may block first launch. If you trust the source and intentionally downloaded this beta, review the blocked-app option in **System Settings → Privacy & Security**. Availability depends on macOS and device-management policy. Do not disable Gatekeeper globally or paste commands from an untrusted issue. Building from the [source](../README.md#build-from-source) is another development option.
+This preview is certificate-signed, **not Apple-verified or Developer ID notarised**. macOS may block first launch. If you trust the source and intentionally downloaded this beta, review the blocked-app option in **System Settings → Privacy & Security**. Availability depends on macOS and device-management policy. Do not disable Gatekeeper globally or paste commands from an untrusted issue. Building from the [source](../README.md#build-from-source) is another development option.
 
 ## 2. Allow mouse and keyboard control
 
 In Sofa Remote, choose **Open Accessibility settings**. Enable Sofa Remote in **System Settings → Privacy & Security → Accessibility**, then return to the app. This lets a paired phone control your logged-in desktop. Screen Recording is not required.
 
-If the phone still reports missing permission, check that the enabled entry points to the installed copy. Quit any duplicate copy, reopen Applications → Sofa Remote and check permission again. An upgrade or rebuilt ad-hoc signature may require you to review that entry. If the switch is on but a fresh diagnostic preview still reports missing access after restarting, remove only Sofa Remote from the list, add the current Applications copy again, and enable it yourself. Do not grant permissions automatically or enable unrelated apps.
+If the phone still reports missing permission, check that the enabled entry points to the installed copy. Quit any duplicate copy, reopen Applications → Sofa Remote and check permission again. The first move from an older ad-hoc build to the persistent certificate identity may require one manual permission review. Later certificate-signed updates must keep the same signing identity; see [Signing](SIGNING.md). If the switch is on but a fresh diagnostic preview still reports missing access after restarting, remove only Sofa Remote from the list, add the current Applications copy again, and enable it yourself. Do not grant permissions automatically or enable unrelated apps.
 
 ## 3. Connect the phone
 

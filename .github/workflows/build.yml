@@ -14,21 +14,22 @@ concurrency:
 jobs:
   macos:
     runs-on: macos-latest
+    env:
+      SOFA_ALLOW_ADHOC: '1'
+      SOFA_SIGN_IDENTITY: '-'
+      SOFA_DEVELOPMENT_ARTIFACT: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Swift and browser tests
-        run: |
-          swift test --disable-xctest
-          node Tests/Web/transport.test.cjs
-          node Tests/Web/remote.test.cjs
-      - name: Build universal app
+      - name: Swift, browser and signing tests
+        run: ./scripts/test.sh
+      - name: Build development app
         run: ./build.sh
-      - name: Verify and package
+      - name: Verify and package development artifact
         run: |
-          codesign --verify --deep --strict 'build/Sofa Remote.app'
+          ./scripts/verify-signing.sh --mode development --app 'build/Sofa Remote.app'
           lipo -archs 'build/Sofa Remote.app/Contents/MacOS/SofaRemote'
           cmp LICENSE 'build/Sofa Remote.app/Contents/Resources/LICENSE'
           cmp NOTICE 'build/Sofa Remote.app/Contents/Resources/NOTICE'
@@ -39,8 +40,9 @@ jobs:
           ./scripts/package-release.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: Sofa-Remote
+          name: Sofa-Remote-development-not-for-distribution
+          if-no-files-found: error
           path: |
-            build/Sofa-Remote.zip
-            build/Sofa-Remote.dmg
-            build/SHA256SUMS
+            build/development/Sofa-Remote-development.zip
+            build/development/Sofa-Remote-development.dmg
+            build/development/SHA256SUMS
