@@ -105,9 +105,9 @@ final class DisplayController {
                 currentSize = CGSize(width: currentSize.width * scale, height: currentSize.height * scale)
                 var point = CGPoint(x: area.midX - currentSize.width / 2, y: area.midY - currentSize.height / 2)
                 guard let positionValue = AXValueCreate(.cgPoint, &point), let sizeValue = AXValueCreate(.cgSize, &currentSize) else { throw DisplayError.moveFailed }
-                let positioned = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue) == .success
-                try validate(app, axApp, window, authorized: authorized)
                 let resized = scale >= 1 || AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue) == .success
+                try validate(app, axApp, window, authorized: authorized)
+                let positioned = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue) == .success
                 try await Task.sleep(for: .milliseconds(200))
                 try validate(app, axApp, window, authorized: authorized)
                 if positioned && resized, let actual = position(window), abs(actual.x - point.x) < 12, abs(actual.y - point.y) < 12 {

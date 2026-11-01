@@ -25,6 +25,7 @@ final class RemoteServer {
     private let state: @MainActor () -> [String: Any]
     private let route: Route
     private let onRevoke: @MainActor () -> Void
+    private let icons: [String: Data]
     private let limits: Limits
     private let now: () -> Date
     private var listener: NWListener?
@@ -41,9 +42,10 @@ final class RemoteServer {
     init(store: PairingStore, html: @escaping () -> String,
          state: @escaping @MainActor () -> [String: Any], route: @escaping Route,
          limits: Limits = Limits(), now: @escaping () -> Date = Date.init,
-         onRevoke: @escaping @MainActor () -> Void = {}) {
+         onRevoke: @escaping @MainActor () -> Void = {}, icons: [String: Data] = AppIcons.images) {
         self.store = store; self.html = html; self.state = state; self.route = route; self.onRevoke = onRevoke
         self.limits = limits; self.now = now
+        self.icons = icons
     }
 
     @discardableResult
@@ -149,7 +151,8 @@ final class RemoteServer {
                     self.send(.json(["error": "Invalid request"], status: status), to: client)
                 case .complete(let request, let consumed):
                     guard !complete, error == nil, consumed == buffer.count, let port = self.port,
-                          RemotePeer.validRequestHost(request.headers, port: port),
+                          RemotePeer.validRequestHost(request.headers, port: port,
+                                                      allowDocumentNavigation: request.method == "GET" && request.path == "/"),
                           request.method != "POST" || request.headers["content-type"]?.lowercased().split(separator: ";").first == "application/json" else {
                         self.send(.json(["error": "Request origin or content type not allowed"], status: "403 Forbidden"), to: client); return
                     }
@@ -186,8 +189,12 @@ final class RemoteServer {
             return HTTPResponse(contentType: "text/html; charset=utf-8", body: Data(html().utf8))
         }
         if request.method == "GET", request.path == "/manifest.webmanifest" {
-            var response = HTTPResponse.json(["name": "Sofa Remote", "short_name": "Sofa", "start_url": "/", "display": "standalone", "icons": [["src": "/icon.svg", "sizes": "any", "type": "image/svg+xml"]]])
+            var response = HTTPResponse.json(["name": "Sofa Remote", "short_name": "Sofa", "start_url": "/", "display": "standalone", "icons": [192, 512].map { ["src": "/icon-\($0).png", "sizes": "\($0)x\($0)", "type": "image/png"] }])
             response.contentType = "application/manifest+json"; return response
+        }
+        if request.method == "GET", AppIcons.paths.contains(request.path) {
+            guard let data = icons[request.path] else { return .json(["error": "Icon is unavailable in this build."], status: "404 Not Found") }
+            return HTTPResponse(contentType: "image/png", body: data)
         }
         if request.method == "GET", request.path == "/icon.svg" {
             let icon = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"16\" fill=\"#20232b\"/><rect x=\"12\" y=\"18\" width=\"40\" height=\"28\" rx=\"6\" fill=\"#8caaff\"/></svg>"

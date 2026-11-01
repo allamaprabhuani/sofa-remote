@@ -35,13 +35,17 @@ enum RemotePeer {
     }
 
     /// Reject DNS-rebinding names and mismatched cross-origin browser requests.
-    static func validRequestHost(_ headers: [String: String], port: UInt16) -> Bool {
+    static func validRequestHost(_ headers: [String: String], port: UInt16, allowDocumentNavigation: Bool = false) -> Bool {
         guard let host = headers["host"], host.utf8.count < 256,
               let url = URLComponents(string: "http://" + host), url.user == nil, url.password == nil,
               url.path.isEmpty, url.query == nil, url.fragment == nil,
               let hostname = url.host, hostname == "localhost" || allowedLiteral(hostname.trimmingCharacters(in: CharacterSet(charactersIn: "[]"))),
               (url.port ?? 80) == Int(port) else { return false }
-        if let site = headers["sec-fetch-site"], site.lowercased() != "same-origin" && site.lowercased() != "none" { return false }
+        if let site = headers["sec-fetch-site"], site.lowercased() != "same-origin" && site.lowercased() != "none" {
+            // A camera/link can open the public page from another app. API requests and frames remain restricted.
+            guard allowDocumentNavigation, headers["sec-fetch-mode"]?.lowercased() == "navigate",
+                  headers["sec-fetch-dest"]?.lowercased() == "document" else { return false }
+        }
         if let origin = headers["origin"] {
             guard let value = URLComponents(string: origin), value.scheme == "http", value.user == nil, value.password == nil,
                   value.host?.lowercased() == hostname.lowercased(), (value.port ?? 80) == (url.port ?? 80),

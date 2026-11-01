@@ -11,7 +11,8 @@ enum RemotePage {
     <meta name="theme-color" content="#10121a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/icon.svg" />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />
     <title>Sofa Remote</title>
     <style>
       :root {

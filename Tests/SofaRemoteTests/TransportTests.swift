@@ -69,6 +69,22 @@ import Testing
         #expect(throws: PairingStore.StoreError.self) { try store.issue(name: "Seventeenth") }
     }
 
+    @Test func publicIconsAreFixedAssetsAndManifestUsesPNG() async throws {
+        let folder = try temporaryFolder(); defer { try? FileManager.default.removeItem(at: folder) }
+        let image = Data([137, 80, 78, 71])
+        let server = RemoteServer(store: PairingStore(folder: folder), html: { "" }, state: { [:] }, route: { _ in nil },
+                                  icons: ["/icon-180.png": image, "/private.png": image])
+        let icon = await server.respond(to: try request("GET", "/icon-180.png"))
+        #expect(icon.contentType == "image/png" && icon.body == image)
+        #expect(await server.respond(to: try request("GET", "/icon-512.png")).status == "404 Not Found")
+        #expect(await server.respond(to: try request("GET", "/private.png")).status == "401 Unauthorized")
+        let manifest = await server.respond(to: try request("GET", "/manifest.webmanifest"))
+        let json = try #require(try JSONSerialization.jsonObject(with: manifest.body) as? [String: Any])
+        let icons = try #require(json["icons"] as? [[String: String]])
+        #expect(icons.map { $0["src"] } == ["/icon-192.png", "/icon-512.png"])
+        #expect(RemotePage.html.contains("rel=\"apple-touch-icon\""))
+    }
+
     @Test func peerAndOriginBoundaries() {
         for host in ["127.0.0.1", "10.1.2.3", "172.31.1.1", "192.168.1.2", "169.254.2.3", "100.64.3.4", "::1", "fd7a:115c:a1e0::1", "::ffff:192.168.1.2"] {
             #expect(RemotePeer.allowedLiteral(host), "Expected private address: \(host)")
@@ -81,6 +97,15 @@ import Testing
         #expect(!RemotePeer.validRequestHost(["host": "192.168.1.2:8740", "origin": "http://evil.example"], port: 8740))
         #expect(!RemotePeer.validRequestHost(["host": "192.168.1.2:8740", "sec-fetch-site": "cross-site"], port: 8740))
         #expect(!RemotePeer.validRequestHost(["host": "192.168.1.2:8765"], port: 8740))
+        let navigation = ["host": "192.168.1.2:8740", "sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document"]
+        #expect(RemotePeer.validRequestHost(navigation, port: 8740, allowDocumentNavigation: true))
+        #expect(!RemotePeer.validRequestHost(navigation, port: 8740)) // API routes never opt in.
+        var frame = navigation; frame["sec-fetch-dest"] = "iframe"
+        #expect(!RemotePeer.validRequestHost(frame, port: 8740, allowDocumentNavigation: true))
+        var fetch = navigation; fetch["sec-fetch-mode"] = "cors"
+        #expect(!RemotePeer.validRequestHost(fetch, port: 8740, allowDocumentNavigation: true))
+        var wrongOrigin = navigation; wrongOrigin["origin"] = "http://evil.example"
+        #expect(!RemotePeer.validRequestHost(wrongOrigin, port: 8740, allowDocumentNavigation: true))
     }
 
     @Test func boundedHTTPParsing() {

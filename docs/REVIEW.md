@@ -1,0 +1,17 @@
+# Review and device checks
+
+## 1 November 2026
+
+AGY reviewed the source at `4bb5649` for input, displays, power, networking and usability. Findings were checked against the implementation and platform documentation before applying changes.
+
+- Accepted a narrow exception for cross-site **top-level GET navigation to the public root page**, covering external camera/link launches. API requests, frames, origin mismatches and invalid hosts remain rejected. Regression cases cover these boundaries. The tested iPhone QR launch already worked; this is compatibility hardening, not a claim that all QR launches had failed.
+- Resize oversized windows before positioning them on a smaller target display. Preserve focus, cancellation and authorization checks throughout.
+- Retain `IOPMAssertionDeclareUserActivity` for wake. Apple's [IOPMLib header](https://github.com/apple-oss-distributions/IOKitUser/blob/main/pwr_mgt.subproj/IOPMLib.h) explicitly describes powering on the display; the review's contrary assertion was unsupported. Physical off/wake testing is a separate requirement. Do not inject keys into a locked session as a workaround.
+- Retain strict single-request HTTP connections and bounded clients. Normal browser HTTP/1 fetch concurrency does not establish that HTTP pipelining occurs. No transport weakening was justified by the review.
+- Keep Brave preference, as required for this product; keep explicit local resume after Lock. Fullscreen animation and scroll direction observations need reproduction before changing focus or input safeguards.
+
+The owner paired an iPhone using the Mac's QR code, moved the pointer, clicked the disposable fixture (counter reached six), and confirmed display selection plus explicit window moves worked in both directions. They then enabled Keep Mac awake, used Screen off, waited and used Wake screen: both screens turned off and returned. macOS required Touch ID to unlock afterwards. This confirms display wake, not remote unlock. These checks used the installed `4bb5649` build.
+
+They reported that pointer confinement to one display was undesirable and motion felt jittery. Those are separate follow-up input issues; successful clicks/window movement do not establish smoothness or free travel between displays. AGY and Grok subsequently advised separating free pointer motion from explicit display/window destinations, reducing the 33 ms throttle, keeping motion bounded, and using a legible blue sofa/white-cursor icon. Grok supplied design opinions from the described implementation, not an independent source audit or live test. Its suggestion to replace pending motion with only the newest delta is not adopted: relative motion must accumulate to preserve swipe distance. Both reviews' suggestions remain subject to code review and physical retesting.
+
+Do not infer physical power, fullscreen, lock, provider playback or iPhone reconnect results from automated tests. Keep results tied to the version and scenario actually tested.
