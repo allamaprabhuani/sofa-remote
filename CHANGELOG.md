@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-beta.2 — 2026-11-01
+
+Build 8. Ad-hoc signed, not Developer ID notarised.
+
+- Add clear local SVG controls, accessible labels and four phone themes: Imperial blue, Light, Ocean and Custom. Theme choice stays in the browser.
+- Suppress accidental double-tap zoom on remote controls and short touchpad taps, while preserving pinch zoom outside the pad. Automated Chromium touch checks pass; physical iPhone Safari confirmation remains separate.
+- Add project/developer website and support links on Mac and phone, plus an easy-to-find bug-report link.
+- Publish a static introduction/demo/download website on GitHub Pages, initially authored by Claude and reviewed during integration. No web frameworks, analytics or embedded payment widgets.
+
+Existing trusted-network, Accessibility, awake-Mac and pointer-jitter limits remain.
+
 ## 0.1.0-beta.1 — 2026-11-01
 
 Public beta, build 7. Not Developer ID notarised.

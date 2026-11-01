@@ -27,3 +27,7 @@ Swift geometry/event-sink tests and browser interaction tests exercise multiple 
 ## Public beta simplification
 
 Claude and AGY independently recommended plain copy, a pairing-focused Mac window and a touchpad-first phone. The descriptor is “Control your Mac from your phone.” Setup/practice live in About & Help; preferences are grouped; empty paired-phone lists are omitted. Website entry lives in Shortcuts. Sharing status, stop/revoke controls and the unencrypted-network notice remain visible. Help holds the full guide, contact links, reviewed diagnostics, privacy and licences. No new service, timer or dependency was added for this change.
+
+## Beta 2 appearance
+
+The phone uses local SVG symbols with accessible names and brief visible captions where an icon is ambiguous. Its four CSS-variable themes are Imperial blue (`#003E74`), Light, Ocean and Custom. A native colour picker supplies a validated hex background; the client derives contrast-safe text/surfaces. Preferences live only in browser local storage. No font/icon library, image fetch, new timer or service was added. Controls use `touch-action: manipulation`; the pad keeps `touch-action: none` with a narrow short-single-finger-touch fallback that never sends its own command. Pinch zoom stays available outside the pad. Physical Safari confirmation remains separate from trusted Chromium input tests.

@@ -5,6 +5,9 @@ import Foundation
 enum SupportInfo {
     static let developer = "Allamaprabhu Ani"
     static let repository = URL(string: "https://github.com/allamaprabhuani/sofa-remote")!
+    static let website = URL(string: "https://allamaprabhuani.github.io/sofa-remote/")!
+    static let developerWebsite = URL(string: "https://allamaprabhuani.github.io/")!
+    static let supportProject = URL(string: "https://allamaprabhuani.github.io/sofa-remote/#support")!
     static let setup = repository.appendingPathComponent("blob/main/docs/SETUP.md")
     static let privacy = repository.appendingPathComponent("blob/main/docs/PRIVACY.md")
     static let licence = repository.appendingPathComponent("blob/main/LICENSE")

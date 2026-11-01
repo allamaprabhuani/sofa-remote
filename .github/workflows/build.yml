@@ -1,5 +1,11 @@
 name: Build and test
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['site/**', 'README.md', '.github/workflows/pages.yml']
+  pull_request:
+    paths-ignore: ['site/**', 'README.md', '.github/workflows/pages.yml']
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:

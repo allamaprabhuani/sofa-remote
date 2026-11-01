@@ -2,14 +2,15 @@ Sofa Remote is a free, MIT-licensed Mac helper that turns a phone browser into a
 
 This public beta includes the Mac TV-inspired pointer improvements, fractional movement, short-lived pointer tracking across displays, and fewer requests for accelerated swipes. Occasional pointer stepping or acceleration changes remain a known issue; native-trackpad smoothness is not claimed.
 
-New in this beta:
+New in beta 2 (build 8):
 
-- About & Help on Mac and phone: setup, developer contact, bug/feature reports, privacy, licences, credits, source and manual update checking.
-- Allowlisted diagnostic summaries that you preview before copying. No automatic uploads, typed text, pairing tokens, personal URLs, screenshots, device names or input history.
-- A setup walkthrough, disposable practice window and clearer connection/permission recovery instructions.
-- Optional menu-bar icon hiding. Reopen Sofa Remote from Applications to show its controls and restore the icon. Hiding the icon keeps sharing running; Stop sharing and Quit end remote access.
-- Drag-to-Applications DMG and ZIP downloads with SHA-256 checksums, support/community guides, known issues and an expanded manual test matrix.
-- Improved accessibility labels, dialog focus handling and phone layouts.
+- Local SVG icons with accessible names and short labels for ambiguous controls.
+- Four phone themes: Imperial blue, Light, Ocean and a safe custom colour picker. Choices stay on the phone; no dependencies or extra network requests.
+- Targeted double-tap zoom prevention while keeping pinch zoom outside the touchpad. Chromium touch tests verify two taps produce exactly two clicks; physical Safari confirmation is still required.
+- Project/developer website and support links on Mac and phone, plus clear bug-report access.
+- A minimalist static introduction/download website, initially written by Claude, with an interactive browser-only demo. No framework, analytics or embedded checkout.
+
+Existing About & Help, reviewed diagnostics, setup/practice, manual updates and menu-bar hiding remain. Support links open the project website. The app remains free.
 
 Requires macOS 14 or later, Apple silicon or Intel, and Accessibility permission. Download the DMG, drag Sofa Remote to Applications, open it and scan the pairing QR with your phone on the same trusted network. Existing users should quit the old helper before replacing it; normal upgrades preserve settings and paired phones.
 
