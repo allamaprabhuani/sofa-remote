@@ -259,6 +259,21 @@ async function main() {
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
   assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
   assert.deepEqual(await evaluate(`Array.from(document.querySelector('.bottom-tools').children).map(x=>x.id || 'help')`),['help','settings-open','keyboard-open','shortcuts-open'],'bottom navigation follows the requested order');
+  const spotlightFlow=await evaluate(`(async()=>{
+    calls.length=0; document.querySelector('#shortcuts-open').click();
+    const trigger=document.querySelector('[data-action="spotlight"]'); trigger.click();
+    const opened=document.querySelector('#keyboard-sheet').classList.contains('open');
+    const focused=document.activeElement===document.querySelector('#text');
+    await new Promise(r=>setTimeout(r,100));
+    const sent=calls.filter(x=>x.path==='/command').map(x=>x.body);
+    closeSheet(); const returned=document.querySelector('#shortcuts-sheet').classList.contains('open') && document.activeElement===trigger;
+    closeSheet(); return {opened,focused,sent,returned};
+  })()`);
+  assert.equal(spotlightFlow.opened,true,'Spotlight opens the phone keyboard sheet');
+  assert.equal(spotlightFlow.focused,true,'Spotlight focuses the text field during the tap');
+  assert.deepEqual(spotlightFlow.sent,[{type:'action',action:'spotlight'}]);
+  assert.equal(spotlightFlow.returned,true,'closing the keyboard restores Shortcuts and focus');
+  console.log('PASS Spotlight opens focused typing and returns to Shortcuts');
   console.log('PASS appearance migration and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});

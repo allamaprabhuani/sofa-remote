@@ -1443,7 +1443,15 @@ enum RemotePage {
           if (drag) command({ type: "drag", phase: "move", dx: 0, dy: 0 });
         }, 1000);
       };
-      $$("[data-action]").forEach((b) => (b.onclick = () => action(b.dataset.action)));
+      $$("[data-action]").forEach((b) => (b.onclick = () => {
+        const pending = action(b.dataset.action);
+        if (b.dataset.action === "spotlight" && !locked) {
+          // Focus synchronously within the tap so iOS can show its keyboard.
+          sheet("keyboard-sheet", b);
+          $("#text").focus();
+        }
+        return pending;
+      }));
       $$("[data-mod]").forEach(
         (b) =>
           (b.onclick = () => {
