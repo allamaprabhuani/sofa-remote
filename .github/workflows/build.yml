@@ -24,6 +24,8 @@ jobs:
         run: |
           codesign --verify --deep --strict 'build/Sofa Remote.app'
           lipo -archs 'build/Sofa Remote.app/Contents/MacOS/SofaRemote'
+          cmp LICENSE 'build/Sofa Remote.app/Contents/Resources/LICENSE'
+          cmp NOTICE 'build/Sofa Remote.app/Contents/Resources/NOTICE'
           ditto -c -k --sequesterRsrc --keepParent 'build/Sofa Remote.app' build/Sofa-Remote.zip
           shasum -a 256 build/Sofa-Remote.zip > build/Sofa-Remote.zip.sha256
       - uses: actions/upload-artifact@v4

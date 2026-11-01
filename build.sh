@@ -7,9 +7,10 @@ BIN="$(swift build -c release --arch arm64 --arch x86_64 "${LOCATION[@]}" --show
 STAGING="$(mktemp -d build-staging.XXXXXX)"
 trap 'rm -rf "$STAGING"' EXIT
 APP="$STAGING/Sofa Remote.app"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/SofaRemote" "$APP/Contents/MacOS/SofaRemote"
 cp Info.plist "$APP/Contents/Info.plist"
+cp LICENSE NOTICE "$APP/Contents/Resources/"
 codesign --force --sign "${SOFA_SIGN_IDENTITY:--}" "$APP"
 codesign --verify --deep --strict "$APP"
 # Build staging is independent of an installed/running app. Never replace a live build bundle.
