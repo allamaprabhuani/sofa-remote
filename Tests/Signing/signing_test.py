@@ -16,9 +16,11 @@ def run(args, data=None, success=True):
 try:
  run(['security','create-keychain','-p',pw,str(k)])
  run(['security','unlock-keychain','-p',pw,str(k)])
- # Keep fixture credentials out of the user's default search list.
+ # Some macOS versions require the explicit keychain to also be searchable.
+ # Only disposable, codesign-restricted fixture keys are added; no trust is granted.
  current=shlex.split(subprocess.check_output(['security','list-keychains','-d','user'],text=True))
- run(['security','list-keychains','-d','user','-s',*[item for item in current if Path(item)!=k]])
+ if not any(Path(item).resolve()==k.resolve() for item in current):
+  run(['security','list-keychains','-d','user','-s',*current,str(k)])
  def identity(name):
   key=work/(name+'.key');cert=work/(name+'.pem')
   run([openssl,'genrsa',*(['-traditional'] if modern_openssl else []),'-out',str(key),'2048']);key.chmod(0o600)
@@ -54,5 +56,10 @@ try:
  verify(b,mode='release',ok=False);reports.append('PASS self-signed fixture cannot pass Developer ID release policy')
  print('\n'.join(reports))
 finally:
+ # Remove only this fixture entry, preserving concurrent search-list changes.
+ current=shlex.split(subprocess.check_output(['security','list-keychains','-d','user'],text=True))
+ remaining=[item for item in current if Path(item).resolve()!=k.resolve()]
+ if len(remaining)!=len(current):
+  subprocess.run(['security','list-keychains','-d','user','-s',*remaining],capture_output=True,check=True)
  subprocess.run(['security','delete-keychain',str(k)],capture_output=True)
  shutil.rmtree(work)
