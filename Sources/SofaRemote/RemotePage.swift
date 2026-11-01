@@ -1471,7 +1471,46 @@ enum RemotePage {
         });
         return pending;
       }
-      $$("[data-key]").forEach((b) => (b.onclick = () => sendKey(b.dataset.key)));
+      // Repeat only navigation/editing keys; commands are serialized so a slow network
+      // cannot build a backlog that keeps scrolling after the finger is lifted.
+      let repeatingKey = null;
+      function stopKeyRepeat() {
+        if (!repeatingKey) return;
+        clearTimeout(repeatingKey.timer);
+        repeatingKey.stopped = true;
+        repeatingKey = null;
+      }
+      const repeatableKeys = new Set(["up", "down", "left", "right", "backspace", "delete"]);
+      $$("[data-key]").forEach((b) => {
+        let suppressClick = false;
+        b.onclick = (e) => {
+          if (suppressClick && e.detail !== 0) { suppressClick = false; return; }
+          suppressClick = false; sendKey(b.dataset.key);
+        };
+        if (!repeatableKeys.has(b.dataset.key)) return;
+        b.addEventListener("pointerdown", (e) => {
+          if (e.button !== 0 || repeatingKey || locked || !key) return;
+          suppressClick = false;
+          const hold = { pointer: e.pointerId, stopped: false, repeated: false, timer: 0, start: Date.now(), modifiers: [...modifiers] };
+          repeatingKey = hold;
+          b.setPointerCapture(e.pointerId);
+          const repeat = async () => {
+            if (hold.stopped || locked || !key || Date.now() - hold.start > 15000) { stopKeyRepeat(); return; }
+            hold.repeated = true;
+            const ok = await (hold.firstSent ? command({ type: "key", key: b.dataset.key, modifiers: hold.modifiers }) : sendKey(b.dataset.key));
+            hold.firstSent = true;
+            if (!hold.stopped && ok) hold.timer = setTimeout(repeat, 100);
+            else if (!ok && repeatingKey === hold) stopKeyRepeat();
+          };
+          hold.timer = setTimeout(repeat, 400);
+        });
+        for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(eventName, (e) => {
+          if (repeatingKey?.pointer !== e.pointerId) return;
+          suppressClick = repeatingKey.repeated;
+          stopKeyRepeat();
+        });
+        b.addEventListener("contextmenu", (e) => e.preventDefault());
+      });
       $("#text-form").onsubmit = async (e) => {
         e.preventDefault();
         const input = $("#text"),
@@ -1505,7 +1544,7 @@ enum RemotePage {
       }
       function closeSheet() {
         const current = sheetStack.pop();
-        if (current?.id === "keyboard-sheet") endRightOption();
+        if (current?.id === "keyboard-sheet") { stopKeyRepeat(); endRightOption(); }
         if (current?.id === "present-sheet") {
           stopPresenting();
           if (statusKind === "presenter") status("");
@@ -1979,7 +2018,7 @@ enum RemotePage {
           $("main").classList.remove("is-pointing");
           stopPresenting();
           dropQueuedMotion();
-          endDrag(); endRightOption();
+          endDrag(); stopKeyRepeat(); endRightOption();
         }
       });
       window.addEventListener("pagehide", () => {
@@ -1987,7 +2026,7 @@ enum RemotePage {
         $("main").classList.remove("is-pointing");
         stopPresenting();
         dropQueuedMotion();
-        endDrag(); endRightOption();
+        endDrag(); stopKeyRepeat(); endRightOption();
       });
       if (/^\d{6}$/.test(pairCode)) pair(pairCode);
       else refresh();

@@ -280,6 +280,18 @@ async function main() {
   const dictationLayout=await evaluate(`(()=>{document.querySelector('#keyboard-open').click();const sheet=document.querySelector('#keyboard-sheet .sheet'),button=document.querySelector('#right-option-hold'),form=document.querySelector('#text-form');const b=button.getBoundingClientRect(), f=form.getBoundingClientRect(), panel=sheet.getBoundingClientRect();const result={label:button.textContent.trim(),accessible:button.getAttribute('aria-label'),width:b.width,height:b.height,right:b.right>=f.right && b.right<=panel.right,after:!!(form.compareDocumentPosition(button)&Node.DOCUMENT_POSITION_FOLLOWING),fits:sheet.scrollWidth<=sheet.clientWidth+1};closeSheet();return result})()`);
   assert.equal(dictationLayout.label,'Hold to speak');assert.equal(dictationLayout.accessible,'Hold to speak');
   assert.ok(dictationLayout.width>=88&&dictationLayout.width===dictationLayout.height&&dictationLayout.right&&dictationLayout.after&&dictationLayout.fits,'large square dictation control sits at the lower right');
+  const keyRepeat=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;document.querySelector('#keyboard-open').click();
+    const b=document.querySelector('[data-key="down"]');
+    b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:42,button:0,bubbles:true}));await sleep(730);
+    b.dispatchEvent(new PointerEvent('pointerup',{pointerId:42,button:0,bubbles:true}));b.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}));await sleep(200);
+    const count=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;await sleep(200);
+    const after=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;
+    calls.length=0;b.click();await sleep(50);const tap=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;
+    calls.length=0;b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:43,button:0,bubbles:true}));await sleep(450);b.dispatchEvent(new PointerEvent('pointercancel',{pointerId:43,bubbles:true}));await sleep(100);const cancelled=calls.length;await sleep(200);const later=calls.length;closeSheet();return {count,after,tap,cancelled,later};
+  })()`);
+  assert.ok(keyRepeat.count>=2,'holding arrow repeats');assert.equal(keyRepeat.after,keyRepeat.count,'release stops repeating');assert.equal(keyRepeat.tap,1,'tap sends one key');assert.equal(keyRepeat.cancelled,keyRepeat.later,'cancellation stops repeating');
+  console.log('PASS navigation key hold repeat and release');
   console.log('PASS Right Option press and release');
   console.log('PASS appearance migration and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
