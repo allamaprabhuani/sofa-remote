@@ -1,9 +1,10 @@
 # Changelog
 
-## Certificate preview beta 6 — build 12 — build 12
+## Certificate preview beta 6 — build 12
 
 - Require stable certificate signing for normal local builds and check update identity across all architectures. Reject ad-hoc updates, changed signers, modified signatures and weakened requirements.
 - Reserve normal public release packaging for verified Developer ID and notarisation. Keep explicit certificate-signed previews and ad-hoc CI artifacts separate.
+- Publish a standalone app site and an independent Homebrew tap; retain licence notices without a front-facing origin line.
 - Report only the signing category in setup/help and reviewed diagnostics; preserve all mouse, keyboard, pairing and network controls.
 
 ## 0.1.0-beta.5 — 2026-11-01
