@@ -32,7 +32,7 @@ enum RemotePage {
         margin: 0;
         min-height: 100%;
         font:
-          16px/1.35 -apple-system,
+          100%/1.35 -apple-system,
           BlinkMacSystemFont,
           system-ui,
           sans-serif;
@@ -46,7 +46,8 @@ enum RemotePage {
       }
       button,
       input,
-      select {
+      select,
+      textarea {
         font: inherit;
       }
       button {
@@ -55,7 +56,9 @@ enum RemotePage {
       }
       button:focus-visible,
       input:focus-visible,
-      select:focus-visible {
+      select:focus-visible,
+      textarea:focus-visible,
+      a:focus-visible {
         outline: 3px solid var(--accent);
         outline-offset: 2px;
       }
@@ -74,14 +77,16 @@ enum RemotePage {
         gap: 10px;
       }
       header h1 {
-        font-size: 19px;
+        font-size: 1.1875rem;
         letter-spacing: -0.02em;
         margin: 0;
         flex: 1;
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
       header small {
         display: block;
-        font-size: 11px;
+        font-size: 0.6875rem;
         color: var(--muted);
         font-weight: 500;
       }
@@ -94,6 +99,7 @@ enum RemotePage {
       button {
         min-height: 44px;
         padding: 0 13px;
+        overflow-wrap: anywhere;
       }
       button:active {
         background: rgba(255, 255, 255, 0.2);
@@ -160,18 +166,19 @@ enum RemotePage {
         gap: 7px;
       }
       .clicks {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .media {
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(5, minmax(0, 1fr));
       }
       .actions {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
       .row button {
         padding: 0 4px;
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 650;
+        overflow-wrap: anywhere;
       }
       .row button.on,
       .modifiers button.on {
@@ -179,7 +186,7 @@ enum RemotePage {
         color: #11182c;
       }
       .media button {
-        font-size: 20px;
+        font-size: 1.25rem;
       }
       .status {
         font-size: 12px;
@@ -220,7 +227,7 @@ enum RemotePage {
         gap: 10px;
       }
       .sheet-head h2 {
-        font-size: 18px;
+        font-size: 1.125rem;
         flex: 1;
         margin: 0;
       }
@@ -232,14 +239,25 @@ enum RemotePage {
       }
       .sheet p {
         color: var(--muted);
-        font-size: 13px;
+        font-size: 0.875rem;
         margin: 0;
       }
+      a { color: #b6ccff; overflow-wrap: anywhere; }
+      .help-links { display: grid; gap: 6px; }
+      .help-links a { min-height: 44px; display: flex; align-items: center; }
+      .sheet ol { margin: 0; padding-left: 24px; }
+      .sheet li { margin: 6px 0; }
+      .sheet h3 { font-size: 1rem; margin: 6px 0 0; }
+      #help-sheet { z-index: 12; }
+      #diagnostics { width: 100%; min-height: 190px; padding: 12px; line-height: 1.5; resize: vertical; }
+      #connection-help { border: 1px solid var(--line); border-radius: 15px; padding: 12px; }
+      #connection-help[hidden] { display: none; }
+      #connection-help p { margin: 0 0 10px; }
       .sheet p.error {
         color: #ffaaa7;
       }
       .sheet label {
-        font-size: 13px;
+        font-size: 0.875rem;
         color: var(--muted);
       }
       .sheet form {
@@ -258,16 +276,17 @@ enum RemotePage {
       }
       .modifiers {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
       }
       .modifiers button {
         padding: 0;
-        font-size: 12px;
+        font-size: 0.75rem;
+        overflow-wrap: anywhere;
       }
       .keygrid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
       }
       .shortcut {
@@ -303,6 +322,7 @@ enum RemotePage {
         display: none;
         align-items: center;
         justify-content: center;
+        overflow: auto;
       }
       #pair.open,
       #locked.open {
@@ -313,6 +333,7 @@ enum RemotePage {
       }
       .card {
         width: min(100%, 390px);
+        margin: auto;
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -374,8 +395,9 @@ enum RemotePage {
       </form>
       <div
         id="pad"
-        role="application"
-        aria-label="Touchpad. Drag to move, tap to click, use two fingers to scroll."
+        role="group"
+        tabindex="0"
+        aria-label="Touchpad. Drag to move, tap to click, use two fingers to scroll. With a keyboard, use arrow keys to move and Enter or Space to click."
       >
         <span class="pad-title">Touchpad</span
         ><span class="hint">Move · tap · two fingers scroll · spans all displays</span>
@@ -397,6 +419,10 @@ enum RemotePage {
         ><button data-action="spotlight">Spotlight</button>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
+      <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
+        <p>Keep your Mac awake and Sofa Remote sharing. Check that both devices are on the same Wi-Fi or Tailscale network. If the Mac's address changed, open Sofa Remote on the Mac and scan its new QR code.</p>
+        <div class="sheet-row"><button id="reconnect">Try reconnecting</button><button data-help>About &amp; Help</button></div>
+      </aside>
     </main>
     <div class="scrim" id="keyboard-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard">
@@ -436,9 +462,9 @@ enum RemotePage {
         </form>
         <div class="keygrid">
           <button data-key="escape">Esc</button><button data-key="tab">Tab</button
-          ><button data-key="backspace">⌫</button><button data-key="delete">Delete</button
-          ><button data-key="left">←</button><button data-key="up">↑</button><button data-key="down">↓</button
-          ><button data-key="right">→</button><button data-key="space">Space</button
+          ><button data-key="backspace" aria-label="Backspace">⌫</button><button data-key="delete">Delete</button
+          ><button data-key="left" aria-label="Left arrow">←</button><button data-key="up" aria-label="Up arrow">↑</button><button data-key="down" aria-label="Down arrow">↓</button
+          ><button data-key="right" aria-label="Right arrow">→</button><button data-key="space">Space</button
           ><button data-key="enter">Return</button>
         </div>
       </div>
@@ -502,11 +528,50 @@ enum RemotePage {
           macOS setting.
         </p>
         <div id="devices"></div>
+        <button data-help>About &amp; Help</button>
       </div>
     </div>
-    <div id="pair">
+    <div class="scrim" id="help-sheet">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="About and Help">
+        <div class="sheet-head"><h2>About &amp; Help</h2><button data-close>Done</button></div>
+        <p id="app-version">Sofa Remote · connect to see the Mac app version</p>
+        <p>By Allamaprabhu Ani. Free and open source under the MIT licence. Your phone is the mouse and keyboard; your Mac does the playing.</p>
+        <h3>Get started</h3>
+        <ol>
+          <li>On your Mac, open Sofa Remote and allow it in System Settings → Privacy &amp; Security → Accessibility.</li>
+          <li>Choose Show pairing code, then scan its QR code with your phone Camera. Use the same trusted Wi-Fi or your own Tailscale network.</li>
+          <li>Slide one finger to move the pointer. Tap to click; use two fingers to scroll. With a hardware keyboard, focus the touchpad and use arrow keys to move, Enter or Space to click. Try clicking a harmless area on your Mac. Drag is a toggle: turn it off to release.</li>
+          <li>In iPhone Safari, use Share → Add to Home Screen. The shortcut opens this Mac's address; rescan if its address changes.</li>
+        </ol>
+        <h3>Connection and permissions</h3>
+        <p>If input is unavailable, allow Accessibility on the Mac. After a manual lock or secure text input, unlock on the Mac and choose Resume input there. Wake screen does not unlock or start a sleeping Mac.</p>
+        <p>For connection problems, keep the Mac awake, start sharing, check the network and scan its current QR code. Reload this page after upgrading the Mac app. Guest Wi-Fi may block devices from reaching each other.</p>
+        <h3>Privacy</h3>
+        <p>No screen streaming, analytics, ads or accounts. Paired phones can control your desktop. Direct local HTTP is unencrypted; use a trusted network or your own Tailscale connection. Stop sharing or revoke a phone on your Mac when needed.</p>
+        <nav class="help-links" aria-label="Support and project links">
+          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md" target="_blank" rel="noopener noreferrer">Setup guide</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/SUPPORT.md" target="_blank" rel="noopener noreferrer">Troubleshooting and developer contact</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">Report a bug</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=feature_request.yml" target="_blank" rel="noopener noreferrer">Suggest a feature</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/discussions" target="_blank" rel="noopener noreferrer">Ask a question</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/releases" target="_blank" rel="noopener noreferrer">Check for updates and release notes</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/security/advisories/new" target="_blank" rel="noopener noreferrer">Report a security vulnerability privately</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT licence</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/NOTICE" target="_blank" rel="noopener noreferrer">Credits and third-party notices</a>
+          <a href="https://github.com/allamaprabhuani/sofa-remote" target="_blank" rel="noopener noreferrer">Source code</a>
+        </nav>
+        <h3>Diagnostic summary</h3>
+        <p>Preview before copying. Only app, macOS and browser versions plus permission and sharing status are included. No typed text, tokens, personal URLs, screenshots, Mac names or network addresses. Nothing is uploaded automatically.</p>
+        <label for="diagnostics">Review diagnostic summary</label>
+        <textarea class="field" id="diagnostics" readonly spellcheck="false"></textarea>
+        <button id="copy-diagnostics">Copy diagnostic summary</button>
+        <p id="copy-result" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+    <div id="pair" role="dialog" aria-modal="true" aria-labelledby="pair-title">
       <div class="card">
-        <h1>Pair with your Mac</h1>
+        <h1 id="pair-title">Pair with your Mac</h1>
         <p>
           Enter the code shown in Sofa Remote on your Mac. Pair only on a trusted network: direct local HTTP
           is unencrypted. Tailscale offers an encrypted connection.
@@ -527,17 +592,19 @@ enum RemotePage {
           aria-label="Phone name"
         /><button class="primary" id="pair-button">Pair</button>
         <p class="error" id="pair-error" role="status"></p>
+        <button data-help>About &amp; Help</button>
       </div>
     </div>
-    <div id="locked">
+    <div id="locked" role="dialog" aria-modal="true" aria-labelledby="locked-title">
       <div class="card">
-        <h1>Input paused</h1>
+        <h1 id="locked-title">Input paused</h1>
         <p>
           Mac is locked, using secure text input, or paused. Unlock the Mac and choose Resume input in Sofa
           Remote on the Mac if needed.
         </p>
         <button class="primary" id="wake">Wake screen</button>
         <p id="locked-error" role="status"></p>
+        <button data-help>About &amp; Help</button>
       </div>
     </div>
     <script>
@@ -566,6 +633,8 @@ enum RemotePage {
         stateSerial = 0;
       let statusKind = "notice",
         permissionMissing = false;
+      let supportState = null;
+      const sheetStack = [];
       let drag = false,
         dragHeartbeat = 0,
         modifiers = new Set(),
@@ -591,6 +660,53 @@ enum RemotePage {
             permissionMissing ? "permission" : "notice",
           );
       }
+      function safeVersion(value) {
+        return typeof value === "string" && /^\d{1,5}(?:\.\d{1,5}){0,3}$/.test(value) ? value : "Unavailable";
+      }
+      function browserVersion() {
+        const ua = navigator.userAgent;
+        for (const [name, pattern] of [
+          ["Edge", /(?:Edg|EdgiOS|EdgA)\/([\d.]+)/],
+          ["Firefox", /(?:Firefox|FxiOS)\/([\d.]+)/],
+          ["Chrome", /(?:Chrome|CriOS)\/([\d.]+)/],
+          ["Safari", /Version\/([\d.]+).*Safari\//],
+        ]) {
+          const found = ua.match(pattern);
+          if (found) return `${name} ${safeVersion(found[1])}`;
+        }
+        return "Other browser";
+      }
+      function diagnosticSummary() {
+        const state = supportState || {};
+        const yesNo = (v) => v === true ? "Yes" : v === false ? "No" : "Unavailable";
+        return [
+          "Sofa Remote diagnostic summary",
+          `App version: ${safeVersion(state.appVersion)}`,
+          `Build: ${safeVersion(state.appBuild)}`,
+          `macOS: ${safeVersion(state.macOSVersion)}`,
+          `Browser: ${browserVersion()}`,
+          `Accessibility allowed: ${yesNo(state.accessibility)}`,
+          `Sharing enabled: ${yesNo(state.sharing)}`,
+          `Input paused: ${yesNo(state.sessionLocked)}`,
+          supportState ? "Mac status is from the last successful connection." : "Connect to the Mac to include its version and status.",
+        ].join("\n");
+      }
+      function updateSupport() {
+        const version = safeVersion(supportState?.appVersion), build = safeVersion(supportState?.appBuild);
+        $("#app-version").textContent = supportState
+          ? `Sofa Remote ${version} · build ${build}`
+          : "Sofa Remote · connect to see the Mac app version";
+        const summary = diagnosticSummary();
+        if ($("#diagnostics").value !== summary) $("#diagnostics").value = summary;
+      }
+      function activeOverlay() {
+        return $(".scrim.open") || $("#locked.open") || $("#pair.open");
+      }
+      function updateLayers() {
+        const active = activeOverlay();
+        $("main").inert = !!active;
+        $$(".scrim,#pair,#locked").forEach((x) => x.inert = !!active && x !== active);
+      }
       $$(".sheet").forEach((sheet) => {
         const note = document.createElement("p");
         note.className = "sheet-status";
@@ -598,15 +714,25 @@ enum RemotePage {
         sheet.append(note);
       });
       function showPair() {
+        supportState = null;
+        updateSupport();
         clearInterval(dragHeartbeat);
         dragHeartbeat = 0;
         drag = false;
         $("#drag").classList.remove("on");
         $("#drag").setAttribute("aria-pressed", "false");
         $("#locked").classList.remove("open");
-        if ($("#pair").classList.contains("open")) return;
+        if ($("#help-sheet").classList.contains("open")) {
+          const help = sheetStack.find((entry) => entry.id === "help-sheet");
+          sheetStack.splice(0, sheetStack.length, ...(help ? [help] : []));
+        } else {
+          $$(".scrim").forEach((x) => x.classList.remove("open"));
+          sheetStack.length = 0;
+        }
+        if ($("#pair").classList.contains("open")) { updateLayers(); return; }
         $("#pair").classList.add("open");
-        setTimeout(() => $("#code").focus(), 50);
+        updateLayers();
+        setTimeout(() => { if (!$("#help-sheet.open")) $("#code").focus(); }, 50);
       }
       async function request(path, body, authenticated = true, externalSignal = null) {
         if (externalSignal?.aborted) throw Error("cancelled");
@@ -665,6 +791,7 @@ enum RemotePage {
           key = result.token;
           storage.set(key);
           $("#pair").classList.remove("open");
+          updateLayers();
           $("#pair-error").textContent = "";
           await refresh();
         } catch (e) {
@@ -830,6 +957,19 @@ enum RemotePage {
       }
       const pad = $("#pad"),
         fingers = new Map();
+      pad.addEventListener("keydown", (e) => {
+        if (e.target !== pad || document.activeElement !== pad || locked || !key || document.hidden || activeOverlay()
+            || e.altKey || e.ctrlKey || e.metaKey) return;
+        const delta = e.shiftKey ? 40 : 10;
+        const movement = { ArrowLeft: [-delta, 0], ArrowRight: [delta, 0], ArrowUp: [0, -delta], ArrowDown: [0, delta] }[e.key];
+        if (movement) {
+          e.preventDefault(); e.stopPropagation();
+          command({ type: "move", dx: movement[0], dy: movement[1] });
+        } else if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault(); e.stopPropagation();
+          if (!e.repeat) command({ type: "click", button: "left", count: 1 });
+        }
+      });
       let travel = 0,
         down = 0,
         multi = false;
@@ -961,24 +1101,70 @@ enum RemotePage {
           button.disabled = false;
         }
       };
-      function sheet(id) {
-        if (locked) return;
+      function sheet(id, opener = document.activeElement) {
+        if (locked && id !== "help-sheet") return;
+        if ($("#" + id).classList.contains("open")) return;
+        $$(".scrim").forEach((x) => x.classList.remove("open"));
+        sheetStack.push({ id, opener });
         $("#" + id).classList.add("open");
+        if (id === "help-sheet") { updateSupport(); $("#copy-result").textContent = ""; }
+        updateLayers();
         $("#" + id + " [data-close]").focus();
       }
-      $("#keyboard-open").onclick = () => sheet("keyboard-sheet");
-      $("#shortcuts-open").onclick = () => sheet("shortcuts-sheet");
-      $("#settings-open").onclick = () => {
-        sheet("settings-sheet");
+      function closeSheet() {
+        const current = sheetStack.pop();
+        $$(".scrim").forEach((x) => x.classList.remove("open"));
+        const previous = sheetStack.at(-1);
+        if (previous && (!locked || previous.id === "help-sheet")) $("#" + previous.id).classList.add("open");
+        else if (locked) sheetStack.length = 0;
+        updateLayers();
+        if (current?.opener?.isConnected && current.opener.getClientRects().length && !current.opener.closest("[inert]")) current.opener.focus();
+        else if (activeOverlay()) activeOverlay().querySelector("button,input,a")?.focus();
+        else $("#settings-open").focus();
+      }
+      $("#keyboard-open").onclick = (e) => sheet("keyboard-sheet", e.currentTarget);
+      $("#shortcuts-open").onclick = (e) => sheet("shortcuts-sheet", e.currentTarget);
+      $("#settings-open").onclick = (e) => {
+        sheet("settings-sheet", e.currentTarget);
         loadDevices();
       };
-      $$("[data-close]").forEach((b) => (b.onclick = () => b.closest(".scrim").classList.remove("open")));
+      $$("[data-help]").forEach((b) => b.onclick = (e) => sheet("help-sheet", e.currentTarget));
+      $$("[data-close]").forEach((b) => (b.onclick = closeSheet));
       $$(".scrim").forEach(
         (s) =>
           (s.onclick = (e) => {
-            if (e.target === s) s.classList.remove("open");
+            if (e.target === s) closeSheet();
           }),
       );
+      document.addEventListener("keydown", (e) => {
+        const overlay = activeOverlay();
+        if (!overlay) return;
+        if (e.key === "Escape" && overlay.classList.contains("scrim")) {
+          e.preventDefault(); closeSheet(); return;
+        }
+        if (e.key !== "Tab") return;
+        const focusable = [...overlay.querySelectorAll("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled)")]
+          .filter((x) => x.getClientRects().length && !x.closest("[inert]"));
+        if (!focusable.length) { e.preventDefault(); return; }
+        const first = focusable[0], last = focusable.at(-1);
+        if (e.shiftKey && (document.activeElement === first || !overlay.contains(document.activeElement))) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && (document.activeElement === last || !overlay.contains(document.activeElement))) {
+          e.preventDefault(); first.focus();
+        }
+      });
+      $("#copy-diagnostics").onclick = async () => {
+        const preview = $("#diagnostics"), result = $("#copy-result");
+        try {
+          if (!navigator.clipboard?.writeText) throw Error("Clipboard unavailable");
+          await navigator.clipboard.writeText(preview.value);
+          result.textContent = "Diagnostic summary copied. Review it again before posting publicly.";
+        } catch {
+          preview.focus(); preview.select(); preview.setSelectionRange(0, preview.value.length);
+          result.textContent = "Automatic copy is unavailable on this connection. Touch and hold the selected summary, then choose Copy.";
+        }
+      };
+      $("#reconnect").onclick = () => { $("#connection").textContent = "Reconnecting…"; refresh(); };
       async function mutate(path, body) {
         if (changing || locked) return;
         changing = true;
@@ -1114,6 +1300,13 @@ enum RemotePage {
           try {
             const s = await request("/state");
             if (generation !== stateSerial) return false;
+            supportState = {
+              appVersion: s.appVersion, appBuild: s.appBuild, macOSVersion: s.macOSVersion,
+              accessibility: s.accessibility, sharing: s.sharing, sessionLocked: s.sessionLocked,
+            };
+            updateSupport();
+            $("#connection-help").hidden = true;
+            const wasLocked = locked;
             locked = !!s.sessionLocked;
             if (locked) {
               fingers.clear();
@@ -1122,14 +1315,20 @@ enum RemotePage {
               dragHeartbeat = 0;
               $("#drag").classList.remove("on");
               $("#drag").setAttribute("aria-pressed", "false");
-              $$(".scrim").forEach((x) => x.classList.remove("open"));
+              if ($("#help-sheet.open")) {
+                const help = sheetStack.find((entry) => entry.id === "help-sheet");
+                sheetStack.splice(0, sheetStack.length, ...(help ? [help] : []));
+              } else {
+                $$(".scrim").forEach((x) => x.classList.remove("open"));
+                sheetStack.length = 0;
+              }
             }
             $("#locked").classList.toggle("open", locked);
-            $$("main,.scrim").forEach((x) => {
-              x.inert = locked;
-            });
+            updateLayers();
+            if (locked && !wasLocked && !$("#help-sheet.open")) $("#wake").focus();
+            else if (!locked && wasLocked && !activeOverlay()) $("#settings-open").focus();
             const appName = typeof s.frontApp === "string" ? s.frontApp.trim() : "";
-            $("#connection").textContent = (s.name || "Connected") + (appName ? ` · ${appName}` : "");
+            $("#connection").textContent = "Connected" + (s.name ? ` · ${s.name}` : "") + (appName ? ` · ${appName}` : "");
             permissionMissing = s.accessibility === false;
             if (permissionMissing)
               status("Allow Accessibility access for Sofa Remote on your Mac.", true, "permission");
@@ -1159,7 +1358,11 @@ enum RemotePage {
             $("#awake").checked = !!s.keepAwake;
             return true;
           } catch (e) {
-            if (e.message !== "unpaired") status(e.message, true, "runtime");
+            if (e.message !== "unpaired") {
+              $("#connection").textContent = "Disconnected · try reconnecting";
+              $("#connection-help").hidden = false;
+              status(e.message, true, "runtime");
+            }
             return false;
           }
         })();

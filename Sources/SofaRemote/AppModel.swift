@@ -63,6 +63,7 @@ import ServiceManagement
     }
     var accessibilityAllowed: Bool { input.accessibilityAllowed }
     var keepAwake: Bool { preferences?.saved.keepAwake ?? false }
+    var showMenuBarIcon: Bool { preferences?.saved.showMenuBarIcon ?? true }
     var inputPaused: Bool {
         locallyPaused || !sessionActive || input.secureInput || NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.loginwindow"
     }
@@ -133,8 +134,15 @@ import ServiceManagement
         try preferences.update { $0.keepAwake = value }
         awake.set(sharing && value); objectWillChange.send()
     }
+    func setShowMenuBarIcon(_ value: Bool) throws {
+        guard let preferences else { throw RemoteError("Settings are unavailable.") }
+        try preferences.update { $0.showMenuBarIcon = value }
+        objectWillChange.send()
+    }
     func state() -> [String: Any] {
         ["name": Host.current().localizedName ?? "Mac", "sharing": sharing,
+         "appVersion": SupportInfo.version, "appBuild": SupportInfo.build,
+         "macOSVersion": SupportInfo.macOSVersion,
          "accessibility": accessibilityAllowed, "sessionLocked": inputPaused, "screenSleeping": screenSleeping,
          "frontApp": inputPaused ? "" : (NSWorkspace.shared.frontmostApplication?.localizedName ?? ""),
          "displayID": displays.selectedID ?? "", "displays": displays.options,

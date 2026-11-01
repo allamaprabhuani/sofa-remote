@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and developer contact
+    url: https://github.com/allamaprabhuani/sofa-remote/discussions
+    about: Ask for help or discuss an idea with the community and maintainer.
+  - name: Private security report
+    url: https://github.com/allamaprabhuani/sofa-remote/security/advisories/new
+    about: Report a vulnerability privately without public exploit details.
+  - name: Setup and troubleshooting
+    url: https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md
+    about: Check permissions, pairing, network changes, displays and wake behaviour.

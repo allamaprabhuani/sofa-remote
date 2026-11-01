@@ -15,14 +15,29 @@ import Testing
         try store.update { state in
             state.shortcuts.swapAt(0, 1)
             state.keepAwake = true
+            state.showMenuBarIcon = false
             state.preferredDisplay = "saved-display-uuid"
         }
         let reloaded = try Preferences(folder: folder)
         #expect(reloaded.saved.shortcuts.first?.id == "iina")
         #expect(reloaded.saved.keepAwake)
+        #expect(!reloaded.saved.showMenuBarIcon)
         #expect(reloaded.saved.preferredDisplay == "saved-display-uuid")
         let mode = try FileManager.default.attributesOfItem(atPath: folder.appendingPathComponent("settings.json").path)[.posixPermissions] as? NSNumber
         #expect(mode?.intValue == 0o600)
+    }
+    @Test func previousSettingsDefaultToAVisibleMenuBarIcon() throws {
+        let folder = try folder(); defer { try? FileManager.default.removeItem(at: folder) }
+        let original = Data(#"{"shortcuts":[],"keepAwake":true,"preferredDisplay":"old-display"}"#.utf8)
+        try original.write(to: folder.appendingPathComponent("settings.json"))
+        let store = try Preferences(folder: folder)
+        #expect(store.saved.showMenuBarIcon)
+        #expect(store.saved.keepAwake)
+        #expect(store.saved.preferredDisplay == "old-display")
+        #expect(store.saved.shortcuts.isEmpty)
+        #expect(try Data(contentsOf: folder.appendingPathComponent("settings.json")) == original)
+        try store.update { $0.showMenuBarIcon = false }
+        #expect(!(try Preferences(folder: folder)).saved.showMenuBarIcon)
     }
     @Test func failedWriteKeepsPriorStateAndCorruptionIsPreserved() throws {
         let folder = try folder(); defer { try? FileManager.default.removeItem(at: folder) }

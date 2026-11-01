@@ -1,22 +1,45 @@
-# Manual acceptance checklist
+# Validation and manual acceptance
 
-Use disposable windows and isolated app data. Automated tests use mocked input; a green build is not proof of physical iPhone behaviour.
+Automated checks use fake input sinks, loopback connections and isolated browser profiles. They do not prove physical iPhone smoothness, third-party playback or every macOS permission/session state. Manual input checks must use empty/disposable windows; never type into personal documents. Use isolated data on a test account/VM for fresh-install, upgrade or corrupt-settings checks, rather than replacing the owner's pairing/settings files.
 
-- First launch: the menu-bar helper appears, Accessibility instructions are actionable, QR/code pairs the intended phone, no Screen Recording permission appears.
-- Reconnect: reload phone; background/lock it for several minutes; return without stale queued clicks or repeated text. Revoke the phone and confirm the next request is denied.
-- Touchpad: motion, tap, two-finger scroll/tap, right/double click, drag, stationary hold, pointer cancellation and leaving the page. Confirm every drag eventually releases.
-- Keyboard: Unicode text, Enter/Escape/Backspace, sticky modifiers and Cmd-L/Cmd-Tab. Preserve unsent text on failure and never retry a timed-out mutation automatically.
-- Displays: use real connected names/UUIDs; select each; move a disposable window in both directions while windowed and fullscreen. Unplug a display, change foreground windows during a move and stop sharing mid-move. No unrelated window should move.
-- Brave/IINA: launch a saved app/website; operate normal provider controls, Finder Downloads, IINA subtitles and fullscreen. Verify focus rather than assuming global media keys target a particular player.
-- Power: with explicit consent, turn displays off then request wake while the Mac remains awake. Verify system notifications rather than interpreting request acceptance as physical TV power.
-- Lock: only with the owner's explicit consent and a working physical unlock method. Use remote Lock, verify input is paused, unlock on the Mac and resume locally. Test manual Lock separately; record the observed boundaries without promising automatic unlock.
-- Stop/quit: listener and connections close; no held input or sleep assertion remains. Starting again uses saved preferences. Only one helper instance should be running.
-- Resources: measure process CPU/memory at idle with native settings closed, then while receiving input. List listener count. Keep test-browser and Brave/IINA costs separate. No streaming encoder/capture should run.
+## Recorded evidence before the public-beta release
 
-The first public version is experimental. Record tested OS/browser/hardware and failures before treating a scenario as supported. Never attach real credentials, personal window content or local settings to a public issue.
+On 1 November 2026, a bounded authenticated local-client check sent Unicode text (including emoji) and Enter into the disposable native fixture. Revocation returned HTTP 401 and Stop sharing closed the listener. These establish that event path and lifecycle on the tested Mac only.
 
-## Local checks on 1 November 2026
+A physical iPhone then confirmed QR pairing, pointer movement and clicks, explicit window movement to both displays, and display off/wake with Keep Mac awake enabled. macOS required Touch ID afterwards. Later changes freed the pointer across both displays. With Mac TV-style shaping and a short-lived pointer anchor, the owner reported smoother movement. After the request-count optimisation, the owner still reported occasional tiny lag or acceleration changes and considered it acceptable for their use. These observations are subjective and do not establish native-trackpad smoothness.
 
-A paired local client sent Unicode text (including an emoji) and Enter through the authenticated HTTP route into the app's disposable native text window. The foreground app was checked before sending input and the resulting text was read back from that window. Revoking that test client made its next authenticated request return HTTP 401. Native Stop sharing closed the listener, and the helper was then quit. These checks verify the keyboard/event path and revocation on this Mac; they do not verify physical iPhone touch gestures, live pointer movement, external-display movement, provider playback or lock/power behaviour.
+Before the public-beta UI work, local/CI Swift and browser checks passed for the pointer changes. They cover proportional/fractional travel, packet validation, serial transport, cancellation and stale-click prevention. A separate WebSocket experiment felt worse on the physical phone despite passing loopback tests; it is not part of the installed beta path.
 
-Later checks with a physical iPhone and the installed `4bb5649` build confirmed QR pairing, pointer motion and clicks, explicit display/window moves in both directions, and display off/wake with Keep Mac awake enabled. macOS then required Touch ID for unlock. The owner reported single-display pointer confinement and jitter; subsequent input changes need a fresh device check. See [review decisions and results](REVIEW.md). Native fullscreen moves, drag/scroll/reconnect edge cases, manual-lock safeguards and provider playback remain separate acceptance checks.
+Short normal-background samples on the tested Mac showed 0.0% sampled idle CPU, approximately 60–63 MiB RSS, one TCP listener and an approximately 3.8 MiB app bundle. These are short observations of the earlier build, not an energy benchmark or a promise for every Mac. Brave/IINA and test-browser resource use is separate. Keep Mac awake intentionally prevents idle system sleep.
+
+## Release-candidate checklist
+
+Record app/build, macOS, phone/browser, network type, result and a reproduction without identifiers or private content. A prior-build observation does not automatically accept a new build. CI results and physical results should be reported separately in release notes.
+
+| Scenario | Acceptance criterion | Physical status before beta publication |
+| --- | --- | --- |
+| Fresh installation | Actual downloaded app opens on a clean supported Mac; permission guide identifies the installed copy; no Screen Recording prompt. | Clean-machine/Gatekeeper check pending; beta not notarised. |
+| First-run QR and guide | Permission → QR → disposable pointing/click → Home Screen instructions can be followed without assistance. | Earlier pairing confirmed; new walkthrough needs external testers. |
+| Hidden icon and reopen | Hide icon; reopen from Applications; setup and Show menu bar icon remain accessible; hiding does not stop sharing. | New beta behaviour needs device check. |
+| Upgrade from alpha | Quit before replacement; previous pairings/settings survive; new preferences default correctly; Accessibility recovery instructions work. | Isolated upgrade and real permission check pending. |
+| Multiple phones | Pair two independent clients; revoke one without invalidating the other; no privilege upgrade. | Automated pairing/revocation coverage; two physical phones pending. |
+| Reload/background/reconnect | No stale queued click/text/drag is replayed after timeout, phone backgrounding or reconnect. | Automated queue checks; extended Safari checks pending. |
+| Wi-Fi/address change | Old connection reports failure; current QR recovers; instructions explain stale Home Screen address. | Manual Wi-Fi/IP-change check pending. |
+| Gesture precision | Slow motion, quick swipe, tap, two-finger tap/scroll, drag/hold/cancel; every drag releases. | Basic pointing/click confirmed earlier; slight jitter remains; full gesture sweep pending. |
+| Keyboard | Unicode, Enter/Escape/Backspace and modifiers work in fixture; failures preserve unsent text without automatic mutation replay. | Local fixture path confirmed; broader physical Safari keyboard sweep pending. |
+| Displays | Pointer crosses both screens; explicit window move works each way; unplug/reconnect does not move unrelated windows. | Earlier cross-display and two-way move confirmed; hot-plug/native fullscreen races pending. |
+| Power | With explicit owner consent, displays go dark and return while system stays awake; physical fallback works. | Earlier off/wake confirmed; locked afterwards; broader hardware coverage pending. |
+| Lock and secure input | Input pauses; physical unlock and local Resume input required; no unlock/password injection. | Manual-lock variants pending; no universal lock-state detector claimed. |
+| About/help/diagnostics | Version and links correct; preview excludes input, URLs, token/address/device fields; copy is explicit and unavailable clipboard has fallback. | Automated allowlist/browser checks required; physical phone copy fallback pending. |
+| Accessibility | VoiceOver describes controls; keyboard focus stays usable; sheets dismiss correctly; larger text and portrait/landscape remain usable. | Browser layout/focus checks required; full macOS/iOS VoiceOver audit pending. |
+| Stop/quit | One helper only; listener/connections close and held input/sleep assertions release. | Earlier local lifecycle confirmed; recheck updated release build. |
+| Resources | Measure idle with native settings closed and active input separately; verify listener count and lack of capture/encoder. | Earlier short sample recorded above; longer active-input/energy measurement pending. |
+| Existing browsers/players | Normal provider/Finder/IINA controls remain reachable; focus and app-specific media semantics documented. | Provider/DRM/fullscreen/subtitle combinations pending; no compatibility guarantee. |
+
+For power/lock checks, get explicit consent and a working physical recovery method first. Do not turn a test plan into an unattended command that sleeps or locks the owner's Mac.
+
+## Automated checks
+
+Run `./scripts/test.sh` and `./build.sh`, then the release packaging checks in [RELEASE.md](RELEASE.md). Swift tests cover pairing, persistence, loopback transport/deadlines, finite command bounds, geometry and fake-sink event sequencing. Browser tests use a mocked backend at six portrait/landscape sizes and test transport order, gestures and UI states. Diagnostic tests must use deliberately private-looking sentinel strings to establish that only allowlisted fields are copied.
+
+For a disposable local fixture, launch a locally built app with `--input-fixture`. `SOFA_REMOTE_DATA_DIR=/absolute/test/folder` isolates settings; close other copies first. The flag does not grant permissions. Keep test files in the established scratch location, never Documents/iCloud. Do not post app-data files, logs containing secrets, private screenshots or raw browser storage.

@@ -1,0 +1,30 @@
+# Publishing a release
+
+Keep the app free and MIT-licensed. Building locally does not require a paid developer account. A smooth public Gatekeeper experience needs the publisher's Developer ID signing identity and Apple notarisation setup; those cannot be replaced by an ad-hoc signature.
+
+## Build and package
+
+1. Start with a clean tree, review the changelog, and set marketing version/build in `Info.plist`.
+2. Run `./scripts/test.sh`. Use an established local `SOFA_BUILD_DIR` when the checkout is cloud-synchronised.
+3. Run `./build.sh`, then `./scripts/package-release.sh`. The package script produces the drag-to-Applications disk image, ZIP and SHA256SUMS from `build/Sofa Remote.app`.
+4. Verify both architectures, code signature, bundled licences/icon, archive/checksums and a mounted disk image. Quit before updating an installed bundle. Test the actual downloaded artifact after publication, not just a local build.
+
+For a publisher-signed build, provide `SOFA_SIGN_IDENTITY` with the Developer ID Application identity. Optional `SOFA_NOTARY_PROFILE` refers to a notarytool keychain profile configured by the publisher; the package script requires the signing identity for notarisation. Keep credentials in Keychain/CI secrets and never place them in source, issue reports or command output. Inspect the scripts for exact environment handling.
+
+Without those credentials, publish only an explicitly labelled **ad-hoc signed, not notarised beta**. Do not call a strict ad-hoc signature check a Gatekeeper/notarisation pass.
+
+## Publish and verify
+
+The tag workflow handles `v*` release builds. Check its tests/packaging and the exact source commit. Mark experimental versions as prereleases, include known issues and evidence/limits in the notes, and attach the DMG, ZIP and checksums. Make download links point at the intended prerelease; GitHub's generic latest-release link may skip prereleases.
+
+After publishing, download to a disposable directory, compare published hashes, inspect architectures and signature, and mount the DMG to confirm the Applications link and app. Record release URL/source SHA and the checks actually performed. Gatekeeper launch on a clean Mac, phone gestures, upgrade permissions, wake/lock and other physical checks remain separate.
+
+Update the download link, changelog and validation matrix. Retain source history and a verified installed app before clearing generated build directories. Do not delete personal settings/pairings as build cleanup.
+
+## Update policy
+
+The current app provides manual release links only. No updater polls, silently downloads or replaces the app. A future signed automatic updater should use a reviewed standard framework and require explicit policy/security review; it is not part of this beta.
+
+## Encrypted transport investigation
+
+Tailscale IP links provide the currently documented encrypted network option. Native HTTPS pairing would need a certificate trust/renewal plan compatible with iPhone Safari and changing local addresses; a self-signed warning is not a usable solution. Browser WebCrypto also has secure-context constraints, and application-layer encryption needs a reviewed authenticated protocol and key lifecycle. No new cryptographic protocol, certificate installer or HTTPS endpoint is claimed by this release. Revisit this work with a specific threat model and usability prototype before broad promotion beyond trusted-network beta users.
