@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-beta.5 — 2026-11-01
+
+Build 11. Ad-hoc signed, not Developer ID notarised.
+
+- Put a working, seven-theme remote preview at the top of the static website. Replace blue gradients and repeated device mockups with a neutral layout, clearer type and simpler download controls.
+- Refine native setup and monochrome help actions. Show denied Accessibility, stopped sharing, server startup and paused input separately. Add an explicit permission-status refresh.
+- Make diagnostic input status reflect permission and sharing state on Mac and phone, without collecting additional personal data.
+- Keep the existing pointer handling, authentication, transport and seven local phone themes.
+
 ## 0.1.0-beta.4 — 2026-11-01
 
 Build 10. Ad-hoc signed, not Developer ID notarised.

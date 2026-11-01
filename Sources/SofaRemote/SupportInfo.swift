@@ -56,6 +56,11 @@ enum SupportInfo {
         let numeric = CharacterSet(charactersIn: "0123456789.")
         let os = !macOS.isEmpty && macOS.utf8.count <= 24 && macOS.unicodeScalars.allSatisfy(numeric.contains) ? macOS : "unknown"
         let arch = ["arm64", "x86_64"].contains(architecture) ? architecture : "unknown"
+        let inputStatus: String
+        if !accessibilityAllowed { inputStatus = "blocked (Accessibility not allowed)" }
+        else if !sharing { inputStatus = "stopped (Sharing off)" }
+        else if inputPaused { inputStatus = "paused" }
+        else { inputStatus = "ready" }
         return """
         Sofa Remote diagnostic summary
         App: \(safeVersion(version)) (\(safeVersion(build)))
@@ -63,7 +68,7 @@ enum SupportInfo {
         Architecture: \(arch)
         Accessibility: \(accessibilityAllowed ? "allowed" : "not allowed")
         Sharing: \(sharing ? "running" : "stopped")
-        Input: \(inputPaused ? "paused" : "available")
+        Input: \(inputStatus)
         """
     }
 }
