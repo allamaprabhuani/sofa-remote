@@ -508,3 +508,99 @@ details.before ul li { padding: 10px 0;  color: #e5e0d2; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+
+/* Neon Ink: the selected editorial layout, adapted for a dark page. */
+:root {
+  color-scheme: dark;
+  --bone: #111214; --bone-2: #111214; --ink: #f5f5f2;
+  --ink-2: #d0d0ce; --muted: #b5b6b5; --rule: #515255;
+  --blue: #b9f53a; --blue-hover: #d1ff66; --blue-pressed: #a8e131;
+  --focus: #e4fa56;
+}
+.nav { max-width: 1200px; margin: auto; padding-top: 20px; }
+.nav-cta { background: transparent; color: var(--ink); padding-inline: 0; }
+@media (hover: hover) { .nav-cta:hover { background: transparent; text-decoration: underline; } }
+.hero { padding-top: 42px; padding-bottom: 76px; }
+.hero-grid { grid-template-columns: minmax(0,1fr); align-items: center; justify-items: center; gap: 38px; }
+.hero-copy h1 { display: flex; align-items: baseline; gap: .22em; max-width: none; margin-bottom: .45em; }
+.hero-serif { order: 0; color: var(--ink); position: relative; isolation: isolate; font-size: clamp(4.8rem,9vw,7rem); line-height: 1; }
+.hero-serif::after { content: ''; position: absolute; z-index: -1; bottom: .08em; left: -.06em; right: -.04em; height: .12em; background: #eaff42; transform: rotate(-2deg); }
+.hero-sans { order: 1; color: var(--ink); font-size: clamp(1.05rem,1.8vw,1.45rem); text-transform: uppercase; letter-spacing: .13em; }
+.hero .lede { max-width: 38ch; }
+.hero-live { justify-self: center; width: min(340px,100%); }
+.live-shell { border-color: #515255; }
+.btn.primary, .download .btn.primary { background: #b9f53a; color: #111214; }
+@media (hover:hover) { .btn.primary:hover, .download .btn.primary:hover { background: #d1ff66; } }
+.btn.primary:active, .download .btn.primary:active { background: #a8e131; }
+.btn.link, .download .btn.link { color: var(--ink); text-decoration-color: #ff66ae; text-decoration-thickness: 2px; }
+@media (hover:hover) { .btn.link:hover, .download .btn.link:hover { text-decoration-color: #ff9bc9; } }
+a { text-decoration-color: #929392; }
+.capabilities, .setup, .download, .faq, .support { padding-top: 64px; padding-bottom: 64px; }
+.capabilities { border-top: 2px solid #ff66ae; }
+.feature-grid { gap: 0; }
+.feature { padding-top: 20px; padding-bottom: 20px; }
+.setup, .download, .faq, .support { background: var(--bone); border-top: 1px solid var(--rule); }
+.download { color: var(--ink); }
+.download h2, .download .meta strong, .download a, details.before summary { color: var(--ink); }
+.download .section-lede, .download .meta, details.before ul li { color: var(--ink-2); }
+.download :focus-visible { outline-color: var(--focus); }
+.site-footer { border-top: 1px solid var(--rule); }
+@media (max-width:700px) {
+  .hero { padding-top: 42px; padding-bottom: 50px; }
+  .hero-copy h1 { font-size: inherit; }
+  .hero-serif { font-size: clamp(4.2rem,20vw,6rem); }
+  .hero-sans { font-size: clamp(1rem,5vw,1.3rem); }
+}
+
+/* Keep the real remote preview at the centre of the opening composition. */
+.hero-copy { text-align: center; }
+.hero-copy h1 { justify-content: center; }
+.hero .lede, .hero .meta { margin-left: auto; margin-right: auto; }
+.hero .cta-row { justify-content: center; }
+.demo-replay { align-self: center; color: #e9e9e7; background: transparent; border: 0; padding: 8px 12px; min-height: 44px; font: inherit; font-size: .82rem; text-decoration: underline; text-decoration-color: #ff66ae; text-underline-offset: 4px; cursor: pointer; }
+.demo-replay:hover { text-decoration-color: #ffb6d9; }
+.live-pad.is-demonstrating::after { content: ''; position: absolute; left: 28%; top: 66%; width: 14px; height: 14px; border-radius: 50%; background: #eaff42; box-shadow: 0 0 0 5px rgba(234,255,66,.18); pointer-events: none; animation: demo-swipe 1.5s ease-in-out both; }
+@keyframes demo-swipe { 0% { opacity: 0; transform: translate(0,0); } 15% { opacity: 1; } 75% { opacity: 1; transform: translate(110px,-66px); } 100% { opacity: 0; transform: translate(110px,-66px); } }
+@media (prefers-reduced-motion: reduce) { .live-pad.is-demonstrating::after { display:none; } }
+@media (max-width:700px) { .hero .cta-row { align-items: center; } .hero .cta-row .btn.link { align-self: center; } }
+
+.desktop-demo { width: min(340px,100%); color: var(--muted); font-size: .82rem; text-align: center; }
+.desktop-demo p { margin: 0 0 9px; }
+.desktop-demo-screen { height: 170px; border: 1px solid #62636a; background: #202127; border-radius: 8px; position: relative; overflow: hidden; text-align: left; }
+.desktop-demo-label { position:absolute; left:12px; top:10px; font-size:10px; letter-spacing:.1em; color:#c6c7ca; }
+.desktop-demo-cursor { position:absolute; pointer-events:none; }
+.desktop-demo-screen.is-demonstrating .desktop-demo-cursor { animation: desktop-swipe 1.5s ease-in-out both; }
+@keyframes desktop-swipe { 0%,15% { transform:translate(-50px,35px); } 75%,100% { transform:translate(50px,-30px); } }
+@media (prefers-reduced-motion: reduce) { .desktop-demo-screen.is-demonstrating .desktop-demo-cursor { animation:none; } }
+
+/* On short desktop windows, bring the interactive remote into the first view. */
+@media (min-width:701px) and (max-height:760px) {
+  .nav { padding-top: 8px; padding-bottom: 8px; }
+  .hero { padding-top: 12px; }
+  .hero-grid { gap: 16px; }
+  .hero-copy h1 { margin-bottom: .12em; }
+  .hero-serif { font-size: 4.4rem; }
+  .hero-sans { font-size: 1.1rem; }
+  .hero .lede { max-width: 68ch; margin-bottom: 4px; }
+  .hero .cta-row { margin: 8px 0 6px; }
+  .hero .meta { max-width: 70ch; }
+}
+
+/* Preview matches the icon-only remote; labels remain available to assistive technology. */
+.live-head .live-btn { width:44px; min-width:44px; height:44px; padding:8px; border:0; background:transparent; }
+.live-head .live-btn svg { width:23px; height:23px; }
+.live-head .live-btn:hover,.live-head .live-btn:active { background:#454750; }
+.live-row.clicks .live-btn svg { width:25px; height:25px; }
+
+/* Mirror the app's grouped controls and quiet, non-interactive volume mark. */
+.live-pad { background:#31323a; border-radius:28px; box-shadow:inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.1); }
+.live-row.clicks { width:min(100%,230px); align-self:center; }
+.live-panel .live-btn svg { width:26px; height:26px; }
+.live-row.media #playBtn svg { width:32px; height:32px; }
+.live-row.volume { position:relative; }
+.live-row.volume::before { content:''; position:absolute; width:18%; height:2px; left:41%; top:50%; background:#888a93; opacity:.45; pointer-events:none; }
+.live-shell { background:#111214; }
+.live-panel { background:#28272f; border-color:#8e8c9c; }
+.live-pad { background:#302f39; }
+.live-row.volume::before { background:#8e8c9c; }

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — build 19
+
+- Add Velvet Cinema, Paper & Ink and Soft Machine appearances with borderless icon controls and accessible names.
+
 ## Certificate preview beta 7 — build 18
 
 - Add presenter controls with previous/next, end slideshow, a laser, coloured pen and automatically disappearing highlighter on a chosen display.

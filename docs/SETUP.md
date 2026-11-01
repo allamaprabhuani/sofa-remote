@@ -24,6 +24,8 @@ In **About & Help → Setup and connection help**, open the disposable practice 
 
 In iPhone Safari, choose **Share → Add to Home Screen**. Keep that shortcut to return to the remote. If the Mac's network address changes, open a fresh QR link from the Mac instead of the old shortcut, then save the new link if necessary.
 
+Choose **Velvet Cinema**, **Paper & Ink** or **Soft Machine** in the phone remote’s Settings. The appearance is saved in that phone’s browser. Action buttons are icon-only; their accessible names identify them to VoiceOver.
+
 The remote’s **Settings** include **Screen off**, **Wake** and Mac brightness buttons. Brightness sends the Mac's brightness-key events; macOS and the display determine what responds, so some external displays need their own controls. Screen off affects all connected displays and macOS may lock; Wake requires the Mac to remain awake and cannot unlock it. Saved shortcuts use local initials alongside their names, without fetching icons from websites.
 
 ## Present a slideshow

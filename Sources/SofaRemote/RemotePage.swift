@@ -31,6 +31,12 @@ enum RemotePage {
         --danger: #ffb4ab;
         --error: #ffb4ab;
       }
+      html[data-appearance="velvet"] { --bg:#191417; --card:#302329; --pad:#302329; --touch:#382a30; --online:#59db88; --sheet:#191417; --line:#9d8583; --muted:#dec9ba; --accent:#ddb65e; --ink:#f7ede1; --pressed:#49393a; --selection:#f7ede1; --selection-ink:#191417; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="paper"] { --bg:#f6f3ec; --card:#f6f3ec; --pad:#ebe5d9; --touch:#f0ece3; --online:#187544; --sheet:#f6f3ec; --line:#71665d; --muted:#5b534c; --accent:#a22f1d; --ink:#252322; --pressed:#ded5c7; --selection:#252322; --selection-ink:#f6f3ec; --danger:#9d1e2c; --error:#9d1e2c; color-scheme:light; }
+      html[data-appearance="soft"] { --bg:#111214; --card:#28272f; --pad:#28272f; --touch:#302f39; --online:#59db88; --sheet:#111214; --line:#8e8c9c; --muted:#d4cdec; --accent:#c4b8ff; --ink:#f7f6fb; --pressed:#3d3b49; --selection:#f7f6fb; --selection-ink:#111214; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="velvet"] header h1, html[data-appearance="paper"] header h1 { font-family: Georgia, serif; }
+      html[data-appearance="paper"] .remote-panel { border-radius:24px; }
+      html[data-appearance="soft"] .remote-panel { border-radius:38px; }
       * {
         box-sizing: border-box;
         -webkit-tap-highlight-color: transparent;
@@ -108,6 +114,7 @@ enum RemotePage {
         color: var(--muted);
         font-weight: 500;
       }
+      #connection[data-connected="true"]::before { content:""; display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%; background:var(--online); vertical-align:1px; }
       button,
       .field {
         border: 1px solid var(--line);
@@ -118,6 +125,7 @@ enum RemotePage {
         min-height: 44px;
         padding: 0 13px;
         overflow-wrap: anywhere;
+        border: 0;
       }
       button:active {
         background: var(--pressed);
@@ -162,7 +170,8 @@ enum RemotePage {
         flex: 1 1 auto;
         min-height: 180px;
         border-radius: 28px;
-        background: transparent;
+        background: var(--touch);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.1);
         touch-action: none;
         position: relative;
         user-select: none;
@@ -193,6 +202,8 @@ enum RemotePage {
       }
       .clicks {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: min(100%, 230px);
+        align-self: center;
       }
       .media {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -211,14 +222,23 @@ enum RemotePage {
       .media button {
         font-size: 1.25rem;
       }
-      .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); position:relative; }
+      .volume::before { content:""; position:absolute; width:18%; height:2px; left:41%; top:50%; background:var(--line); opacity:.45; pointer-events:none; }
       .panel-divider { width: 42px; height: 1px; align-self: center; flex: 0 0 auto; background: var(--line); opacity: 0.5; }
-      .media .control-icon, .volume .control-icon { width: 25px; height: 25px; }
+      .remote-guide summary { min-height: 44px; display: flex; align-items: center; justify-content: center; width: 44px; border-radius: 50%; cursor: pointer; }
+      .remote-guide summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .remote-guide p { margin: 4px 0 12px; color: var(--muted); font-size: 0.875rem; }
+      .remote-panel .control-icon { width: 26px; height: 26px; }
+      .media [data-action="playPause"] .control-icon { width: 32px; height: 32px; }
       main .row button { min-height: 52px; border-radius: 28px; }
       main .row { gap: 10px; }
       main .remote-panel .row button { border: 0; background: transparent; }
       main .remote-panel .row button:active { background: var(--pressed); }
       main .remote-panel .row button.on { background: var(--selection); color: var(--selection-ink); }
+      @media (prefers-reduced-motion: no-preference) {
+        main .remote-panel .row button { transition: transform 100ms ease-out; }
+        main .remote-panel .row button:active:not(:disabled) { transform:scale(.96); }
+      }
       .present-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .present-nav button { min-height: 78px; font-size: 1.125rem; font-weight: 700; }
       #present-sheet .sheet-status:empty { display: none; }
@@ -487,6 +507,16 @@ enum RemotePage {
 </g></symbol>
       <symbol id="icon-folder" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
 </g></symbol>
+      <symbol id="icon-send" viewBox="0 0 24 24"><path d="M3 12h17m-6-6 6 6-6 6"/></symbol>
+      <symbol id="icon-add" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+      <symbol id="icon-retry" viewBox="0 0 24 24"><path d="M20 7V3m0 4h-4M20 7a9 9 0 1 0 1 8"/></symbol>
+      <symbol id="icon-slide-previous" viewBox="0 0 24 24"><path d="M14 4 6 12l8 8M6 12h14"/></symbol>
+      <symbol id="icon-slide-next" viewBox="0 0 24 24"><path d="m10 4 8 8-8 8M18 12H4"/></symbol>
+      <symbol id="icon-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/></symbol>
+      <symbol id="icon-laser" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></symbol>
+      <symbol id="icon-pen" viewBox="0 0 24 24"><path d="m4 20 1-5L16 4l4 4L9 19l-5 1ZM14 6l4 4"/></symbol>
+      <symbol id="icon-highlight" viewBox="0 0 24 24"><path d="m5 16 9-10 4 4-9 10H5v-4ZM3 22h18"/></symbol>
+      <symbol id="icon-undo" viewBox="0 0 24 24"><path d="m8 6-5 5 5 5M3 11h10a7 7 0 0 1 7 7"/></symbol>
       <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
       <symbol id="icon-remove" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6"/></symbol>
       <symbol id="icon-move-display" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4M7 10h10m-3-3 3 3-3 3"/></symbol>
@@ -519,7 +549,7 @@ enum RemotePage {
     <main>
       <header>
         <h1>Sofa Remote<small id="connection">Connecting…</small></h1>
-        <button class="icon icon-caption toolbar-caption" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"><span>Shortcuts</span></button
+        <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button
         ><button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </header>
       <div class="remote-panel">
@@ -534,8 +564,8 @@ enum RemotePage {
       </div>
       <div class="panel-divider" aria-hidden="true"></div>
       <div class="row clicks">
-        <button id="right" data-icon="right-click" class="icon-caption" title="Right click"><span>Right click</span></button>
-        <button id="drag" data-icon="drag" class="icon-caption" aria-pressed="false" title="Drag: toggle to hold or release"><span>Drag</span></button>
+        <button id="right" data-icon="right-click" aria-label="Right click" title="Right click"></button>
+        <button id="drag" data-icon="drag" aria-label="Drag" aria-pressed="false" title="Drag: toggle to hold or release"></button>
       </div>
       <div class="row media">
         <button data-icon="previous" data-action="previous" aria-label="Previous track" title="Previous track"></button>
@@ -547,28 +577,30 @@ enum RemotePage {
         <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
       </div>
       </div>
+      <details class="remote-guide"><summary aria-label="Explain remote icons" title="Explain remote icons">?</summary><p>At the top, the grid opens Shortcuts and the gear opens Settings. Inside the pad, the mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume.</p></details>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
         <p>Keep your Mac awake and Sofa Remote sharing. Check that both devices are on the same Wi-Fi or Tailscale network. If the Mac's address changed, open Sofa Remote on the Mac and scan its new QR code.</p>
-        <div class="sheet-row"><button id="reconnect">Try reconnecting</button><button data-help data-icon="help" title="About and Help">About &amp; Help</button></div>
+        <div class="sheet-row"><button id="reconnect" data-icon="retry" aria-label="Try reconnecting" title="Try reconnecting"></button><button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button></div>
       </aside>
     </main>
     <div class="scrim" id="present-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Presenter controls">
-        <div class="sheet-head"><h2>Present</h2><button data-close>Done</button></div>
+        <div class="sheet-head"><h2>Present</h2><button data-close data-icon="close" aria-label="Close" title="Close"></button></div>
         <p>Start your slideshow on the Mac. Previous and Next send arrow keys to the active app.</p>
-        <div class="present-nav"><button id="present-previous" aria-label="Previous slide">← Previous</button><button id="present-next" aria-label="Next slide">Next →</button></div>
-        <div class="present-tools"><button id="present-exit">End slideshow</button></div>
+        <div class="present-nav"><button id="present-previous" data-icon="slide-previous" aria-label="Previous slide" title="Previous slide"></button><button id="present-next" data-icon="slide-next" aria-label="Next slide" title="Next slide"></button></div>
+        <div class="present-tools"><button id="present-exit" data-icon="stop" aria-label="End slideshow" title="End slideshow"></button></div>
         <label for="present-display">Presentation display</label><select class="field" id="present-display" aria-label="Presentation display"></select>
         <p>Choose the screen showing your slides. Changing display clears marks.</p>
+        <details class="help-disclosure"><summary>About presenter icons</summary><p>Top row: previous slide, next slide, end slideshow. Tools: laser, pen, highlight; then red, blue, green and yellow. Below the pad: undo and clear marks.</p></details>
         <div class="present-mode" role="group" aria-label="Pointer and annotation tools">
-          <button id="present-laser" aria-pressed="true">Laser</button><button id="present-pen" aria-pressed="false">Pen</button><button id="present-highlight" aria-pressed="false">Highlight</button>
+          <button id="present-laser" data-icon="laser" aria-label="Laser" title="Laser" aria-pressed="true"></button><button id="present-pen" data-icon="pen" aria-label="Pen" title="Pen" aria-pressed="false"></button><button id="present-highlight" data-icon="highlight" aria-label="Highlight" title="Highlight" aria-pressed="false"></button>
         </div>
         <div class="present-colours" role="group" aria-label="Pointer and ink colour">
-          <button data-present-colour="red" aria-pressed="true"><span class="present-chip" aria-hidden="true" style="--chip: #e21b2d"></span>Red</button>
-          <button data-present-colour="blue" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #2476ed"></span>Blue</button>
-          <button data-present-colour="green" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #138748"></span>Green</button>
-          <button data-present-colour="yellow" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #f4cd16"></span>Yellow</button>
+          <button data-present-colour="red" aria-label="Red" title="Red" aria-pressed="true"><span class="present-chip" aria-hidden="true" style="--chip: #e21b2d"></span></button>
+          <button data-present-colour="blue" aria-label="Blue" title="Blue" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #2476ed"></span></button>
+          <button data-present-colour="green" aria-label="Green" title="Green" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #138748"></span></button>
+          <button data-present-colour="yellow" aria-label="Yellow" title="Yellow" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #f4cd16"></span></button>
         </div>
         <details id="present-options"><summary>Stroke options</summary>
           <p>Optional for pen and highlight. Choose before drawing.</p>
@@ -578,7 +610,7 @@ enum RemotePage {
         </details>
         <p>Your touch position maps to the entire selected display. The ring shows your last touch position; look at the screen to aim. This pad does not show the slide.</p>
         <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch the position matching the selected screen and move to point or draw. The ring shows your last position. Keyboard: move with arrow keys, hold Space to point or draw."><span id="present-dot" aria-hidden="true"></span></div>
-        <div class="present-tools"><button id="present-undo">Undo</button><button id="present-clear">Clear</button></div>
+        <div class="present-tools"><button id="present-undo" data-icon="undo" aria-label="Undo" title="Undo"></button><button id="present-clear" data-icon="remove" aria-label="Clear marks" title="Clear marks"></button></div>
         <p>Laser appears while touching. Pen marks stay until cleared; highlights disappear after about 2.5 seconds. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
       </div>
     </div>
@@ -586,7 +618,7 @@ enum RemotePage {
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard">
         <div class="sheet-head">
           <h2>Keyboard</h2>
-          <button data-close>Done</button>
+          <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
         <form id="text-form">
           <label for="text">Type on your Mac</label
@@ -596,7 +628,7 @@ enum RemotePage {
             maxlength="1000"
             autocomplete="off"
             aria-label="Text to send"
-          /><button>Send text</button>
+          /><button data-icon="send" aria-label="Send text" title="Send text"></button>
         </form>
         <p>Modifiers apply to the next key.</p>
         <div class="modifiers">
@@ -615,7 +647,7 @@ enum RemotePage {
               aria-label="Letter or number key"
               autocapitalize="off"
               autocomplete="off"
-            /><button>Send key</button>
+            /><button data-icon="send" aria-label="Send key" title="Send key"></button>
           </div>
         </form>
         <div class="keygrid">
@@ -631,10 +663,10 @@ enum RemotePage {
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Shortcuts">
         <div class="sheet-head">
           <h2>Shortcuts</h2>
-          <button data-close>Done</button>
+          <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" title="Slideshow controls">Present</button><button id="keyboard-open" data-icon="keyboard" title="Keyboard">Keyboard</button></div>
-        <div class="sheet-row"><button data-icon="apps" data-action="appSwitcher" title="App switcher">Apps</button><button data-icon="fullscreen" data-action="fullscreen" title="Full screen">Full screen</button><button data-icon="search" data-action="spotlight" title="Spotlight search">Spotlight</button></div>
+        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" aria-label="Present" title="Present"></button><button id="keyboard-open" data-icon="keyboard" aria-label="Keyboard" title="Keyboard"></button></div>
+        <div class="sheet-row"><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
         <label for="url">Open a website on your Mac</label>
       <form class="address" id="open-form">
         <input
@@ -646,7 +678,7 @@ enum RemotePage {
           autocapitalize="off"
           autocorrect="off"
           spellcheck="false"
-        /><button>Open</button>
+        /><button data-icon="send" aria-label="Open website" title="Open website"></button>
       </form>
         <p>Open a saved website or app. Changes are saved on your Mac.</p>
         <div id="shortcut-list"></div>
@@ -668,13 +700,15 @@ enum RemotePage {
           /><select class="field" id="shortcut-kind" aria-label="Shortcut type">
             <option value="url">Website</option>
             <option value="bundleID">Mac app bundle ID</option></select
-          ><button>Add shortcut</button>
+          ><button data-icon="add" aria-label="Add shortcut" title="Add shortcut"></button>
         </form>
       </div>
     </div>
     <div class="scrim" id="settings-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
+        <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option></select>
+        <p>Saved on this phone.</p>
         <h3>Display</h3>
         <label for="display">Jump pointer to display</label><select class="field" id="display"></select>
         <p>The touchpad can move across all connected displays.</p>
@@ -705,7 +739,7 @@ enum RemotePage {
     </div>
     <div class="scrim" id="help-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="About and Help">
-        <div class="sheet-head"><h2>About &amp; Help</h2><button data-close>Done</button></div>
+        <div class="sheet-head"><h2>About &amp; Help</h2><button data-close data-icon="close" aria-label="Close" title="Close"></button></div>
         <p id="app-version">Sofa Remote · connect to see the Mac app version</p>
         <p>Control your Mac from your phone. By Allamaprabhu Ani · Free and open source.</p>
         <nav class="support-icons" aria-label="Support and project links">
@@ -740,7 +774,7 @@ enum RemotePage {
         <p>Preview before copying. Only app, macOS and browser versions, signing type and permission/sharing status are included. No typed text, tokens, personal URLs, screenshots, Mac names or network addresses. Nothing is uploaded automatically.</p>
         <label for="diagnostics">Review diagnostic summary</label>
         <textarea class="field" id="diagnostics" readonly spellcheck="false"></textarea>
-        <button id="copy-diagnostics" data-icon="copy" title="Copy diagnostic summary">Copy diagnostic summary</button>
+        <button id="copy-diagnostics" data-icon="copy" aria-label="Copy diagnostic summary" title="Copy diagnostic summary"></button>
         <p id="copy-result" role="status" aria-live="polite"></p>
         </details>
       </div>
@@ -766,9 +800,9 @@ enum RemotePage {
           maxlength="60"
           placeholder="Phone name (optional)"
           aria-label="Phone name"
-        /><button class="primary" id="pair-button">Pair</button>
+        /><button class="primary" id="pair-button" data-icon="send" aria-label="Pair" title="Pair"></button>
         <p class="error" id="pair-error" role="status"></p>
-        <button data-help data-icon="help" title="About and Help">About &amp; Help</button>
+        <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
       </div>
     </div>
     <div id="locked" role="dialog" aria-modal="true" aria-labelledby="locked-title">
@@ -778,9 +812,9 @@ enum RemotePage {
           Mac is locked, using secure text input, or paused. Unlock the Mac and choose Resume input in Sofa
           Remote on the Mac if needed.
         </p>
-        <button class="primary" data-icon="wake" id="wake" title="Wake displays">Wake screen</button>
+        <button class="primary" data-icon="wake" id="wake" aria-label="Wake screen" title="Wake screen"></button>
         <p id="locked-error" role="status"></p>
-        <button data-help data-icon="help" title="About and Help">About &amp; Help</button>
+        <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
       </div>
     </div>
     <script>
@@ -799,8 +833,18 @@ enum RemotePage {
         button.prepend(svg);
       }
       $$('[data-icon]').forEach(addIcon);
-      // Retire old appearance preferences; they never affect pairing or shortcuts.
-      try { localStorage.removeItem("sofaTheme"); localStorage.removeItem("sofaColour"); } catch {}
+      // Older appearance preferences remain untouched for reversible migration.
+      function applyAppearance(value) {
+        const appearance = ["soft", "velvet", "paper"].includes(value) ? value : "soft";
+        document.documentElement.dataset.appearance = appearance;
+        $("#appearance").value = appearance;
+        $("meta[name=theme-color]").content = {soft:"#111214", velvet:"#191417", paper:"#f6f3ec"}[appearance];
+      }
+      try { applyAppearance(localStorage.getItem("sofaAppearance")); } catch { applyAppearance("soft"); }
+      $("#appearance").onchange = (event) => {
+        applyAppearance(event.target.value);
+        try { localStorage.setItem("sofaAppearance", document.documentElement.dataset.appearance); } catch {}
+      };
       const storage = {
         get() {
           try {
@@ -927,6 +971,7 @@ enum RemotePage {
         else sheet.append(note);
       });
       function showPair() {
+        $("#connection").dataset.connected = "false";
         stopPresenting();
         supportState = null;
         updateSupport();
@@ -1530,7 +1575,7 @@ enum RemotePage {
           result.textContent = "Automatic copy is unavailable on this connection. Touch and hold the selected summary, then choose Copy.";
         }
       };
-      $("#reconnect").onclick = () => { $("#connection").textContent = "Reconnecting…"; refresh(); };
+      $("#reconnect").onclick = () => { $("#connection").dataset.connected = "false"; $("#connection").textContent = "Reconnecting…"; refresh(); };
       async function mutate(path, body) {
         if (changing || locked) return;
         changing = true;
@@ -1717,6 +1762,7 @@ enum RemotePage {
             else if (!locked && wasLocked && !activeOverlay()) $("#settings-open").focus();
             const appName = typeof s.frontApp === "string" ? s.frontApp.trim() : "";
             $("#connection").textContent = "Connected" + (s.name ? ` · ${s.name}` : "") + (appName ? ` · ${appName}` : "");
+            $("#connection").dataset.connected = "true";
             permissionMissing = s.accessibility === false;
             if (permissionMissing)
               status("Allow Accessibility access for Sofa Remote on your Mac.", true, "permission");
@@ -1753,6 +1799,7 @@ enum RemotePage {
             $("#awake").checked = !!s.keepAwake;
             return true;
           } catch (e) {
+            $("#connection").dataset.connected = "false";
             if (e.message !== "unpaired") {
               $("#connection").textContent = "Disconnected · try reconnecting";
               $("#connection-help").hidden = false;

@@ -13,7 +13,7 @@ A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen str
 ## What it does
 
 - Touchpad movement, click, right/double click, drag and two-finger scrolling. Clear local SVG icons and accessible labels.
-- A simple dark phone interface with a large touchpad and accessible controls.
+- A large phone touchpad with borderless, accessible controls and three selectable appearances.
 - Unicode text, keyboard shortcuts, app switcher, Spotlight, media keys, volume and mute.
 - Presenter controls for previous/next and ending a slideshow, plus a laser, pen and disappearing highlighter in four colours on a chosen display. Start the slideshow on the Mac first; marks are not saved to slides.
 - Open websites in installed Brave, falling back to your default browser; save and reorder app/website shortcuts.
