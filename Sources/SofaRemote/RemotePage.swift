@@ -653,9 +653,9 @@ enum RemotePage {
           <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
           <p>Appearance is saved on this phone. The touchpad moves across connected displays. Brightness uses Mac keys and external display support varies. Keeping the Mac awake prevents idle system sleep, but displays can still sleep. Wake does not unlock the Mac; unlock on the Mac, or use Apple Watch unlock if configured.</p>
         </div></details>
+        <button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
         <button class="icon" data-icon="keyboard" id="keyboard-open" aria-label="Keyboard" title="Keyboard"></button>
         <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button>
-        <button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </nav>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
