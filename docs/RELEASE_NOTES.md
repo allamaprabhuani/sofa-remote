@@ -2,7 +2,12 @@ Sofa Remote is a free, MIT-licensed Mac helper that turns a phone browser into a
 
 This public beta includes the Mac TV-inspired pointer improvements, fractional movement, short-lived pointer tracking across displays, and fewer requests for accelerated swipes. Occasional pointer stepping or acceleration changes remain a known issue; native-trackpad smoothness is not claimed.
 
-New in beta 2 (build 8):
+New in beta 3 (build 9):
+
+- Compact, accessible icon links in About & Help on Mac and phone, with diagnostics and secondary details collapsed.
+- A redesigned static product website and optional Ko-fi support link.
+
+Also included from beta 2:
 
 - Local SVG icons with accessible names and short labels for ambiguous controls.
 - Four phone themes: Imperial blue, Light, Ocean and a safe custom colour picker. Choices stay on the phone; no dependencies or extra network requests.

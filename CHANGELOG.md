@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-beta.3 — 2026-11-01
+
+Build 9. Ad-hoc signed, not Developer ID notarised.
+
+- Replace the six main help links with rounded local icons on Mac and phone; retain accessible names and Mac tooltips.
+- Collapse diagnostics and secondary help/privacy details until requested.
+- Refine the static blue product website, typography, download controls and optional Ko-fi link.
+- Record a presentation-remote survey; presenter mode remains future work.
+
 ## 0.1.0-beta.2 — 2026-11-01
 
 Build 8. Ad-hoc signed, not Developer ID notarised.

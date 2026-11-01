@@ -390,6 +390,13 @@ enum RemotePage {
           min-height: 44px;
         }
       }
+      .support-icons { display: grid; grid-template-columns: repeat(6, minmax(44px, 1fr)); gap: 8px; margin: 18px 0; }
+      .support-icons a { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 14px; background: var(--card); color: var(--ink); border: 1px solid var(--line); touch-action: manipulation; }
+      .support-icons a:hover, .support-icons a:active { background: var(--pressed); }
+      .support-icons a:focus-visible, .help-disclosure summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .help-disclosure { margin: 12px 0; }
+      .help-disclosure summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
+      @media (max-width: 380px) { .support-icons { grid-template-columns: repeat(3, minmax(44px, 1fr)); } }
     </style>
   </head>
   <body>
@@ -416,6 +423,12 @@ enum RemotePage {
       <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v3"/></symbol>
       <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 8a3 3 0 0 1 6 0c0 2-3 2-3 5m0 4h.01"/></symbol>
       <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></symbol>
+      <symbol id="icon-bug" viewBox="0 0 24 24"><path d="M8 8h8v9a4 4 0 0 1-8 0ZM9 8V6a3 3 0 0 1 6 0v2M4 9l4 2M4 16h4M20 9l-4 2M20 16h-4M12 9v11"/></symbol>
+      <symbol id="icon-idea" viewBox="0 0 24 24"><path d="M8 15a7 7 0 1 1 8 0l-1 3H9ZM9 21h6"/></symbol>
+      <symbol id="icon-chat" viewBox="0 0 24 24"><path d="M3 4h15v11H8l-5 4ZM18 9h3v12l-5-3h-5v-3"/></symbol>
+      <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></symbol>
+      <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M12 21 3 12C-3 4 7 0 12 7 17 0 27 4 21 12Z"/></symbol>
+      <symbol id="icon-updates" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v12M7 13l5 5 5-5"/></symbol>
     </svg>
     <main>
       <header>
@@ -586,31 +599,39 @@ enum RemotePage {
         <div class="sheet-head"><h2>About &amp; Help</h2><button data-close>Done</button></div>
         <p id="app-version">Sofa Remote · connect to see the Mac app version</p>
         <p>Control your Mac from your phone. By Allamaprabhu Ani · Free and open source.</p>
-        <p>Allow Accessibility in the Mac app, show its pairing code and scan the QR with your phone Camera. In Safari, use Share → Add to Home Screen. For connection or permission problems, follow the setup guide below.</p>
-        <h3>Privacy</h3>
-        <p>No screen streaming, analytics, ads or accounts. Paired phones can control your desktop. Direct local HTTP is unencrypted; use a trusted network or your own Tailscale connection. Stop sharing or revoke a phone on your Mac when needed.</p>
-        <nav class="help-links" aria-label="Support and project links">
-          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md" target="_blank" rel="noopener noreferrer">Setup guide</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/SUPPORT.md" target="_blank" rel="noopener noreferrer">Troubleshooting and developer contact</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">Report a bug</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=feature_request.yml" target="_blank" rel="noopener noreferrer">Suggest a feature</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/discussions" target="_blank" rel="noopener noreferrer">Ask a question</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/releases" target="_blank" rel="noopener noreferrer">Check for updates and release notes</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy policy</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/security/advisories/new" target="_blank" rel="noopener noreferrer">Report a security vulnerability privately</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT licence</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/NOTICE" target="_blank" rel="noopener noreferrer">Credits and third-party notices</a>
-          <a href="https://github.com/allamaprabhuani/sofa-remote" target="_blank" rel="noopener noreferrer">Source code</a>
-          <a href="https://allamaprabhuani.github.io/sofa-remote/" target="_blank" rel="noopener noreferrer">Project website</a>
-          <a href="https://allamaprabhuani.github.io/sofa-remote/#support" target="_blank" rel="noopener noreferrer">Support this project</a>
-          <a href="https://allamaprabhuani.github.io/" target="_blank" rel="noopener noreferrer">Developer website</a>
+        <nav class="support-icons" aria-label="Support and project links">
+          <a data-icon="bug" href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" aria-label="Report a bug" title="Report a bug"></a>
+          <a data-icon="idea" href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=feature_request.yml" target="_blank" rel="noopener noreferrer" aria-label="Suggest a feature" title="Suggest a feature"></a>
+          <a data-icon="chat" href="https://github.com/allamaprabhuani/sofa-remote/discussions" target="_blank" rel="noopener noreferrer" aria-label="Questions and developer contact" title="Questions and developer contact"></a>
+          <a data-icon="globe" href="https://allamaprabhuani.github.io/sofa-remote/" target="_blank" rel="noopener noreferrer" aria-label="Project website" title="Project website"></a>
+          <a data-icon="heart" href="https://allamaprabhuani.github.io/sofa-remote/#support" target="_blank" rel="noopener noreferrer" aria-label="Support this project" title="Support this project"></a>
+          <a data-icon="updates" href="https://github.com/allamaprabhuani/sofa-remote/releases" target="_blank" rel="noopener noreferrer" aria-label="Check for updates and release notes" title="Check for updates and release notes"></a>
         </nav>
-        <h3>Diagnostic summary</h3>
+        <details class="help-disclosure"><summary>Setup and connection help</summary>
+        <p>Allow Accessibility in the Mac app, show its pairing code and scan the QR with your phone Camera. In Safari, use Share → Add to Home Screen. For connection or permission problems, follow the setup guide below.</p>
+          <nav class="help-links" aria-label="Setup links">
+            <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md" target="_blank" rel="noopener noreferrer">Setup guide</a>
+            <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/SUPPORT.md" target="_blank" rel="noopener noreferrer">Troubleshooting</a>
+          </nav>
+        </details>
+        <details class="help-disclosure"><summary>Privacy and credits</summary>
+          <p>No screen streaming, analytics, ads or accounts. Paired phones can control your desktop. Local HTTP is unencrypted; use trusted Wi-Fi or Tailscale. Stop sharing or revoke a phone on the Mac to end access.</p>
+          <nav class="help-links" aria-label="Privacy and credits links">
+            <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+            <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT licence</a>
+            <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/NOTICE" target="_blank" rel="noopener noreferrer">Credits and third-party notices</a>
+            <a href="https://github.com/allamaprabhuani/sofa-remote/security/advisories/new" target="_blank" rel="noopener noreferrer">Report a security vulnerability privately</a>
+            <a href="https://github.com/allamaprabhuani/sofa-remote" target="_blank" rel="noopener noreferrer">Source code</a>
+            <a href="https://allamaprabhuani.github.io/" target="_blank" rel="noopener noreferrer">Developer website</a>
+          </nav>
+        </details>
+        <details class="help-disclosure" id="diagnostic-details"><summary>Diagnostic summary</summary>
         <p>Preview before copying. Only app, macOS and browser versions plus permission and sharing status are included. No typed text, tokens, personal URLs, screenshots, Mac names or network addresses. Nothing is uploaded automatically.</p>
         <label for="diagnostics">Review diagnostic summary</label>
         <textarea class="field" id="diagnostics" readonly spellcheck="false"></textarea>
         <button id="copy-diagnostics" data-icon="copy" title="Copy diagnostic summary">Copy diagnostic summary</button>
         <p id="copy-result" role="status" aria-live="polite"></p>
+        </details>
       </div>
     </div>
     <div id="pair" role="dialog" aria-modal="true" aria-labelledby="pair-title">
@@ -1242,7 +1263,7 @@ enum RemotePage {
         $$(".scrim").forEach((x) => x.classList.remove("open"));
         sheetStack.push({ id, opener });
         $("#" + id).classList.add("open");
-        if (id === "help-sheet") { updateSupport(); $("#copy-result").textContent = ""; }
+        if (id === "help-sheet") { $("#diagnostic-details").open = false; updateSupport(); $("#copy-result").textContent = ""; }
         updateLayers();
         $("#" + id + " [data-close]").focus();
       }
@@ -1278,8 +1299,14 @@ enum RemotePage {
           e.preventDefault(); closeSheet(); return;
         }
         if (e.key !== "Tab") return;
-        const focusable = [...overlay.querySelectorAll("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled)")]
-          .filter((x) => x.getClientRects().length && !x.closest("[inert]"));
+        const focusable = [...overlay.querySelectorAll("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary")]
+          .filter((x) => {
+            if (!x.getClientRects().length || x.closest("[inert]")) return false;
+            for (let parent = x.parentElement; parent; parent = parent.parentElement) {
+              if (parent.matches("details:not([open])") && !parent.querySelector(":scope > summary")?.contains(x)) return false;
+            }
+            return true;
+          });
         if (!focusable.length) { e.preventDefault(); return; }
         const first = focusable[0], last = focusable.at(-1);
         if (e.shiftKey && (document.activeElement === first || !overlay.contains(document.activeElement))) {

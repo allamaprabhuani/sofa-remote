@@ -120,7 +120,10 @@ async function main() {
     q('#text').value='SECRET_TYPED_TEXT';q('#url').value='https://private.example/SECRET_URL';
     await refresh();q('#settings-open').click();
     q('#settings-sheet [data-help]').click();
-    const initial={open:q('#help-sheet').classList.contains('open'),mainInert:q('main').inert,settingsInert:q('#settings-sheet').inert,summary:q('#diagnostics').value,version:q('#app-version').textContent,focus:q('#help-sheet').contains(document.activeElement)};
+    const initial={open:q('#help-sheet').classList.contains('open'),mainInert:q('main').inert,settingsInert:q('#settings-sheet').inert,diagnosticsCollapsed:!q('#diagnostic-details').open,summary:q('#diagnostics').value,version:q('#app-version').textContent,focus:q('#help-sheet').contains(document.activeElement)};
+    q('#diagnostic-details summary').focus();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
+    initial.collapsedWrap=document.activeElement===q('#help-sheet [data-close]');
+    q('#diagnostic-details summary').click();
     q('#copy-diagnostics').focus();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
     const wrapped=document.activeElement===q('#help-sheet [data-close]');
     const before=calls.length;await q('#copy-diagnostics').onclick();
@@ -137,6 +140,7 @@ async function main() {
     q('#text').value='';q('#url').value='';await refresh();
     return {initial,wrapped,copied,networkAfterCopy,fallback,sanitized,restored,restoredMain};
   })()`);
+  assert.equal(help.initial.diagnosticsCollapsed,true,'diagnostics start collapsed');assert.equal(help.initial.collapsedWrap,true,'Tab skips hidden disclosure contents and wraps');
   assert.equal(help.initial.open,true);assert.equal(help.initial.mainInert,true);assert.equal(help.initial.settingsInert,true);assert.equal(help.initial.focus,true);
   assert.match(help.initial.summary,/App version: 0\.1\.0/);assert.match(help.initial.summary,/Build: 7/);assert.match(help.initial.summary,/macOS: 15\.0\.1/);assert.match(help.initial.summary,/Browser: Chrome 123\.0\.1\.2/);assert.match(help.initial.summary,/Accessibility allowed: Yes/);
   assert.doesNotMatch(help.initial.summary,/SECRET|private\.example|PrivatePhone|secret-ua|a{64}|private-id/,'diagnostics exclude personal fields, full UA and tokens');
@@ -149,6 +153,7 @@ async function main() {
     const layout=await evaluate(`(()=>{document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click();const modal=document.querySelector('#help-sheet .sheet'),r=modal.getBoundingClientRect();const result={width:r.width,height:r.height,viewport:innerWidth,screen:innerHeight,scroll:document.documentElement.scrollWidth,targets:[...modal.querySelectorAll('button,a')].map(x=>x.getBoundingClientRect().height)};closeSheet();closeSheet();return result})()`);
     assert.ok(layout.scroll<=layout.viewport+1,`help ${width}x${height} no overflow`);assert.ok(layout.height<=layout.screen,`help ${width}x${height} scrolls within screen`);assert.ok(layout.targets.every(h=>h>=44),`help ${width}x${height} touch targets`);
   }
+  if(process.env.SOFA_TEST_HELP_SCREENSHOT){await evaluate(`document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click()`);const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_HELP_SCREENSHOT,Buffer.from(shot.data,'base64'));await evaluate(`closeSheet();closeSheet()`)}
   const recovery=await evaluate(`(async()=>{stateFailure=true;await refresh();const disconnected={title:document.querySelector('#connection').textContent,help:!document.querySelector('#connection-help').hidden};stateFailure=false;document.querySelector('#reconnect').click();await new Promise(r=>setTimeout(r,10));return {disconnected,recovered:document.querySelector('#connection-help').hidden}})()`);
   assert.match(recovery.disconnected.title,/Disconnected/);assert.equal(recovery.disconnected.help,true);assert.equal(recovery.recovered,true);
   await cdp('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
