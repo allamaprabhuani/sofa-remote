@@ -73,4 +73,4 @@ Swift tests use fake input sinks and real loopback transport; browser tests use 
 
 Use [bug reports](https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml), [feature requests](https://github.com/allamaprabhuani/sofa-remote/issues/new?template=feature_request.yml), or [Discussions](https://github.com/allamaprabhuani/sofa-remote/discussions). Read [Contributing](CONTRIBUTING.md), [support](SUPPORT.md), [changelog](CHANGELOG.md) and [credits](CONTRIBUTORS.md). Report vulnerabilities [privately](https://github.com/allamaprabhuani/sofa-remote/security/advisories/new).
 
-Copyright © 2026 Allamaprabhu Ani. Selected code is adapted from [Mac TV](https://github.com/Arunprakaash/mac-tv), copyright © 2026 Arunprakaash. The original attribution is retained in [LICENSE](LICENSE) and [NOTICE](NOTICE). Personal shortcuts remain local settings, not public defaults.
+Copyright © 2026 Allamaprabhu Ani. Third-party copyright and licence notices are in [LICENSE](LICENSE) and [NOTICE](NOTICE). Personal shortcuts remain local settings, not public defaults.

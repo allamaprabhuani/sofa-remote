@@ -4,7 +4,7 @@ Small reproducible fixes, accessibility improvements, tests and documentation ar
 
 ## Product scope
 
-Sofa Remote is an input-only Mac helper and browser remote. Prioritise pointing, keyboard input, reconnecting, clear recovery and bounded resource use. Keep personal shortcuts local. No screen streaming, accounts, analytics, ads, subscriptions, shell-command API, saved credentials or unlock bypass. Preserve Mac TV's MIT attribution.
+Sofa Remote is an input-only Mac helper and browser remote. Prioritise pointing, keyboard input, reconnecting, clear recovery and bounded resource use. Keep personal shortcuts local. No screen streaming, accounts, analytics, ads, subscriptions, shell-command API, saved credentials or unlock bypass. Preserve third-party copyright and licence notices.
 
 ## Development
 

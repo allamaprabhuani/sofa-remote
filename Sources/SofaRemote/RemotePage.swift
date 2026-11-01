@@ -101,9 +101,9 @@ enum RemotePage {
       header button:active { background: var(--pressed); }
       header h1 {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        font-weight: 700;
-        font-size: 1.1875rem;
-        letter-spacing: -0.02em;
+        font-weight: 650;
+        font-size: 0.98rem;
+        letter-spacing: -0.01em;
         margin: 0;
         flex: 1;
         min-width: 0;
@@ -218,9 +218,16 @@ enum RemotePage {
       .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); position:relative; }
       .volume::before { content:""; position:absolute; width:18%; height:2px; left:41%; top:50%; background:var(--line); opacity:.45; pointer-events:none; }
       .panel-divider { width: 42px; height: 1px; align-self: center; flex: 0 0 auto; background: var(--line); opacity: 0.5; }
+      .bottom-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+      .bottom-tools button { background: transparent; border-radius: 12px; }
+      .bottom-tools button:active { background: var(--pressed); }
+      .bottom-tools .control-icon { width: 23px; height: 23px; }
+      .remote-guide { position: relative; }
+      .guide-content { position: absolute; right: -104px; bottom: calc(100% + 8px); width: min(310px, calc(100vw - 32px)); max-height: 50dvh; overflow: auto; z-index: 3; padding: 16px; border-radius: 16px; background: var(--sheet); box-shadow: 0 4px 24px rgba(0,0,0,.2); }
       .remote-guide summary { min-height: 44px; display: flex; align-items: center; justify-content: center; width: 44px; border-radius: 50%; cursor: pointer; }
       .remote-guide summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-      .remote-guide p { margin: 4px 0 12px; color: var(--muted); font-size: 0.875rem; }
+      .remote-guide p { margin: 0 0 12px; color: var(--muted); font-size: 0.875rem; }
+      .remote-guide p:last-child { margin-bottom: 0; }
       .remote-panel .control-icon { width: 25px; height: 25px; }
       .media [data-action="playPause"] .control-icon { width: 30px; height: 30px; }
       header .control-icon { width: 23px; height: 23px; }
@@ -230,10 +237,10 @@ enum RemotePage {
       main .remote-panel .row button:active { background: var(--pressed); }
       main .remote-panel .row button.on { background: var(--selection); color: var(--selection-ink); }
       main.is-pointing header, main.is-pointing .row, main.is-pointing .panel-divider,
-      main.is-pointing .remote-guide, main.is-pointing #pad .hint { opacity: 0; }
-      main.is-pointing header button, main.is-pointing .row button, main.is-pointing .remote-guide { pointer-events: none; }
+      main.is-pointing .bottom-tools, main.is-pointing #pad .hint { opacity: 0; }
+      main.is-pointing .bottom-tools, main.is-pointing .row button { pointer-events: none; }
       @media (prefers-reduced-motion: no-preference) {
-        main header, main .row, main .panel-divider, main .remote-guide, main #pad .hint { transition: opacity 160ms ease; }
+        main header, main .row, main .panel-divider, main .bottom-tools, main #pad .hint { transition: opacity 160ms ease; }
         main .remote-panel .row button { transition: transform 100ms ease-out; }
         main .remote-panel .row button:active:not(:disabled) { transform:scale(.96); }
       }
@@ -292,6 +299,7 @@ enum RemotePage {
         border: 1px solid var(--line);
         border-radius: 24px 24px 0 0;
       }
+      :is(#settings-sheet, #shortcuts-sheet) .sheet { max-height: 78dvh; }
       #settings-sheet .settings-actions { display: flex; gap: 10px; flex-wrap: wrap; }
       #settings-sheet .settings-actions button, #settings-sheet .settings-close, #devices button { flex: 0 0 48px; width: 48px; height: 48px; min-width: 48px; padding: 0; border-radius: 50%; }
       #settings-sheet .settings-close { min-width: 48px; }
@@ -367,6 +375,9 @@ enum RemotePage {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
       }
+      .shortcut-add summary { min-height: 44px; width: 48px; display: grid; place-items: center; cursor: pointer; font-size: 1.5rem; border-radius: 12px; }
+      .shortcut-add summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .shortcut-add[open] form { margin-top: 8px; }
       .shortcut {
         display: flex;
         gap: 6px;
@@ -579,8 +590,6 @@ enum RemotePage {
     <main>
       <header>
         <h1>Sofa Remote<small id="connection">Connecting…</small></h1>
-        <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button
-        ><button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </header>
       <div class="remote-panel">
       <div
@@ -606,7 +615,15 @@ enum RemotePage {
         <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
       </div>
       </div>
-      <details class="remote-guide"><summary aria-label="Explain remote icons" title="Explain remote icons">?</summary><p>At the top, the grid opens Shortcuts and the gear opens Settings. Inside the pad, the mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume.</p></details>
+      <nav class="bottom-tools" aria-label="Remote navigation">
+        <details class="remote-guide"><summary aria-label="Explain remote icons" title="Explain remote icons">?</summary><div class="guide-content">
+          <p>The mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume. The grid opens Shortcuts and the gear opens Settings.</p>
+          <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
+          <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
+        </div></details>
+        <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button>
+        <button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
+      </nav>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
         <p>Keep your Mac awake and Sofa Remote sharing. Check that both devices are on the same Wi-Fi or Tailscale network. If the Mac's address changed, open Sofa Remote on the Mac and scan its new QR code.</p>
@@ -692,6 +709,7 @@ enum RemotePage {
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Shortcuts">
         <div class="sheet-head">
           <h2>Shortcuts</h2>
+          <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
           <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
         <div class="sheet-row"><button id="present-open" data-icon="fullscreen" aria-label="Present" title="Present"></button><button id="keyboard-open" data-icon="keyboard" aria-label="Keyboard" title="Keyboard"></button></div>
@@ -711,6 +729,7 @@ enum RemotePage {
       </form>
         <p>Open a saved website or app. Changes are saved on your Mac.</p>
         <div id="shortcut-list"></div>
+        <details class="shortcut-add"><summary aria-label="Add shortcut" title="Add shortcut">+</summary>
         <form id="shortcut-form">
           <label for="shortcut-name">Add shortcut</label
           ><input
@@ -731,11 +750,12 @@ enum RemotePage {
             <option value="bundleID">Mac app bundle ID</option></select
           ><button data-icon="add" aria-label="Add shortcut" title="Add shortcut"></button>
         </form>
+        </details>
       </div>
     </div>
     <div class="scrim" id="settings-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
-        <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
+        <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-help data-icon="help" aria-label="About and Help" title="About and Help"></button><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
         <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option></select>
         <p>Saved on this phone.</p>
         <h3>Display</h3>
@@ -749,7 +769,6 @@ enum RemotePage {
           <button id="wake-main" data-icon="wake" data-action="screenOn" aria-label="Wake screens" title="Wake screens"></button>
         </div>
         <p>Brightness uses Mac keys; external display support varies. Screen off may lock the Mac.</p>
-        <details class="help-disclosure"><summary>About display icons</summary><p>In order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p></details>
         <h3>Mac controls</h3>
         <div class="settings-actions" role="group" aria-label="Mac controls">
           <button data-icon="desktop" data-action="showDesktop" aria-label="Show desktop" title="Show desktop"></button>
@@ -757,13 +776,11 @@ enum RemotePage {
           <button data-icon="mute" data-action="mute" aria-label="Mute" title="Mute"></button>
           <button class="danger" data-icon="lock" id="lock" aria-label="Lock Mac" title="Lock Mac"></button>
         </div>
-        <details class="help-disclosure"><summary>About Mac control icons</summary><p>In order: show desktop, open Downloads, mute, and lock the Mac.</p></details>
         <p>Waking does not unlock your Mac. Unlock on the Mac; Apple Watch unlock is a separate macOS setting.</p>
         <h3>Sharing</h3>
         <label class="sheet-row"><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake" /></label>
         <p>Prevents idle system sleep; the display can still sleep.</p>
         <h3>Paired phones</h3><div id="devices"></div>
-        <h3>Help</h3><div class="settings-actions"><button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button></div>
       </div>
     </div>
     <div class="scrim" id="help-sheet">
@@ -779,6 +796,11 @@ enum RemotePage {
           <a data-icon="heart" href="https://sofa-remote.doublehoney1.chatgpt.site/#support" target="_blank" rel="noopener noreferrer" aria-label="Support this project" title="Support this project"></a>
           <a data-icon="updates" href="https://github.com/allamaprabhuani/sofa-remote/releases" target="_blank" rel="noopener noreferrer" aria-label="Check for updates and release notes" title="Check for updates and release notes"></a>
         </nav>
+        <details class="help-disclosure"><summary>Remote and settings icons</summary>
+          <p>The mouse icon is right click and the hand toggles drag. Playback and volume follow below. The grid opens Shortcuts and the gear opens Settings.</p>
+          <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
+          <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
+        </details>
         <details class="help-disclosure"><summary>Setup and connection help</summary>
         <p id="signing-help">Signing: Unknown. Signing type alone does not verify Developer ID or notarisation.</p>
         <p>Allow Accessibility in the Mac app, show its pairing code and scan the QR with your phone Camera. In Safari, use Share → Add to Home Screen. For connection or permission problems, follow the setup guide below.</p>
@@ -1331,7 +1353,7 @@ enum RemotePage {
           if (drag) endDrag();
           command({ type: "scroll", dx: -dx / fingers.size, dy: -dy / fingers.size });
         } else {
-          // Match Mac TV's touchpad feel and preserve small movements across samples.
+          // Preserve small movements across samples while applying pointer gain.
           const gain = 1.6 + Math.min(Math.hypot(dx, dy) / 6, 3);
           pointerFraction.dx += dx * gain;
           pointerFraction.dy += dy * gain;

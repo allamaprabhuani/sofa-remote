@@ -126,6 +126,7 @@
     acts[i].addEventListener('click', function (ev) {
       var act = ev.currentTarget.getAttribute('data-act');
       switch (act) {
+        case 'help': setStatus('Help is available in the connected remote.'); break;
         case 'shortcuts': setStatus('Shortcuts are available in the connected remote.'); break;
         case 'settings': setStatus('Settings are available in the connected remote.'); break;
         case 'right':   setStatus('Right click'); markMoved(); break;
