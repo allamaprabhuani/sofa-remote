@@ -97,7 +97,8 @@ enum RemotePage {
         align-items: center;
         gap: 10px;
       }
-      header button { border-radius: 24px; }
+      header button { border-radius: 24px; background: transparent; }
+      header button:active { background: var(--pressed); }
       header h1 {
         font-family: ui-rounded, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         font-weight: 700;
@@ -162,7 +163,7 @@ enum RemotePage {
         flex-direction: column;
         gap: 4px;
         padding: 0 10px 12px;
-        background: var(--pad);
+        background: transparent;
         border: 0;
         border-radius: 36px;
       }
@@ -227,8 +228,9 @@ enum RemotePage {
       .remote-guide summary { min-height: 44px; display: flex; align-items: center; justify-content: center; width: 44px; border-radius: 50%; cursor: pointer; }
       .remote-guide summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .remote-guide p { margin: 4px 0 12px; color: var(--muted); font-size: 0.875rem; }
-      .remote-panel .control-icon { width: 26px; height: 26px; }
-      .media [data-action="playPause"] .control-icon { width: 32px; height: 32px; }
+      .remote-panel .control-icon { width: 32px; height: 32px; }
+      .media [data-action="playPause"] .control-icon { width: 38px; height: 38px; }
+      header .control-icon { width: 26px; height: 26px; }
       main .row button { min-height: 52px; border-radius: 28px; }
       main .row { gap: 10px; }
       main .remote-panel .row button { border: 0; background: transparent; }
@@ -475,6 +477,38 @@ enum RemotePage {
       .help-disclosure { margin: 12px 0; }
       .help-disclosure summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
       @media (max-width: 380px) { .support-icons { grid-template-columns: repeat(3, minmax(44px, 1fr)); } }
+      /* Match the open, icon-led remote while keeping fields and focus states distinct. */
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) .sheet {
+        background: var(--bg);
+        border: 0;
+        border-radius: 28px 28px 0 0;
+        padding: 24px 22px calc(28px + env(safe-area-inset-bottom));
+        gap: 14px;
+      }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) .sheet-head h2 {
+        font-size: 1.4rem;
+        letter-spacing: -0.03em;
+      }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) .sheet-head button,
+      #settings-sheet .settings-actions button,
+      #shortcuts-sheet .sheet-row button,
+      #shortcuts-sheet .shortcut button,
+      #shortcuts-sheet #shortcut-form button,
+      #help-sheet #copy-diagnostics {
+        background: transparent;
+        border: 0;
+      }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) button[data-icon] .control-icon,
+      #help-sheet .support-icons .control-icon { width: 27px; height: 27px; }
+      :is(#shortcuts-sheet, #settings-sheet, #help-sheet) button:active,
+      #help-sheet .support-icons a:active { background: var(--pressed); }
+      #shortcuts-sheet .shortcut-initial { background: transparent; color: var(--ink); }
+      #shortcuts-sheet .shortcut { min-height: 52px; }
+      #settings-sheet h3 { margin-top: 14px; }
+      #help-sheet .support-icons { gap: 4px; margin: 14px 0; }
+      #help-sheet .support-icons a { border: 0; background: transparent; border-radius: 50%; }
+      #help-sheet .help-disclosure { margin: 0; }
+      #help-sheet .help-disclosure summary { padding: 15px 0; }
     </style>
   </head>
   <body>
