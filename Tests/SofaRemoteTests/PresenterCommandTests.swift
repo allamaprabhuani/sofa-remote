@@ -20,4 +20,14 @@ import Testing
         let highlight = try? PresenterCommand(json: ["action":"start", "display":"screen", "mode":"highlight", "color":"blue", "x":0.5, "y":0.5])
         #expect(highlight?.mode == .highlight && highlight?.color == .blue)
     }
+    @Test func drawingOptionsAreExplicitBooleans() throws {
+        let base: [String: Any] = ["action":"start", "display":"screen", "mode":"pen", "x":0.5, "y":0.5]
+        let defaults = try PresenterCommand(json: base)
+        #expect(!defaults.smoothing && !defaults.shapeCorrection)
+        let enabled = try PresenterCommand(json: base.merging(["smooth":true, "shapes":true]) { _, new in new })
+        #expect(enabled.smoothing && enabled.shapeCorrection)
+        for bad: Any in [1, 0, "true", NSNull()] {
+            #expect(throws: (any Error).self) { try PresenterCommand(json: base.merging(["smooth":bad]) { _, new in new }) }
+        }
+    }
 }

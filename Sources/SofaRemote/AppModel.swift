@@ -205,7 +205,8 @@ import ServiceManagement
                           let display = command.display, let x = command.x, let y = command.y else {
                         throw RemoteError("Choose a presentation tool and display.")
                     }
-                    guard presenter.begin(displayID: display, mode: mode, color: color, x: x, y: y) else {
+                    guard presenter.begin(displayID: display, mode: mode, color: color, smoothing: command.smoothing,
+                                          shapeCorrection: command.shapeCorrection, x: x, y: y) else {
                         throw RemoteError("Presenter tool is unavailable. Check the display and finish the previous gesture.")
                     }
                     presenterOwner = device.id; guardPresenter()

@@ -30,6 +30,10 @@ Start your slideshow on the Mac in Keynote, PowerPoint or Google Slides, and kee
 
 Choose the display showing your audience's slides. Select **Laser**, **Pen** or **Highlight** and a colour, then touch and move on the phone's presentation pad. The ring shows your position on the pad, and a matching marker appears on the display while you touch it. The pad is a control surface: it does not show or stream the slide. The laser disappears when you lift your finger; highlights disappear about 2½ seconds after you finish each stroke. Pen marks are temporary, are not saved to the presentation, and clear when you change slides, close Present, or lose connection for 30 seconds. Undo and Clear remove marks. The overlay may not be included when sharing only an app window; share the display if your meeting software supports it. Full-screen stacking and display configurations vary, so try it with your setup before a presentation.
 
+Open **Stroke options** to enable smoothing or shape correction for pen and highlighter strokes. Both are off by default. Shape correction attempts near-straight lines and closed circles after you lift your finger; other strokes remain freehand. Try these options before presenting to see whether they suit your drawing style.
+
+The overlay has a limit of 100 strokes or 10,000 points. In this preview, reaching the limit can clear the overlay; use Clear periodically during long presentations.
+
 ## Find the Mac controls again
 
 Choose the cursor icon in the Mac menu bar. If you hid it, open **Applications → Sofa Remote** again; its setup window reopens. Restore **Show menu bar icon** if you want. Hiding the icon or closing the setup window keeps sharing running. **Stop sharing** closes the listener; **Quit** exits the helper.

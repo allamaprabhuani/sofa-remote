@@ -7,7 +7,13 @@ struct PresenterInk {
         let id: UUID
         let mode: PresenterOverlay.Mode
         let color: PresenterOverlay.Color
+        let smoothing: Bool
+        let shapeCorrection: Bool
+        let aspectRatio: CGFloat
+        var lastRaw: CGPoint
         var points: [CGPoint]
+        /// Repeated identical touch coordinates still represent a visible dot.
+        var isDot: Bool { guard let first = points.first else { return false }; return points.dropFirst().allSatisfy { $0 == first } }
     }
     static let maxStrokes = 100
     static let maxPoints = 10_000
@@ -22,11 +28,16 @@ struct PresenterInk {
         guard x.isFinite, y.isFinite, (0...1).contains(x), (0...1).contains(y) else { return nil }
         return CGPoint(x: x, y: y)
     }
-    mutating func begin(mode: PresenterOverlay.Mode, color: PresenterOverlay.Color = .red, x: Double, y: Double) -> Bool {
-        guard !active, let point = Self.point(x, y) else { return false }
+    mutating func begin(mode: PresenterOverlay.Mode, color: PresenterOverlay.Color = .red,
+                        smoothing: Bool = false, shapeCorrection: Bool = false, aspectRatio: CGFloat = 1,
+                        x: Double, y: Double) -> Bool {
+        guard !active, aspectRatio.isFinite, aspectRatio > 0,
+              let point = Self.point(x, y) else { return false }
         if mode != .laser {
             guard strokes.count < Self.maxStrokes, count < Self.maxPoints else { return false }
-            strokes.append(Stroke(id: UUID(), mode: mode, color: color, points: [point])); count += 1
+            strokes.append(Stroke(id: UUID(), mode: mode, color: color, smoothing: smoothing,
+                                  shapeCorrection: shapeCorrection, aspectRatio: aspectRatio,
+                                  lastRaw: point, points: [point])); count += 1
         }
         cursor = point; cursorColor = color; self.mode = mode; active = true
         return true
@@ -35,7 +46,14 @@ struct PresenterInk {
         guard active, let point = Self.point(x, y) else { return false }
         if mode != .laser {
             guard count < Self.maxPoints, !strokes.isEmpty else { return false }
-            strokes[strokes.count - 1].points.append(point); count += 1
+            let index = strokes.count - 1
+            let previous = strokes[index].points.last!
+            let next = strokes[index].smoothing
+                ? CGPoint(x: previous.x + (point.x - previous.x) * 0.6,
+                          y: previous.y + (point.y - previous.y) * 0.6)
+                : point
+            strokes[index].lastRaw = point
+            strokes[index].points.append(next); count += 1
         }
         cursor = point
         return true
@@ -44,6 +62,19 @@ struct PresenterInk {
     @discardableResult
     mutating func end() -> UUID? {
         let id = active && mode == .highlight ? strokes.last?.id : nil
+        if active && mode != .laser && !strokes.isEmpty {
+            let index = strokes.count - 1
+            if strokes[index].smoothing, strokes[index].points.last != strokes[index].lastRaw {
+                if count < Self.maxPoints { strokes[index].points.append(strokes[index].lastRaw); count += 1 }
+                else { strokes[index].points[strokes[index].points.count - 1] = strokes[index].lastRaw }
+            }
+            if strokes[index].shapeCorrection,
+               let corrected = PresenterShapeCorrection.correct(strokes[index].points, aspectRatio: strokes[index].aspectRatio),
+               count - strokes[index].points.count + corrected.count <= Self.maxPoints {
+                count += corrected.count - strokes[index].points.count
+                strokes[index].points = corrected
+            }
+        }
         active = false; cursor = nil
         return id
     }
@@ -63,6 +94,50 @@ struct PresenterInk {
         count -= strokes[index].points.count
         strokes.remove(at: index)
         return true
+    }
+}
+
+/// Conservative after-lift recognition in display-corrected coordinates. Only
+/// unambiguous lines and near-circular closed loops are replaced; freehand and
+/// aspect-skewed ellipses are left untouched. No points escape the display.
+enum PresenterShapeCorrection {
+    static func correct(_ normalized: [CGPoint], aspectRatio: CGFloat) -> [CGPoint]? {
+        guard normalized.count >= 5, aspectRatio.isFinite, (0.1...10).contains(aspectRatio),
+              normalized.allSatisfy({ $0.x.isFinite && $0.y.isFinite && (0...1).contains($0.x) && (0...1).contains($0.y) }) else { return nil }
+        let points = normalized.map { CGPoint(x: $0.x * aspectRatio, y: $0.y) }
+        let first = points[0], last = points[points.count - 1]
+        func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat { hypot(a.x - b.x, a.y - b.y) }
+        let chord = distance(first, last)
+        let length = zip(points, points.dropFirst()).reduce(CGFloat.zero) { $0 + distance($1.0, $1.1) }
+        if chord >= 0.04 && length <= chord * 1.10 {
+            let dx = last.x - first.x, dy = last.y - first.y
+            let error = points.map { abs(dx * ($0.y - first.y) - dy * ($0.x - first.x)) / chord }.max() ?? .infinity
+            if error <= max(0.003, chord * 0.035) { return [normalized[0], normalized[normalized.count - 1]] }
+        }
+        guard points.count >= 12 else { return nil }
+        let minX = points.map(\.x).min()!, maxX = points.map(\.x).max()!
+        let minY = points.map(\.y).min()!, maxY = points.map(\.y).max()!
+        let width = maxX - minX, height = maxY - minY
+        guard min(width, height) >= 0.05, max(width, height) <= min(width, height) * 1.24 else { return nil }
+        let center = CGPoint(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
+        let radius = (width + height) / 4
+        guard chord <= radius * 0.35, length >= 2 * .pi * radius * 0.80,
+              length <= 2 * .pi * radius * 1.35 else { return nil }
+        let errors = points.map { abs(distance($0, center) - radius) / radius }
+        guard errors.reduce(0, +) / CGFloat(errors.count) <= 0.12, (errors.max() ?? 1) <= 0.28 else { return nil }
+        let angles = points.map { atan2($0.y - center.y, $0.x - center.x) }
+        let deltas = zip(angles, angles.dropFirst()).map { atan2(sin($1 - $0), cos($1 - $0)) }
+        let turn = deltas.reduce(0, +), travelled = deltas.reduce(0) { $0 + abs($1) }
+        guard abs(turn) >= 1.75 * .pi, abs(turn) <= 2.25 * .pi,
+              travelled > 0, abs(turn) / travelled >= 0.85,
+              center.x - radius >= 0, center.x + radius <= aspectRatio,
+              center.y - radius >= 0, center.y + radius <= 1 else { return nil }
+        let direction: CGFloat = turn >= 0 ? 1 : -1
+        return (0...64).map { step in
+            let angle = angles[0] + direction * 2 * .pi * CGFloat(step) / 64
+            return CGPoint(x: (center.x + radius * cos(angle)) / aspectRatio,
+                           y: center.y + radius * sin(angle))
+        }
     }
 }
 
@@ -92,12 +167,15 @@ struct PresenterInk {
     var isVisible: Bool { panel?.isVisible == true }
 
     @discardableResult
-    func begin(displayID: String, mode: Mode, color: Color = .red, x: Double, y: Double) -> Bool {
+    func begin(displayID: String, mode: Mode, color: Color = .red,
+               smoothing: Bool = false, shapeCorrection: Bool = false, x: Double, y: Double) -> Bool {
         guard let screen = NSScreen.screens.first(where: { DisplayController.displayID($0) == displayID }) else { return false }
         // Validate before creating any window or discarding existing marks.
         guard x.isFinite, y.isFinite, (0...1).contains(x), (0...1).contains(y), !ink.active else { return false }
         if selectedDisplay != displayID { stop(); selectedDisplay = displayID }
-        guard ink.begin(mode: mode, color: color, x: x, y: y) else { return false }
+        let aspectRatio = screen.frame.width / screen.frame.height
+        guard ink.begin(mode: mode, color: color, smoothing: smoothing, shapeCorrection: shapeCorrection,
+                        aspectRatio: aspectRatio, x: x, y: y) else { return false }
         if panel == nil { install(on: screen) }
         render(); renewExpiry()
         return true
@@ -186,7 +264,7 @@ struct PresenterInk {
             let path = NSBezierPath(); path.lineWidth = width
             path.lineCapStyle = .round; path.lineJoinStyle = .round
             path.move(to: position(stroke.points[0]))
-            if stroke.points.count == 1 {
+            if stroke.isDot {
                 let p = position(stroke.points[0])
                 NSBezierPath(ovalIn: NSRect(x: p.x - width / 2, y: p.y - width / 2, width: width, height: width)).fill()
             } else {

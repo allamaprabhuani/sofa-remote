@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased — build 13
+## Unreleased — build 14
 
 - Add presenter controls with previous/next, end slideshow, a laser, coloured pen and automatically disappearing highlighter on a chosen display.
+- Add optional smoothing and correction for simple hand-drawn shapes.
 - Keep presenter traffic authenticated, bounded and rate limited; temporary marks clear on exit, slide navigation and connection loss.
-- Presenter overlay and slideshow behavior need physical testing across supported applications and display configurations.
+- Presenter controls, colours and highlighter were tested with an iPhone and Keynote; additional app and display combinations need physical testing.
 
 ## Certificate preview beta 6 — build 12
 

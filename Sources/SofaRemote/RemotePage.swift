@@ -221,6 +221,9 @@ enum RemotePage {
       .present-mode button[aria-pressed="true"], .present-colours button[aria-pressed="true"] { background: var(--selection); color: var(--selection-ink); }
       .present-mode button[aria-pressed="true"]::after, .present-colours button[aria-pressed="true"]::after { content: " ✓"; }
       .present-colours button { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; font-size: 0.8125rem; }
+      #present-options summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 650; }
+      #present-options label { min-height: 48px; display: flex; align-items: center; gap: 10px; }
+      #present-options input { width: 24px; height: 24px; flex: none; accent-color: var(--accent); }
       .present-chip { width: 16px; height: 16px; border-radius: 50%; background: var(--chip); border: 1px solid #fff; box-shadow: 0 0 0 1px #161616; flex: 0 0 auto; }
       #present-pad { position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 150px; max-height: 300px; border: 2px solid var(--line); border-radius: 15px; background: var(--pad); touch-action: none; user-select: none; display: grid; place-items: center; text-align: center; padding: 16px; }
       #present-pad:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
@@ -532,6 +535,12 @@ enum RemotePage {
           <button data-present-colour="green" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #138748"></span>Green</button>
           <button data-present-colour="yellow" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #f4cd16"></span>Yellow</button>
         </div>
+        <details id="present-options"><summary>Stroke options</summary>
+          <p>Optional for pen and highlight. Choose before drawing.</p>
+          <label><input type="checkbox" id="present-smooth" /> Smooth lines</label>
+          <label><input type="checkbox" id="present-shapes" /> Correct shapes</label>
+          <p>Shape correction adjusts near-straight lines and closed circles after you lift your finger. Uncertain shapes stay freehand.</p>
+        </details>
         <p>Your touch position maps to the entire selected display. The ring shows your last touch position; look at the screen to aim. This pad does not show the slide.</p>
         <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch the position matching the selected screen and move to point or draw. The ring shows your last position. Keyboard: move with arrow keys, hold Space to point or draw."><span id="present-dot" aria-hidden="true"></span></div>
         <div class="present-tools"><button id="present-undo">Undo</button><button id="present-clear">Clear</button></div>
@@ -1434,7 +1443,7 @@ enum RemotePage {
         if (!presentHeartbeat) presentHeartbeat = setInterval(() => {
           if (presentUsed && !document.hidden && $("#present-sheet").classList.contains("open")) presenter("heartbeat");
         }, 10000);
-        presenter("start", { mode: presentMode, color: presentColour, display: presentDisplay.value, x: presentX, y: presentY });
+        presenter("start", { mode: presentMode, color: presentColour, smooth: $("#present-smooth").checked, shapes: $("#present-shapes").checked, display: presentDisplay.value, x: presentX, y: presentY });
       }
       function endPresentPoint() { if (presentUsed) presenter("end"); }
       presentPad.addEventListener("pointerdown", (e) => {
@@ -1447,6 +1456,11 @@ enum RemotePage {
       });
       function liftPresentPoint(e) {
         if (presentPointer !== e.pointerId) return;
+        if (e.type === "pointerup" && presentUsed) {
+          const previousX = presentX, previousY = presentY;
+          if (pointFromEvent(e) && (presentX !== previousX || presentY !== previousY))
+            presenter("move", { x: presentX, y: presentY });
+        }
         presentPointer = null; endPresentPoint();
       }
       presentPad.addEventListener("pointerup", liftPresentPoint);

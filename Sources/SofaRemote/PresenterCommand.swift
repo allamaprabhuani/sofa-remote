@@ -9,6 +9,8 @@ struct PresenterCommand {
     let action: Action
     let mode: Mode?
     let color: Color?
+    let smoothing: Bool
+    let shapeCorrection: Bool
     let display: String?
     let x: Double?
     let y: Double?
@@ -19,6 +21,14 @@ struct PresenterCommand {
         }
         self.action = action
         if action == .start {
+            func flag(_ key: String) throws -> Bool {
+                guard let value = json[key] else { return false }
+                guard let number = value as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() else {
+                    throw RemoteError("Choose valid drawing options.")
+                }
+                return number.boolValue
+            }
+            smoothing = try flag("smooth"); shapeCorrection = try flag("shapes")
             guard let name = json["mode"] as? String, let mode = Mode(rawValue: name),
                   let display = json["display"] as? String, !display.isEmpty, display.utf8.count <= 128 else {
                 throw RemoteError("Choose a connected display and presenter tool.")
@@ -30,7 +40,7 @@ struct PresenterCommand {
             } else { colorName = "red" }
             guard let color = Color(rawValue: colorName) else { throw RemoteError("Choose a presenter colour.") }
             self.mode = mode; self.display = display; self.color = color
-        } else { mode = nil; display = nil; color = nil }
+        } else { mode = nil; display = nil; color = nil; smoothing = false; shapeCorrection = false }
         if action == .start || action == .move {
             func coordinate(_ key: String) throws -> Double {
                 guard let n = json[key] as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID(),
