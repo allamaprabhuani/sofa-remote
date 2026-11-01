@@ -719,11 +719,12 @@ enum RemotePage {
         }
         let outbound;
         if (motion) {
-          // Split the accumulated travel into bounded ±300 packets so the server never sees
+          // Split accumulated travel into bounded packets so the server never sees
           // out-of-range deltas. The head keeps the remainder in correct order so trailing
           // clicks/drag-end stay queued behind the full gesture.
-          const dx = Math.max(-300, Math.min(300, body.dx || 0));
-          const dy = Math.max(-300, Math.min(300, body.dy || 0));
+          const limit = body.type === "scroll" ? 300 : 1000;
+          const dx = Math.max(-limit, Math.min(limit, body.dx || 0));
+          const dy = Math.max(-limit, Math.min(limit, body.dy || 0));
           body.dx = (body.dx || 0) - dx;
           body.dy = (body.dy || 0) - dy;
           outbound = Object.assign({}, body, { dx, dy });

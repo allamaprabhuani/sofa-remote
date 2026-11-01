@@ -45,6 +45,17 @@ import Testing
 }
 
 @Suite struct CommandValidationTests {
+    @Test func acceleratedMovesStayBoundedWithoutRelaxingScrollLimits() throws {
+        #expect(try RemoteCommand(json: ["type":"move", "dx":1000, "dy":-1000]) == .move(1000, -1000))
+        #expect(try RemoteCommand(json: ["type":"drag", "phase":"move", "dx":-1000, "dy":1000]) == .drag(.move, -1000, 1000))
+        #expect(try RemoteCommand(json: ["type":"scroll", "dx":300, "dy":-300]) == .scroll(300, -300))
+        for json: [String: Any] in [
+            ["type":"move", "dx":1001, "dy":0], ["type":"move", "dx":Double.infinity, "dy":0],
+            ["type":"drag", "phase":"move", "dx":0, "dy":-1001],
+            ["type":"scroll", "dx":301, "dy":0]
+        ] { #expect(throws: RemoteError.self) { _ = try RemoteCommand(json: json) } }
+    }
+
     @Test func rejectsMalformedInputAndPreservesUnicodeText() throws {
         #expect(try RemoteCommand(json: ["type": "text", "value": "Hello 👋 ಕನ್ನಡ"]) == .text("Hello 👋 ಕನ್ನಡ"))
         let invalid: [[String: Any]] = [

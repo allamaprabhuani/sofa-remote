@@ -37,9 +37,9 @@ async function main() {
     window.testState={name:'Mock Mac',frontApp:'Brave Browser',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
     const realTimeout=window.setTimeout;window.setTimeout=(fn,ms,...args)=>realTimeout(fn,ms===9000&&window.hang?30:ms,...args);
     const motionBody=b=>b&&(b.type==='move'||b.type==='scroll'||(b.type==='drag'&&b.phase==='move'));
-    const badDelta=v=>!Number.isFinite(v)||Math.abs(v)>300;
+    const badDelta=(v,limit)=>!Number.isFinite(v)||Math.abs(v)>limit;
     window.fetch=async(path,options={})=>{const body=options.body?JSON.parse(options.body):null;calls.push({path,body,key:options.headers?.['X-Sofa-Key']});
-      if(path==='/command'&&motionBody(body)&&(badDelta(body.dx||0)||badDelta(body.dy||0))){window.illegalMotion.push({dx:body.dx,dy:body.dy});return {status:400,ok:false,json:async()=>({error:'Motion delta out of ±300 range'})}}
+      if(path==='/command'&&motionBody(body)&&(badDelta(body.dx||0,body.type==='scroll'?300:1000)||badDelta(body.dy||0,body.type==='scroll'?300:1000))){window.illegalMotion.push({dx:body.dx,dy:body.dy});return {status:400,ok:false,json:async()=>({error:'Motion delta exceeds command limit'})}}
       if(path==='/command'){window.mockActive++;window.maxActive=Math.max(window.maxActive,window.mockActive);try{await new Promise((resolve,reject)=>{if(!hang)realTimeout(resolve,window.commandLatency);options.signal.addEventListener('abort',()=>reject(Error('aborted')),{once:true})})}finally{window.mockActive--}}
       if(path==='/command'&&commandFailure)return {status:commandFailure==='unauthorized'?401:500,ok:false,json:async()=>({error:'Send failed'})};
       return {status:200,ok:true,json:async()=>path==='/state'?testState:path==='/devices'?[]:{ok:true,token:'b'.repeat(64)}}};
@@ -115,8 +115,8 @@ async function main() {
     const motions=commands.filter(c=>c.type==='move');
     return {commands:commands.map(c=>c.type),motions:motions.length,totalX:motions.reduce((s,c)=>s+c.dx,0),totalY:motions.reduce((s,c)=>s+c.dy,0),illegal:window.illegalMotion.length,maxActive:window.maxActive};
   })()`);
-  assert.equal(burst.illegal,0,'every posted motion delta is within ±300');
-  assert.ok(burst.motions>=5,`burst produced multiple motion posts (got ${burst.motions})`);
+  assert.equal(burst.illegal,0,'every posted motion delta is within its command limit');
+  assert.ok(burst.motions>=2&&burst.motions<=3,`burst produced multiple motion posts (got ${burst.motions})`);
   assert.equal(burst.totalX,1380,'motion travel accumulated and preserved on ordinary lift');
   assert.equal(burst.totalY,1380,'motion travel accumulated and preserved on ordinary lift');
   assert.equal(burst.maxActive,1,'commands remain single-flight across the burst');
@@ -150,7 +150,7 @@ async function main() {
     window.commandLatency=3;
     return {types:calls.filter(c=>c.path==='/command').map(c=>c.body.type+':'+(c.body.phase||'')),illegal:window.illegalMotion.length};
   })()`);
-  assert.equal(dragOrder.illegal,0,'drag motion packets stay within ±300');
+  assert.equal(dragOrder.illegal,0,'drag motion packets stay within the command limit');
   const dragPhases=dragOrder.types.filter(t=>t.startsWith('drag:')).map(t=>t.slice(5));
   assert.equal(dragPhases[0],'start','drag start posts first');
   assert.equal(dragPhases.at(-1),'end','drag end posts after every queued move');
