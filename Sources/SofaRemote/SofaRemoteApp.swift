@@ -38,6 +38,7 @@ private typealias ViewState<Value> = SwiftUI.State<Value>
         appMenu.addItem(withTitle: "Quit Sofa Remote", action: #selector(quit), keyEquivalent: "q").target = self
         let appItem = NSMenuItem(); appItem.submenu = appMenu; main.addItem(appItem)
         let windows = NSMenu(title: "Window")
+        windows.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         let windowsItem = NSMenuItem(title: "Window", action: nil, keyEquivalent: "")
         windowsItem.submenu = windows; main.addItem(windowsItem); NSApp.windowsMenu = windows
         NSApp.mainMenu = main
