@@ -6,7 +6,7 @@ import ServiceManagement
 @main enum SofaRemoteApp {
     static func main() {
         let app = NSApplication.shared
-        app.setActivationPolicy(.accessory)
+        app.setActivationPolicy(CommandLine.arguments.contains("--input-fixture") ? .regular : .accessory)
         let delegate = AppDelegate()
         app.delegate = delegate
         app.run()

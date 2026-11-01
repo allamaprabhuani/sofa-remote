@@ -34,7 +34,7 @@ async function main() {
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`
     localStorage.setItem('sofaKey','a'.repeat(64)); Element.prototype.setPointerCapture=function(){};
     window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';
-    window.testState={name:'Mock Mac',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
+    window.testState={name:'Mock Mac',frontApp:'Brave Browser',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
     const realTimeout=window.setTimeout;window.setTimeout=(fn,ms,...args)=>realTimeout(fn,ms===9000?30:ms,...args);
     window.fetch=async(path,options={})=>{const body=options.body?JSON.parse(options.body):null;calls.push({path,body,key:options.headers?.['X-Sofa-Key']});
       if(path==='/command'){window.mockActive++;window.maxActive=Math.max(window.maxActive,window.mockActive);try{await new Promise((resolve,reject)=>{if(!hang)realTimeout(resolve,3);options.signal.addEventListener('abort',()=>reject(Error('aborted')),{once:true})})}finally{window.mockActive--}}
@@ -42,6 +42,13 @@ async function main() {
       return {status:200,ok:true,json:async()=>path==='/state'?testState:path==='/devices'?[]:{ok:true,token:'b'.repeat(64)}}};
   `});
   await cdp('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/`});await wait(300);
+  const subtitle=await evaluate(`(async()=>{
+    await refresh();const withApp=document.querySelector('#connection').textContent;
+    testState.frontApp='';await refresh();const withoutApp=document.querySelector('#connection').textContent;
+    testState.frontApp='Brave Browser';await refresh();return {withApp,withoutApp};
+  })()`);
+  assert.equal(subtitle.withApp,'Mock Mac · Brave Browser');
+  assert.equal(subtitle.withoutApp,'Mock Mac');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     const geometry=await evaluate(`(()=>{const r=s=>{const x=document.querySelector(s).getBoundingClientRect();return {w:x.width,h:x.height,b:x.bottom}};return {pad:r('#pad'),keys:[...document.querySelectorAll('main button')].map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth,height:innerHeight,page:document.documentElement.scrollHeight}})()`);

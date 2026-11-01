@@ -1047,7 +1047,8 @@ enum RemotePage {
             $$("main,.scrim").forEach((x) => {
               x.inert = locked;
             });
-            $("#connection").textContent = s.name || "Connected";
+            const appName = typeof s.frontApp === "string" ? s.frontApp.trim() : "";
+            $("#connection").textContent = (s.name || "Connected") + (appName ? ` · ${appName}` : "");
             permissionMissing = s.accessibility === false;
             if (permissionMissing)
               status("Allow Accessibility access for Sofa Remote on your Mac.", true, "permission");
