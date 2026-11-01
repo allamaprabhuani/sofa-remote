@@ -649,16 +649,6 @@ enum RemotePage {
       >
         <span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
-      <div class="main-navigation">
-        <div class="direction-pad" role="group" aria-label="Arrow and return keys">
-          <button class="up" data-key="up" aria-label="Up arrow" title="Up arrow">↑</button>
-          <button class="left" data-key="left" aria-label="Left arrow" title="Left arrow">←</button>
-          <button class="enter" data-key="enter" aria-label="Return" title="Return">↵</button>
-          <button class="right" data-key="right" aria-label="Right arrow" title="Right arrow">→</button>
-          <button class="down" data-key="down" aria-label="Down arrow" title="Down arrow">↓</button>
-        </div>
-        <button id="main-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
-      </div>
       <div class="row clicks">
         <button id="right" data-icon="right-click" aria-label="Right click" title="Right click"></button>
         <button id="drag" data-icon="drag" aria-label="Drag" aria-pressed="false" title="Drag: toggle to hold or release"></button>
@@ -671,6 +661,16 @@ enum RemotePage {
       <div class="row volume">
         <button data-icon="volume-down" data-action="volumeDown" aria-label="Volume down" title="Volume down"></button>
         <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
+      </div>
+      <div class="main-navigation">
+        <div class="direction-pad" role="group" aria-label="Arrow and return keys">
+          <button class="up" data-key="up" aria-label="Up arrow" title="Up arrow">↑</button>
+          <button class="left" data-key="left" aria-label="Left arrow" title="Left arrow">←</button>
+          <button class="enter" data-key="enter" aria-label="Return" title="Return">↵</button>
+          <button class="right" data-key="right" aria-label="Right arrow" title="Right arrow">→</button>
+          <button class="down" data-key="down" aria-label="Down arrow" title="Down arrow">↓</button>
+        </div>
+        <button id="main-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
       </div>
       </div>
       <nav class="bottom-tools" aria-label="Remote navigation">

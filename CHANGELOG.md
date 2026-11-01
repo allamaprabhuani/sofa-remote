@@ -1,6 +1,6 @@
 # Changelog
 
-## Certificate preview beta 10 — build 33
+## Certificate preview beta 10 — build 34
 
 - Main remote adds directional and Return keys and Hold to speak; navigation and editing keys repeat while held.
 - Presenter controls add app-aware shortcuts and a connection check.
