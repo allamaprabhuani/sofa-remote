@@ -146,6 +146,27 @@ async function main() {
   assert.deepEqual(presenterUI.calls.filter(c=>c.path==='/command').map(c=>c.body.key),['right','left','escape','right','escape']);
   assert.ok(presenterUI.calls.filter(c=>c.path==='/command').every(c=>c.body.modifiers.length===0));
   console.log('PASS presenter slides, authenticated ordered pen gestures, display selection and cleanup');
+  const appActions=await evaluate(`(async()=>{
+    const pause=ms=>new Promise(r=>setTimeout(r,ms));
+    const result=[];
+    for(const app of ['keynote','powerpoint','browser','']) {
+      testState.presenterApp=app; await refresh(true); calls.length=0;
+      const hidden=document.querySelector('#present-app-actions').hidden;
+      if(app){document.querySelector('#present-start').click(); document.querySelector('#present-black').click(); await pause(40);}
+      result.push({app,hidden,commands:calls.filter(c=>c.path==='/command').map(c=>c.body)});
+    }
+    testState.presenterApp='';await refresh(true);return result;
+  })()`);
+  assert.deepEqual(appActions.map(x=>x.hidden),[false,false,false,true]);
+  assert.deepEqual(appActions.slice(0,3).map(x=>x.commands[0]),[
+    {type:'key',key:'p',modifiers:['option','command'],presenterTarget:'keynote'},
+    {type:'key',key:'enter',modifiers:['shift','command'],presenterTarget:'powerpoint'},
+    {type:'key',key:'enter',modifiers:['command'],presenterTarget:'browser'}]);
+  assert.ok(appActions.slice(0,3).every(x=>x.commands[1].key==='b' && x.commands[1].presenterTarget===x.app));
+  const check=await evaluate(`(async()=>{testState.accessibility=false;await refresh(true);const denied=document.querySelector('#present-check').textContent;testState.accessibility=true;await refresh(true);return [denied,document.querySelector('#present-check').textContent]})()`);
+  assert.match(check[0],/Accessibility/);assert.match(check[1],/ready/);
+  console.log('PASS presentation shortcuts, active-app selection and readiness');
+
   await evaluate(`document.querySelector('#present-open').click();document.querySelector('#present-options').open=false;document.querySelector('#present-options summary').focus();calls.length=0`);
   await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
   await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
@@ -181,12 +202,12 @@ async function main() {
   await cdp('Page.reload',{ignoreCache:true});await wait(150);
   const migrated=await evaluate(`({theme:localStorage.getItem('sofaTheme'),colour:localStorage.getItem('sofaColour'),background:getComputedStyle(document.body).backgroundColor,hasTheme:!!document.querySelector('#theme')})`);
   assert.deepEqual(migrated,{theme:'custom',colour:'#ff0000',background:'rgb(17, 18, 20)',hasTheme:false},'older colour preferences remain intact and the new appearance defaults safely');
-  for(const name of ['soft','velvet','paper']){
+  for(const name of ['soft','velvet','paper','black']){
     await evaluate(`(()=>{const select=document.querySelector('#appearance');select.value='${name}';select.dispatchEvent(new Event('change'))})()`);
     await cdp('Page.reload',{ignoreCache:true});await wait(150);
     const appearance=await evaluate(`(()=>{const s=getComputedStyle(document.documentElement),v=k=>s.getPropertyValue('--'+k).trim();const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]};const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};return {name:document.querySelector('#appearance').value,stored:localStorage.getItem('sofaAppearance'),readable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('ink'),v(k))>=4.5),muted:['bg','pad','sheet'].every(k=>contrast(v('muted'),v(k))>=4.5),selected:contrast(v('selection'),v('selection-ink'))>=4.5,focus:contrast(v('accent'),v('pad'))>=3}})()`);
     assert.deepEqual(appearance,{name,stored:name,readable:true,muted:true,selected:true,focus:true},`${name} persists with readable text, selected state and focus`);
-    for(const width of [320,390]){await cdp('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:true});const layout=await evaluate(`(()=>({overflow:document.documentElement.scrollWidth>innerWidth,buttons:[...document.querySelectorAll('main button')].filter(b=>b.getClientRects().length).map(b=>{const r=b.getBoundingClientRect();return {w:r.width,h:r.height,border:getComputedStyle(b).borderTopWidth,name:b.getAttribute('aria-label'),text:b.textContent.trim()}})}))()`);assert.equal(layout.overflow,false,`${name} fits ${width}px`);assert.ok(layout.buttons.every(b=>b.w>=44&&b.h>=44&&b.border==='0px'&&b.name&&!b.text),`${name} main buttons retain accessible names and borderless targets at ${width}px`)}
+    for(const width of [320,390]){await cdp('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:true});const layout=await evaluate(`(()=>({overflow:document.documentElement.scrollWidth>innerWidth,buttons:[...document.querySelectorAll('main button')].filter(b=>b.getClientRects().length).map(b=>{const r=b.getBoundingClientRect();return {w:r.width,h:r.height,border:getComputedStyle(b).borderTopWidth,name:b.getAttribute('aria-label'),text:b.textContent.trim()}})}))()`);assert.equal(layout.overflow,false,`${name} fits ${width}px`);assert.ok(layout.buttons.every(b=>b.w>=44&&b.h>=44&&b.border==='0px'&&b.name&&(!b.text||['↑','↓','←','→','↵','Hold to speak'].includes(b.text))),`${name} main buttons retain accessible names and borderless targets at ${width}px`)}
     assert.match(await evaluate(`getComputedStyle(document.querySelector('header h1')).fontFamily`), /-apple-system/, `${name} uses the system sans font`);
     if(process.env.SOFA_TEST_THEME_DIR){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(process.env.SOFA_TEST_THEME_DIR,`real-${name}.png`),Buffer.from(shot.data,'base64'))}
   }
@@ -195,11 +216,11 @@ async function main() {
   const access=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();const keys=['present-open'].map(id=>{const el=document.getElementById(id);return !!el.getClientRects().length&&!!el.closest('#shortcuts-sheet.open')});document.querySelector('#present-open').click();const present=!!document.querySelector('#present-sheet.open');closeSheet();const back=!!document.querySelector('#shortcuts-sheet.open');closeSheet();return {keys,present,back}})()`);
   assert.deepEqual(access,{keys:[true],present:true,back:true},'presenter is discoverable in Shortcuts and retains navigation');
   const sharedPanel=await evaluate(`(()=>{const panel=document.querySelector('.remote-panel'),pad=document.querySelector('#pad');const keys=[...panel.querySelectorAll('button')];return {count:keys.length,separate:keys.every(b=>!pad.contains(b)),borderless:keys.every(b=>getComputedStyle(b).borderTopWidth==='0px'),inside:panel.contains(pad)&&keys.every(b=>panel.contains(b))}})()`);
-  assert.deepEqual(sharedPanel,{count:7,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
+  assert.deepEqual(sharedPanel,{count:11,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
   const touchSurface=await evaluate(`(()=>{const pad=getComputedStyle(document.querySelector('#pad')),panel=getComputedStyle(document.querySelector('.remote-panel'));return {padBorder:pad.borderTopWidth,padBackground:pad.backgroundColor,padShadow:pad.boxShadow,panelBorder:panel.borderTopWidth,panelBackground:panel.backgroundColor}})()`);
   assert.deepEqual(touchSurface,{padBorder:'0px',padBackground:'rgba(0, 0, 0, 0)',padShadow:'none',panelBorder:'0px',panelBackground:'rgba(0, 0, 0, 0)'},'idle touch area and shared panel have no boundary or second background');
-  const visual=await evaluate(`(()=>{const volume=document.querySelector('.volume'),track=getComputedStyle(volume,'::before'),drag=document.querySelector('#drag'),right=document.querySelector('#right');return {track:track.content,trackRole:volume.getAttribute('role'),drag:drag.getAttribute('aria-pressed'),right:right.getAttribute('aria-pressed'),play:parseFloat(getComputedStyle(document.querySelector('[data-action="playPause"] svg')).width),prev:parseFloat(getComputedStyle(document.querySelector('[data-action="previous"] svg')).width)}})()`);
-  assert.deepEqual({track:visual.track,role:visual.trackRole,drag:visual.drag,right:visual.right},{track:'none',role:null,drag:'false',right:null},'no volume line is shown, and right click remains separate from the drag toggle');assert.ok(visual.play>visual.prev,'play is the visual anchor');
+  const visual=await evaluate(`(()=>{const drag=document.querySelector('#drag'),right=document.querySelector('#right');return {drag:drag.getAttribute('aria-pressed'),right:right.getAttribute('aria-pressed'),previous:!!document.querySelector('[data-action="previous"]'),next:!!document.querySelector('[data-action="next"]')}})()`);
+  assert.deepEqual(visual,{drag:'false',right:null,previous:false,next:false},'right click and drag stay separate; seek buttons are removed');
   const navigation=await evaluate(`(()=>{const bar=document.querySelector('.bottom-tools');return {help:bar.contains(document.querySelector('.remote-guide')),keyboard:bar.contains(document.querySelector('#keyboard-open')),shortcuts:bar.contains(document.querySelector('#shortcuts-open')),settings:bar.contains(document.querySelector('#settings-open'))}})()`);
   assert.deepEqual(navigation,{help:true,keyboard:true,shortcuts:true,settings:true},'help, shortcuts and settings share the bottom navigation');
   const keyboardLayout=await evaluate(`(()=>{const sheet=document.querySelector('#keyboard-sheet'),form=sheet.querySelector('#text-form'),grid=sheet.querySelector('.keygrid');return {old:!!sheet.querySelector('#key-form'),textAfter:!!(grid.compareDocumentPosition(form)&Node.DOCUMENT_POSITION_FOLLOWING),last:grid.lastElementChild.dataset.key}})()`);
@@ -236,15 +257,61 @@ async function main() {
   await cdp('CSS.forcePseudoState',{nodeId:padNode.nodeId,forcedPseudoClasses:[]});
   if(process.env.SOFA_TEST_SCREENSHOT){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
-  assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
+  assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'none');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
+  assert.deepEqual(await evaluate(`Array.from(document.querySelector('.bottom-tools').children).map(x=>x.id || 'help')`),['help','settings-open','keyboard-open','shortcuts-open'],'bottom navigation follows the requested order');
+  assert.equal(await evaluate(`document.querySelector('[data-action="spotlight"]')`),null,'Spotlight icon removed');
+  const hold=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;
+    document.querySelector('#keyboard-open').click();const b=document.querySelector('#right-option-hold');
+    b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:17,button:0,bubbles:true}));await sleep(30);
+    const pressed=b.getAttribute('aria-pressed');
+    b.dispatchEvent(new PointerEvent('pointerup',{pointerId:17,button:0,bubbles:true}));await sleep(60);
+    const result={pressed,released:b.getAttribute('aria-pressed'),commands:calls.filter(x=>x.path==='/command').map(x=>x.body)};closeSheet();return result;
+  })()`);
+  assert.equal(hold.pressed,'true');assert.equal(hold.released,'false');
+  assert.deepEqual(hold.commands,[{type:'rightOption',phase:'start'},{type:'rightOption',phase:'end'}]);
+  const holdCancel=await evaluate(`(async()=>{
+    calls.length=0;document.querySelector('#keyboard-open').click();const b=document.querySelector('#right-option-hold');
+    b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:18,button:0,bubbles:true}));await new Promise(r=>setTimeout(r,30));
+    b.dispatchEvent(new PointerEvent('pointercancel',{pointerId:18,button:0,bubbles:true}));await new Promise(r=>setTimeout(r,50));
+    const result={pressed:b.getAttribute('aria-pressed'),commands:calls.filter(x=>x.path==='/command').map(x=>x.body)};closeSheet();return result;
+  })()`);
+  assert.equal(holdCancel.pressed,'false');assert.deepEqual(holdCancel.commands,[{type:'rightOption',phase:'start'},{type:'rightOption',phase:'end'}],'touch cancellation releases the key');
+  const dictationLayout=await evaluate(`(()=>{document.querySelector('#keyboard-open').click();const sheet=document.querySelector('#keyboard-sheet .sheet'),button=document.querySelector('#right-option-hold'),form=document.querySelector('#text-form');const b=button.getBoundingClientRect(), f=form.getBoundingClientRect(), panel=sheet.getBoundingClientRect();const result={label:button.textContent.trim(),accessible:button.getAttribute('aria-label'),width:b.width,height:b.height,right:b.right>=f.right && b.right<=panel.right,after:!!(form.compareDocumentPosition(button)&Node.DOCUMENT_POSITION_FOLLOWING),fits:sheet.scrollWidth<=sheet.clientWidth+1};closeSheet();return result})()`);
+  assert.equal(dictationLayout.label,'Hold to speak');assert.equal(dictationLayout.accessible,'Hold to speak');
+  assert.ok(dictationLayout.width>=88&&dictationLayout.width===dictationLayout.height&&dictationLayout.right&&dictationLayout.after&&dictationLayout.fits,'large square dictation control sits at the lower right');
+  const keyRepeat=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;document.querySelector('#keyboard-open').click();
+    const b=document.querySelector('#keyboard-sheet [data-key="down"]');
+    b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:42,button:0,bubbles:true}));await sleep(730);
+    b.dispatchEvent(new PointerEvent('pointerup',{pointerId:42,button:0,bubbles:true}));b.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}));await sleep(200);
+    const count=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;await sleep(200);
+    const after=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;
+    calls.length=0;b.click();await sleep(50);const tap=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;
+    calls.length=0;b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:43,button:0,bubbles:true}));await sleep(450);b.dispatchEvent(new PointerEvent('pointercancel',{pointerId:43,bubbles:true}));await sleep(100);const cancelled=calls.length;await sleep(200);const later=calls.length;closeSheet();return {count,after,tap,cancelled,later};
+  })()`);
+  assert.ok(keyRepeat.count>=2,'holding arrow repeats');assert.equal(keyRepeat.after,keyRepeat.count,'release stops repeating');assert.equal(keyRepeat.tap,1,'tap sends one key');assert.equal(keyRepeat.cancelled,keyRepeat.later,'cancellation stops repeating');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#keyboard-sheet [data-key=down]')).userSelect`),'none','long holds do not select key labels');
+  const mainControls=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms)),main=document.querySelector('main'),down=main.querySelector('[data-key="down"]'),speak=document.querySelector('#main-option-hold');calls.length=0;
+    down.dispatchEvent(new PointerEvent('pointerdown',{pointerId:44,button:0,pointerType:'touch',bubbles:true}));await sleep(650);
+    down.dispatchEvent(new PointerEvent('pointerup',{pointerId:44,button:0,pointerType:'touch',bubbles:true}));down.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}));await sleep(100);
+    const repeated=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;calls.length=0;
+    speak.dispatchEvent(new PointerEvent('pointerdown',{pointerId:45,button:0,pointerType:'touch',bubbles:true}));await sleep(250);speak.dispatchEvent(new PointerEvent('pointerup',{pointerId:45,button:0,pointerType:'touch',bubbles:true}));await sleep(50);
+    return {repeated,phases:calls.filter(c=>c.path==='/command'&&c.body.type==='rightOption').map(c=>c.body.phase),select:getComputedStyle(document.body).userSelect,editable:getComputedStyle(document.querySelector('#text')).userSelect};
+  })()`);
+  assert.ok(mainControls.repeated>=2,'main arrow repeats');assert.deepEqual(mainControls.phases,['start','end']);assert.equal(mainControls.select,'none');assert.equal(mainControls.editable,'text');
+  console.log('PASS navigation key hold repeat and release');
+  console.log('PASS Right Option press and release');
   console.log('PASS appearance migration and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     const geometry=await evaluate(`(()=>{const r=s=>{const x=document.querySelector(s).getBoundingClientRect();return {w:x.width,h:x.height,b:x.bottom}};return {pad:r('#pad'),keys:[...document.querySelectorAll('main button')].filter(x=>x.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth,height:innerHeight,page:document.documentElement.scrollHeight}})()`);
-    assert.ok(geometry.pad.h>=150,`${width}x${height} usable touchpad`);
+    assert.ok(geometry.pad.h >= (height<=650 ? 100 : 150),`${width}x${height} usable touchpad`);
     assert.ok(geometry.keys.every(([w,h])=>w>=44&&h>=44),`${width}x${height} 44px controls`);
     assert.ok(geometry.scroll<=geometry.viewport+1,`${width}x${height} no horizontal overflow`);
-    const presentGeometry=await evaluate(`(()=>{document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const sizes=[...sheet.querySelectorAll('button,select')].map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]});const r={sizes,scroll:sheet.scrollWidth,client:sheet.clientWidth};closeSheet();return r})()`);
+    if(height>=568) assert.ok(geometry.page<=geometry.height+1,`${width}x${height} remote controls fit on screen`);
+    const presentGeometry=await evaluate(`(()=>{document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const sizes=[...sheet.querySelectorAll('button,select')].filter(b=>b.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]});const r={sizes,scroll:sheet.scrollWidth,client:sheet.clientWidth};closeSheet();return r})()`);
     assert.ok(presentGeometry.sizes.every(([w,h])=>w>=44&&h>=44),`${width}x${height} presenter touch targets`);
     assert.ok(presentGeometry.scroll<=presentGeometry.client+1,`${width}x${height} presenter has no horizontal overflow`);
     if(width===390&&height===844&&process.env.SOFA_TEST_SCREENSHOT){const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
@@ -266,7 +333,7 @@ async function main() {
   assert.deepEqual(rightTaps.commands,[{type:'click',button:'right',count:1},{type:'click',button:'right',count:1}],'repeated control taps are not lost or duplicated');assert.equal(rightTaps.scale,1,'double control tap does not zoom');assert.ok(rightTaps.defaults.every(x=>!x.prevented),'controls rely on CSS rather than global touch cancellation');
   await evaluate(`calls.length=0`);const playPoint=await point('[data-action="playPause"]');await tap(playPoint);await wait(200);
   assert.deepEqual(await evaluate(`calls.filter(x=>x.path==='/command').map(x=>x.body)`),[{type:'action',action:'playPause'}],'a real panel button touch sends only its action, never pad input');
-  for (const selector of ['#right', '[data-action="playPause"]', '#keyboard-open', '#shortcuts-open', '#settings-open', '.remote-guide summary']) {
+  for (const selector of ['#right', '[data-action="playPause"]', '.direction-pad [data-key="down"]', '#main-option-hold', '#keyboard-open', '#shortcuts-open', '#settings-open', '.remote-guide summary']) {
     await evaluate(`calls.length=0`);
     const origin=await point(selector);
     await touch('touchStart',[origin]);
@@ -361,7 +428,7 @@ async function main() {
   await cdp('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
   const largeText=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click();const result={scroll:document.documentElement.scrollWidth,viewport:innerWidth,help:document.querySelector('#help-sheet .sheet').getBoundingClientRect().width};closeSheet();closeSheet();document.documentElement.style.fontSize='';return result})()`);
   assert.ok(largeText.scroll<=largeText.viewport+1,'200% text has no horizontal page overflow');assert.ok(largeText.help<=largeText.viewport+1,'200% help remains within viewport');
-  const largePresenter=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const r={scroll:sheet.scrollWidth,client:sheet.clientWidth,controls:[...sheet.querySelectorAll('button,select')].map(b=>{const q=b.getBoundingClientRect();return [q.width,q.height]})};closeSheet();document.documentElement.style.fontSize='';return r})()`);
+  const largePresenter=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const r={scroll:sheet.scrollWidth,client:sheet.clientWidth,controls:[...sheet.querySelectorAll('button,select')].filter(b=>b.getClientRects().length).map(b=>{const q=b.getBoundingClientRect();return [q.width,q.height]})};closeSheet();document.documentElement.style.fontSize='';return r})()`);
   assert.ok(largePresenter.scroll<=largePresenter.client+1,'200% presenter text has no horizontal overflow');
   assert.ok(largePresenter.controls.every(([w,h])=>w>=44&&h>=44),'200% presenter controls stay usable');
   const keyboardPointer=await evaluate(`(async()=>{

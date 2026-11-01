@@ -4,13 +4,14 @@ import CoreFoundation
 enum RemoteCommand: Equatable {
     enum Button: String { case left, right }
     enum Phase: String { case start, move, end }
+    enum HoldPhase: String { case start, heartbeat, end }
     enum Action: String {
         case playPause, previous, next, volumeUp, volumeDown, mute, fullscreen
         case brightnessUp, brightnessDown
         case appSwitcher, spotlight, showDesktop, downloads, lock, screenOff, screenOn, moveWindow
     }
     case move(Double, Double), scroll(Double, Double), click(Button, Int), tap
-    case drag(Phase, Double, Double), text(String), key(String, Set<String>), action(Action)
+    case drag(Phase, Double, Double), rightOption(HoldPhase), text(String), key(String, Set<String>), action(Action)
 
     init(json: [String: Any]) throws {
         func number(_ key: String, optional: Bool = false, limit: Double = 300) throws -> Double {
@@ -33,6 +34,9 @@ enum RemoteCommand: Equatable {
         case "drag":
             guard let phase = (json["phase"] as? String).flatMap(Phase.init(rawValue:)) else { throw RemoteError("Unknown drag phase.") }
             self = .drag(phase, try number("dx", optional: phase != .move, limit: 1000), try number("dy", optional: phase != .move, limit: 1000))
+        case "rightOption":
+            guard let phase = (json["phase"] as? String).flatMap(HoldPhase.init(rawValue:)) else { throw RemoteError("Unknown key-hold phase.") }
+            self = .rightOption(phase)
         case "text":
             guard let value = json["value"] as? String, !value.isEmpty, value.utf16.count <= 2000,
                   value.count <= 1000 else { throw RemoteError("Send between 1 and 1,000 characters at a time.") }

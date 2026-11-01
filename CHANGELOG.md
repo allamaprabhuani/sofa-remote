@@ -1,5 +1,13 @@
 # Changelog
 
+## Certificate preview beta 11 — build 36
+
+- Adds a pitch-black appearance with gray controls.
+- Main remote adds directional and Return keys and Hold to speak; navigation and editing keys repeat while held.
+- Presenter controls add app-aware shortcuts and a connection check.
+- Spotlight shortcut removed after input failures on the tested Mac.
+
+
 ## Certificate preview beta 9 — build 26
 
 - Show the Brave icon and request a new window when its app is already running.

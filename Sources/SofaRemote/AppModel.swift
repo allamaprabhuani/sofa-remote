@@ -167,6 +167,7 @@ import ServiceManagement
          "macOSVersion": SupportInfo.macOSVersion, "signingStatus": SigningStatus.current.rawValue,
          "accessibility": accessibilityAllowed, "sessionLocked": inputPaused, "screenSleeping": screenSleeping,
          "frontApp": inputPaused ? "" : (NSWorkspace.shared.frontmostApplication?.localizedName ?? ""),
+         "presenterApp": inputPaused ? "" : PresenterTarget.classify(NSWorkspace.shared.frontmostApplication?.bundleIdentifier),
          "displayID": displays.selectedID ?? "", "displays": displays.options,
          "shortcuts": (preferences?.saved.shortcuts ?? []).map(\.json), "keepAwake": keepAwake]
     }
@@ -267,6 +268,11 @@ import ServiceManagement
                     guard sharing, !Task.isCancelled, !inputPaused,
                           store.authenticate(request.headers["x-sofa-key"]) != nil else {
                         throw RemoteError("Input paused or connection ended. Reconnect after unlocking the Mac.")
+                    }
+                }
+                if let target = body["presenterTarget"] as? String {
+                    guard PresenterTarget.matches(target, bundleID: NSWorkspace.shared.frontmostApplication?.bundleIdentifier) else {
+                        throw RemoteError("The active app changed. Open your presentation and try again.")
                     }
                 }
                 switch command {

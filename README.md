@@ -6,7 +6,7 @@ Control your Mac from your phone.
 
 A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen streaming, Screen Recording permission, accounts, ads, analytics, subscriptions or cloud relay. Keep using your existing browser, Finder and player.
 
-[Website](https://sofa-remote.doublehoney1.chatgpt.site/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.9) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
+[Website](https://sofa-remote.doublehoney1.chatgpt.site/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.11) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
 
 **Beta software, macOS 14 or later, Apple silicon and Intel.** Current preview downloads are certificate-signed, **not Apple-verified or Developer ID notarised**; macOS may block first launch. See the [installation guide](docs/SETUP.md). Direct LAN HTTP is **unencrypted**: use a trusted private network or your own Tailscale connection. Never forward its port to the internet. See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
@@ -15,7 +15,7 @@ A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen str
 - Touchpad movement, click, right/double click, drag and two-finger scrolling. Clear local SVG icons and accessible labels.
 - A large phone touchpad with borderless, accessible controls and three selectable appearances.
 - Unicode text, keyboard shortcuts, app switcher, Spotlight, media keys, volume and mute.
-- Presenter controls for previous/next and ending a slideshow, plus a laser, pen and disappearing highlighter in four colours on a chosen display. Start the slideshow on the Mac first; marks are not saved to slides.
+- Presenter controls for previous/next and ending a slideshow, plus a laser, pen and disappearing highlighter in four colours on a chosen display. Start and black-screen shortcuts are available for Keynote, PowerPoint and the active browser; for Google Slides, select the presentation tab first. Use the in-app connection check before presenting. Marks are not saved to slides.
 - Open websites in installed Brave, falling back to your default browser; save and reorder app/website shortcuts.
 - Open Downloads in Finder and control IINA's existing playback/subtitle tools with mouse and keyboard input.
 - Move the pointer across connected displays. Jump to a chosen display or explicitly move the front window there.

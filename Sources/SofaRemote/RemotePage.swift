@@ -34,6 +34,7 @@ enum RemotePage {
       html[data-appearance="velvet"] { --bg:#191417; --card:#302329; --pad:#302329; --online:#59db88; --sheet:#191417; --line:#9d8583; --muted:#dec9ba; --accent:#ddb65e; --ink:#f7ede1; --pressed:#49393a; --selection:#f7ede1; --selection-ink:#191417; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
       html[data-appearance="paper"] { --bg:#f6f3ec; --card:#f6f3ec; --pad:#ebe5d9; --online:#187544; --sheet:#f6f3ec; --line:#71665d; --muted:#5b534c; --accent:#a22f1d; --ink:#252322; --pressed:#ded5c7; --selection:#252322; --selection-ink:#f6f3ec; --danger:#9d1e2c; --error:#9d1e2c; color-scheme:light; }
       html[data-appearance="soft"] { --bg:#111214; --card:#28272f; --pad:#28272f; --online:#59db88; --sheet:#111214; --line:#8e8c9c; --muted:#d4cdec; --accent:#c4b8ff; --ink:#f7f6fb; --pressed:#3d3b49; --selection:#f7f6fb; --selection-ink:#111214; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="black"] { --bg:#000000; --card:#1b1b1b; --pad:#141414; --online:#bdbdbd; --sheet:#000000; --line:#8a8a8a; --muted:#a8a8a8; --accent:#c5c5c5; --ink:#dedede; --pressed:#303030; --selection:#c8c8c8; --selection-ink:#000000; --danger:#e5e5e5; --error:#e5e5e5; color-scheme:dark; }
       html[data-appearance="paper"] .remote-panel { border-radius:24px; }
       html[data-appearance="soft"] .remote-panel { border-radius:38px; }
       * {
@@ -253,6 +254,7 @@ enum RemotePage {
       #present-sheet .sheet-status:not(:empty) { position: sticky; top: 0; z-index: 2; margin: 0; padding: 10px 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; }
       #present-sheet .sheet-status.error { color: var(--error); }
       .present-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+      .present-tools[hidden] { display: none; }
       .present-tools button { flex: 1 1 auto; min-height: 56px; }
       .present-mode, .present-colours { display: grid; gap: 7px; }
       .present-mode { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); }
@@ -378,6 +380,25 @@ enum RemotePage {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
       }
+      .keygrid button { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+      body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+      input, textarea { user-select: text; -webkit-user-select: text; -webkit-touch-callout: default; }
+      .control-deck { display:grid; grid-template-columns:1fr 132px; align-items:end; gap:12px; }
+      .primary-controls { display:grid; grid-template-columns:repeat(2, minmax(44px, 1fr)); align-content:end; gap:4px; }
+      .primary-controls button { min-height:48px; padding:0; background:transparent; border-radius:12px; touch-action:none; }
+      .primary-controls .control-icon { width:30px; height:30px; }
+      .primary-controls .play { grid-column:1 / -1; }
+      .main-navigation { display:flex; flex-direction:column; justify-content:end; align-items:center; gap:8px; }
+      main.is-pointing .primary-controls { opacity:0; pointer-events:none; }
+      .direction-pad { display:grid; grid-template: repeat(3, 44px) / repeat(3, 44px); }
+      .direction-pad button { min-height:44px; padding:0; background:transparent; font-size:23px; touch-action:none; }
+      .direction-pad .up { grid-area:1 / 2; } .direction-pad .left { grid-area:2 / 1; }
+      .direction-pad .enter { grid-area:2 / 2; } .direction-pad .right { grid-area:2 / 3; }
+      .direction-pad .down { grid-area:3 / 2; }
+      #main-option-hold { width:88px; height:88px; padding:8px; touch-action:none; line-height:1.2; }
+      #main-option-hold.on { background:var(--selection); color:var(--selection-ink); }
+      main.is-pointing .main-navigation { opacity:0; pointer-events:none; }
+      @media (prefers-reduced-motion: no-preference) { main .main-navigation { transition:opacity 160ms ease; } }
       .shortcut-add summary { min-height: 44px; width: 48px; display: grid; place-items: center; cursor: pointer; font-size: 1.5rem; border-radius: 12px; }
       .shortcut-add summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .shortcut-add[open] form { margin-top: 8px; }
@@ -474,8 +495,9 @@ enum RemotePage {
           gap: 7px;
         }
         #pad {
-          min-height: 150px;
+          min-height: 100px;
         }
+        #main-option-hold { width: 68px; height: 68px; font-size: 0.75rem; }
         .row button {
           min-height: 44px;
         }
@@ -527,6 +549,10 @@ enum RemotePage {
       #shortcut-list.editing .launch { flex:1; justify-content:flex-start; }
       #shortcut-list.editing .shortcut-label { position:static; width:auto; height:auto; clip-path:none; }
       #shortcut-list.editing .shortcut > button:not(.launch) { display:inline-flex; }
+      .keyboard-bottom { display: flex; align-items: flex-end; gap: 12px; }
+      .keyboard-bottom #text-form { flex: 1 1 auto; min-width: 0; }
+      #right-option-hold { flex: 0 0 88px; width: 88px; height: 88px; padding: 8px; line-height: 1.2; touch-action: none; user-select: none; -webkit-user-select: none; }
+      #right-option-hold.on { background: var(--selection); color: var(--selection-ink); }
       #keyboard-sheet .typing-row { display:flex; align-items:center; gap:8px; }
       #keyboard-sheet .typing-row input { flex:1; min-width:0; }
       #keyboard-sheet .typing-row button { flex:0 0 48px; width:48px; padding:0; }
@@ -534,7 +560,7 @@ enum RemotePage {
       #open-form button { flex:0 0 48px; width:48px; padding:0; }
 
       :is(#settings-sheet, #shortcuts-sheet) .field { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding-inline: 4px; }
-      #shortcuts-sheet .shortcut-actions { display: grid; grid-template-columns: repeat(4, minmax(44px, 1fr)); gap: 8px; }
+      #shortcuts-sheet .shortcut-actions { display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: 8px; }
       #shortcuts-sheet .shortcut-actions button { min-height: 52px; border-radius: 12px; }
       #settings-sheet .settings-actions { justify-content: space-between; gap: 4px; }
       #settings-sheet .settings-actions button { border-radius: 12px; }
@@ -631,30 +657,36 @@ enum RemotePage {
       >
         <span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
-      <div class="row clicks">
+      <div class="control-deck">
+      <div class="primary-controls">
         <button id="right" data-icon="right-click" aria-label="Right click" title="Right click"></button>
         <button id="drag" data-icon="drag" aria-label="Drag" aria-pressed="false" title="Drag: toggle to hold or release"></button>
-      </div>
-      <div class="row media">
-        <button data-icon="previous" data-action="previous" aria-label="Previous track" title="Previous track"></button>
-        <button data-icon="play-pause" data-action="playPause" aria-label="Play or pause" title="Play or pause"></button>
-        <button data-icon="next" data-action="next" aria-label="Next track" title="Next track"></button>
-      </div>
-      <div class="row volume">
+        <button class="play" data-icon="play-pause" data-action="playPause" aria-label="Play or pause" title="Play or pause"></button>
         <button data-icon="volume-down" data-action="volumeDown" aria-label="Volume down" title="Volume down"></button>
         <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
+      </div>
+      <div class="main-navigation">
+        <button id="main-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
+        <div class="direction-pad" role="group" aria-label="Arrow and return keys">
+          <button class="up" data-key="up" aria-label="Up arrow" title="Up arrow">↑</button>
+          <button class="left" data-key="left" aria-label="Left arrow" title="Left arrow">←</button>
+          <button class="enter" data-key="enter" aria-label="Return" title="Return">↵</button>
+          <button class="right" data-key="right" aria-label="Right arrow" title="Right arrow">→</button>
+          <button class="down" data-key="down" aria-label="Down arrow" title="Down arrow">↓</button>
+        </div>
+      </div>
       </div>
       </div>
       <nav class="bottom-tools" aria-label="Remote navigation">
         <details class="remote-guide"><summary aria-label="Explain remote icons" title="Explain remote icons">?</summary><div class="guide-content">
-          <p>The mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
+          <p>The mouse icon is right click and the hand toggles drag. The play icon controls playback; the speaker icons change volume. The arrows and Return act like keyboard keys, and Hold to speak activates a compatible Mac dictation shortcut. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
           <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
           <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
           <p>Appearance is saved on this phone. The touchpad moves across connected displays. Brightness uses Mac keys and external display support varies. Keeping the Mac awake prevents idle system sleep, but displays can still sleep. Wake does not unlock the Mac; unlock on the Mac, or use Apple Watch unlock if configured.</p>
         </div></details>
+        <button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
         <button class="icon" data-icon="keyboard" id="keyboard-open" aria-label="Keyboard" title="Keyboard"></button>
         <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button>
-        <button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </nav>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
@@ -665,12 +697,14 @@ enum RemotePage {
     <div class="scrim" id="present-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Presenter controls">
         <div class="sheet-head"><h2>Present</h2><button data-close data-icon="close" aria-label="Close" title="Close"></button></div>
-        <p>Start your slideshow on the Mac. Previous and Next send arrow keys to the active app.</p>
+        <p id="present-app">Open your presentation on the Mac.</p>
+        <div class="present-tools" id="present-app-actions" hidden><button id="present-start" data-icon="present" aria-label="Start slideshow" title="Start slideshow"></button><button id="present-black" data-icon="desktop" aria-label="Black screen" title="Black screen"></button></div>
+        <details class="help-disclosure"><summary>Check connection</summary><p id="present-check" role="status">Checking…</p><button id="present-check-again" data-icon="retry" aria-label="Check again" title="Check again"></button><p>Direct Wi-Fi is unencrypted. For encrypted transport, connect both devices to your own Tailscale network and use the Mac’s Tailscale address.</p></details>
         <div class="present-nav"><button id="present-previous" data-icon="slide-previous" aria-label="Previous slide" title="Previous slide"></button><button id="present-next" data-icon="slide-next" aria-label="Next slide" title="Next slide"></button></div>
         <div class="present-tools"><button id="present-exit" data-icon="stop" aria-label="End slideshow" title="End slideshow"></button></div>
         <label for="present-display">Presentation display</label><select class="field" id="present-display" aria-label="Presentation display"></select>
         <p>Choose the screen showing your slides. Changing display clears marks.</p>
-        <details class="help-disclosure"><summary>About presenter icons</summary><p>Top row: previous slide, next slide, end slideshow. Tools: laser, pen, highlight; then red, blue, green and yellow. Below the pad: undo and clear marks.</p></details>
+        <details class="help-disclosure"><summary>About presenter icons</summary><p>Start and black screen appear for supported apps. In a browser, first select your Google Slides tab; the Mac cannot identify it. Black screen works during a slideshow. Next row: previous slide, next slide, end slideshow. Tools: laser, pen, highlight; then red, blue, green and yellow. Below the pad: undo and clear marks.</p></details>
         <div class="present-mode" role="group" aria-label="Pointer and annotation tools">
           <button id="present-laser" data-icon="laser" aria-label="Laser" title="Laser" aria-pressed="true"></button><button id="present-pen" data-icon="pen" aria-label="Pen" title="Pen" aria-pressed="false"></button><button id="present-highlight" data-icon="highlight" aria-label="Highlight" title="Highlight" aria-pressed="false"></button>
         </div>
@@ -712,6 +746,7 @@ enum RemotePage {
           ><button data-key="right" aria-label="Right arrow">→</button><button data-key="enter">Return</button
           ><button data-key="space">Space</button>
         </div>
+        <div class="keyboard-bottom">
         <form id="text-form">
           <label for="text">Type on your Mac</label>
           <div class="typing-row"><input
@@ -722,6 +757,8 @@ enum RemotePage {
             aria-label="Text to send"
           /><button data-icon="send" aria-label="Send text" title="Send text"></button></div>
         </form>
+        <button id="right-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
+        </div>
       </div>
     </div>
     <div class="scrim" id="shortcuts-sheet">
@@ -731,7 +768,7 @@ enum RemotePage {
           <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
           <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="present" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
+        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="present" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button></div>
         <div class="shortcut-heading"><span>Saved on your Mac</span><button id="shortcut-edit" data-icon="pen" aria-label="Edit shortcuts" title="Edit shortcuts" aria-pressed="false"></button></div>
         <div id="shortcut-list"></div>
         <details class="shortcut-add"><summary aria-label="Add shortcut" title="Add shortcut">+</summary>
@@ -775,7 +812,7 @@ enum RemotePage {
     <div class="scrim" id="settings-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-help data-icon="help" aria-label="About and Help" title="About and Help"></button><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
-        <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option></select>
+        <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option><option value="black">Pitch Black</option></select>
         <h3>Display</h3>
         <label for="display">Jump pointer to display</label><select class="field" id="display"></select>
         <div class="settings-actions" role="group" aria-label="Display controls">
@@ -902,10 +939,10 @@ enum RemotePage {
       $$('[data-icon]').forEach(addIcon);
       // Older appearance preferences remain untouched for reversible migration.
       function applyAppearance(value) {
-        const appearance = ["soft", "velvet", "paper"].includes(value) ? value : "soft";
+        const appearance = ["soft", "velvet", "paper", "black"].includes(value) ? value : "soft";
         document.documentElement.dataset.appearance = appearance;
         $("#appearance").value = appearance;
-        $("meta[name=theme-color]").content = {soft:"#111214", velvet:"#191417", paper:"#f6f3ec"}[appearance];
+        $("meta[name=theme-color]").content = {soft:"#111214", velvet:"#191417", paper:"#f6f3ec", black:"#000000"}[appearance];
       }
       try { applyAppearance(localStorage.getItem("sofaAppearance")); } catch { applyAppearance("soft"); }
       $("#appearance").onchange = (event) => {
@@ -1040,6 +1077,7 @@ enum RemotePage {
       function showPair() {
         $("#connection").dataset.connected = "false";
         stopPresenting();
+        endRightOption();
         supportState = null;
         updateSupport();
         clearInterval(dragHeartbeat);
@@ -1145,6 +1183,7 @@ enum RemotePage {
         clearTimeout(gestureTimer);
         gestureTimer = 0;
         if (presentUsed) stopPresenting();
+        endRightOption();
         if (drag) endDrag();
         else if (release) command({ type: "drag", phase: "end" });
       }
@@ -1368,6 +1407,7 @@ enum RemotePage {
         travel += Math.abs(dx) + Math.abs(dy);
         if (travel >= 8) {
           touchSurface.classList.add("is-pointing");
+          stopKeyRepeat(); endRightOption();
           if (f.origin) swipeClickGuard = { target: f.origin, until: Date.now() + 500 };
           if (!beganOnPad && !touchSurface.hasPointerCapture(e.pointerId)) touchSurface.setPointerCapture(e.pointerId);
         }
@@ -1419,7 +1459,7 @@ enum RemotePage {
         swipeClickGuard = null;
       }, true);
       touchSurface.addEventListener("lostpointercapture", (e) => {
-        if (fingers.has(e.pointerId)) {
+        if (e.target === touchSurface && fingers.has(e.pointerId)) {
           fingers.clear();
           $("main").classList.remove("is-pointing");
           dropQueuedMotion();
@@ -1459,7 +1499,46 @@ enum RemotePage {
         });
         return pending;
       }
-      $$("[data-key]").forEach((b) => (b.onclick = () => sendKey(b.dataset.key)));
+      // Repeat only navigation/editing keys; commands are serialized so a slow network
+      // cannot build a backlog that keeps scrolling after the finger is lifted.
+      let repeatingKey = null;
+      function stopKeyRepeat() {
+        if (!repeatingKey) return;
+        clearTimeout(repeatingKey.timer);
+        repeatingKey.stopped = true;
+        repeatingKey = null;
+      }
+      const repeatableKeys = new Set(["up", "down", "left", "right", "backspace", "delete"]);
+      $$("[data-key]").forEach((b) => {
+        let suppressClick = false;
+        b.onclick = (e) => {
+          if (suppressClick && e.detail !== 0) { suppressClick = false; return; }
+          suppressClick = false; sendKey(b.dataset.key);
+        };
+        if (!repeatableKeys.has(b.dataset.key)) return;
+        b.addEventListener("pointerdown", (e) => {
+          if (e.button !== 0 || repeatingKey || locked || !key) return;
+          suppressClick = false;
+          const hold = { pointer: e.pointerId, stopped: false, repeated: false, timer: 0, start: Date.now(), modifiers: [...modifiers] };
+          repeatingKey = hold;
+          b.setPointerCapture(e.pointerId);
+          const repeat = async () => {
+            if (hold.stopped || locked || !key || Date.now() - hold.start > 15000) { stopKeyRepeat(); return; }
+            hold.repeated = true; suppressClick = true;
+            const ok = await (hold.firstSent ? command({ type: "key", key: b.dataset.key, modifiers: hold.modifiers }) : sendKey(b.dataset.key));
+            hold.firstSent = true;
+            if (!hold.stopped && ok) hold.timer = setTimeout(repeat, 100);
+            else if (!ok && repeatingKey === hold) stopKeyRepeat();
+          };
+          hold.timer = setTimeout(repeat, 400);
+        });
+        for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(eventName, (e) => {
+          if (repeatingKey?.pointer !== e.pointerId) return;
+          suppressClick = repeatingKey.repeated;
+          stopKeyRepeat();
+        });
+        b.addEventListener("contextmenu", (e) => e.preventDefault());
+      });
       $("#text-form").onsubmit = async (e) => {
         e.preventDefault();
         const input = $("#text"),
@@ -1493,6 +1572,7 @@ enum RemotePage {
       }
       function closeSheet() {
         const current = sheetStack.pop();
+        if (current?.id === "keyboard-sheet") { stopKeyRepeat(); endRightOption(); }
         if (current?.id === "present-sheet") {
           stopPresenting();
           if (statusKind === "presenter") status("");
@@ -1598,6 +1678,29 @@ enum RemotePage {
       }
       $("#present-undo").onclick = () => presentMarks("undo");
       $("#present-clear").onclick = () => presentMarks("clear");
+      let presenterApp = "";
+      function updatePresenterApp(s) {
+        presenterApp = typeof s.presenterApp === "string" ? s.presenterApp : "";
+        const names = { keynote: "Keynote", powerpoint: "PowerPoint", browser: "Browser · select Google Slides tab" };
+        $("#present-app").textContent = names[presenterApp] || "Open Keynote, PowerPoint or Google Slides on your Mac.";
+        $("#present-app-actions").hidden = !names[presenterApp];
+        const check = !s.sharing ? "Sharing is stopped on the Mac." : !s.accessibility ? "Allow Accessibility on your Mac." : s.sessionLocked ? "Unlock the Mac and resume input." : "Connected · Accessibility ready. Check the slide display before presenting.";
+        $("#present-check").textContent = check;
+      }
+      $("#present-check-again").onclick = async () => {
+        $("#present-check").textContent = "Checking…";
+        if (!await refresh(true)) $("#present-check").textContent = "Cannot reach the Mac. Check sharing and your network, then retry.";
+      };
+      function appPresentationKey(key, modifiers = []) {
+        if (!["keynote", "powerpoint", "browser"].includes(presenterApp)) return;
+        command({ type: "key", key, modifiers, presenterTarget: presenterApp });
+      }
+      $("#present-start").onclick = () => {
+        if (presenterApp === "keynote") appPresentationKey("p", ["option", "command"]);
+        else if (presenterApp === "powerpoint") appPresentationKey("enter", ["shift", "command"]);
+        else if (presenterApp === "browser") appPresentationKey("enter", ["command"]);
+      };
+      $("#present-black").onclick = () => appPresentationKey("b");
       function presentSlide(key) {
         presentMarks("clear");
         command({ type: "key", key, modifiers: [] });
@@ -1605,7 +1708,43 @@ enum RemotePage {
       $("#present-previous").onclick = () => presentSlide("left");
       $("#present-next").onclick = () => presentSlide("right");
       $("#present-exit").onclick = () => { stopPresenting(); command({ type: "key", key: "escape", modifiers: [] }); };
-      $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); };
+      $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); refresh(true); };
+      let optionPointer = null, optionKeyboard = false, optionHeld = false, optionHeartbeat = 0, optionGeneration = 0, optionDelay = 0;
+      const optionButtons = [$("#right-option-hold"), $("#main-option-hold")];
+      function endRightOption() {
+        optionPointer = null; optionKeyboard = false; clearTimeout(optionDelay); optionDelay = 0;
+        clearInterval(optionHeartbeat); optionHeartbeat = 0;
+        if (!optionHeld) return;
+        optionHeld = false; optionGeneration++;
+        optionButtons.forEach((b) => { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); });
+        command({ type: "rightOption", phase: "end" });
+      }
+      function startRightOption() {
+        if (optionHeld || locked || !key) return;
+        optionHeld = true; const generation = ++optionGeneration;
+        optionButtons.forEach((b) => { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); });
+        command({ type: "rightOption", phase: "start" }).then((ok) => { if (!ok && generation === optionGeneration) endRightOption(); });
+        optionHeartbeat = setInterval(() => { if (optionHeld) command({ type: "rightOption", phase: "heartbeat" }); }, 1000);
+      }
+      optionButtons.forEach((optionButton) => {
+      optionButton.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0 || optionPointer !== null) return;
+        e.preventDefault(); optionPointer = e.pointerId; optionButton.setPointerCapture(e.pointerId);
+        if (optionButton.id === "main-option-hold") optionDelay = setTimeout(() => { optionDelay = 0; if (optionPointer === e.pointerId) startRightOption(); }, 200);
+        else startRightOption();
+      });
+      for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) optionButton.addEventListener(eventName, (e) => {
+        if (optionPointer === e.pointerId) endRightOption();
+      });
+      optionButton.addEventListener("contextmenu", (e) => e.preventDefault());
+      optionButton.addEventListener("keydown", (e) => {
+        if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); optionKeyboard = true; startRightOption(); }
+      });
+      optionButton.addEventListener("keyup", (e) => {
+        if (optionKeyboard && (e.key === " " || e.key === "Enter")) { e.preventDefault(); endRightOption(); }
+      });
+      optionButton.addEventListener("blur", () => { if (optionKeyboard) endRightOption(); });
+      });
       $("#keyboard-open").onclick = (e) => sheet("keyboard-sheet", e.currentTarget);
       $("#shortcuts-open").onclick = (e) => sheet("shortcuts-sheet", e.currentTarget);
       $("#settings-open").onclick = (e) => {
@@ -1819,6 +1958,7 @@ enum RemotePage {
           try {
             const s = await request("/state");
             if (generation !== stateSerial) return false;
+            updatePresenterApp(s);
             supportState = {
               appVersion: s.appVersion, appBuild: s.appBuild, macOSVersion: s.macOSVersion, signingStatus: s.signingStatus,
               accessibility: s.accessibility, sharing: s.sharing, sessionLocked: s.sessionLocked,
@@ -1910,7 +2050,7 @@ enum RemotePage {
           $("main").classList.remove("is-pointing");
           stopPresenting();
           dropQueuedMotion();
-          endDrag();
+          endDrag(); stopKeyRepeat(); endRightOption();
         }
       });
       window.addEventListener("pagehide", () => {
@@ -1918,7 +2058,7 @@ enum RemotePage {
         $("main").classList.remove("is-pointing");
         stopPresenting();
         dropQueuedMotion();
-        endDrag();
+        endDrag(); stopKeyRepeat(); endRightOption();
       });
       if (/^\d{6}$/.test(pairCode)) pair(pairCode);
       else refresh();
