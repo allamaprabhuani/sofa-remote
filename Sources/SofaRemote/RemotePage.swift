@@ -396,7 +396,7 @@ enum RemotePage {
       .direction-pad .enter { grid-area:2 / 2; } .direction-pad .right { grid-area:2 / 3; }
       .direction-pad .down { grid-area:3 / 2; }
       #main-option-hold { width:88px; height:88px; padding:8px; touch-action:none; line-height:1.2; }
-      #main-option-hold.on { background:var(--selection); color:var(--selection-ink); }
+      #main-option-hold.on { background:var(--selection); color:var(--selection-ink); outline: 3px solid var(--accent); outline-offset: 2px; }
       main.is-pointing .main-navigation { opacity:0; pointer-events:none; }
       @media (prefers-reduced-motion: no-preference) { main .main-navigation { transition:opacity 160ms ease; } }
       .shortcut-add summary { min-height: 44px; width: 48px; display: grid; place-items: center; cursor: pointer; font-size: 1.5rem; border-radius: 12px; }
@@ -552,7 +552,7 @@ enum RemotePage {
       .keyboard-bottom { display: flex; align-items: flex-end; gap: 12px; }
       .keyboard-bottom #text-form { flex: 1 1 auto; min-width: 0; }
       #right-option-hold { flex: 0 0 88px; width: 88px; height: 88px; padding: 8px; line-height: 1.2; touch-action: none; user-select: none; -webkit-user-select: none; }
-      #right-option-hold.on { background: var(--selection); color: var(--selection-ink); }
+      #right-option-hold.on { background: var(--selection); color: var(--selection-ink); outline: 3px solid var(--accent); outline-offset: 2px; }
       #keyboard-sheet .typing-row { display:flex; align-items:center; gap:8px; }
       #keyboard-sheet .typing-row input { flex:1; min-width:0; }
       #keyboard-sheet .typing-row button { flex:0 0 48px; width:48px; padding:0; }
@@ -1716,13 +1716,13 @@ enum RemotePage {
         clearInterval(optionHeartbeat); optionHeartbeat = 0;
         if (!optionHeld) return;
         optionHeld = false; optionGeneration++;
-        optionButtons.forEach((b) => { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); });
+        optionButtons.forEach((b) => { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); b.textContent = "Hold to speak"; });
         command({ type: "rightOption", phase: "end" });
       }
       function startRightOption() {
         if (optionHeld || locked || !key) return;
         optionHeld = true; const generation = ++optionGeneration;
-        optionButtons.forEach((b) => { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); });
+        optionButtons.forEach((b) => { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); b.textContent = "Held down"; });
         command({ type: "rightOption", phase: "start" }).then((ok) => { if (!ok && generation === optionGeneration) endRightOption(); });
         optionHeartbeat = setInterval(() => { if (optionHeld) command({ type: "rightOption", phase: "heartbeat" }); }, 1000);
       }

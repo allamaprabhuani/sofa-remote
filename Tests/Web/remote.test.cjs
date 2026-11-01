@@ -264,11 +264,11 @@ async function main() {
     const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;
     document.querySelector('#keyboard-open').click();const b=document.querySelector('#right-option-hold');
     b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:17,button:0,bubbles:true}));await sleep(30);
-    const pressed=b.getAttribute('aria-pressed');
+    const pressed=b.getAttribute('aria-pressed'), label=b.textContent;
     b.dispatchEvent(new PointerEvent('pointerup',{pointerId:17,button:0,bubbles:true}));await sleep(60);
-    const result={pressed,released:b.getAttribute('aria-pressed'),commands:calls.filter(x=>x.path==='/command').map(x=>x.body)};closeSheet();return result;
+    const result={pressed,label,released:b.getAttribute('aria-pressed'),releasedLabel:b.textContent,commands:calls.filter(x=>x.path==='/command').map(x=>x.body)};closeSheet();return result;
   })()`);
-  assert.equal(hold.pressed,'true');assert.equal(hold.released,'false');
+  assert.equal(hold.pressed,'true');assert.equal(hold.label,'Held down');assert.equal(hold.released,'false');assert.equal(hold.releasedLabel,'Hold to speak');
   assert.deepEqual(hold.commands,[{type:'rightOption',phase:'start'},{type:'rightOption',phase:'end'}]);
   const holdCancel=await evaluate(`(async()=>{
     calls.length=0;document.querySelector('#keyboard-open').click();const b=document.querySelector('#right-option-hold');

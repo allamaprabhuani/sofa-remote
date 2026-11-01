@@ -1,5 +1,9 @@
 # Changelog
 
+## Certificate preview beta 12 — build 37
+
+- Hold to speak clearly indicates when its key is held down.
+
 ## Certificate preview beta 11 — build 36
 
 - Adds a pitch-black appearance with gray controls.
