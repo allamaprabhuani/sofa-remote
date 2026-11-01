@@ -259,32 +259,25 @@ async function main() {
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
   assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
   assert.deepEqual(await evaluate(`Array.from(document.querySelector('.bottom-tools').children).map(x=>x.id || 'help')`),['help','settings-open','keyboard-open','shortcuts-open'],'bottom navigation follows the requested order');
-  const spotlightFlow=await evaluate(`(async()=>{
-    calls.length=0; document.querySelector('#shortcuts-open').click();
-    const trigger=document.querySelector('[data-action="spotlight"]'); trigger.click();
-    const opened=document.querySelector('#keyboard-sheet').classList.contains('open');
-    const focused=document.activeElement===document.querySelector('#text');
-    await new Promise(r=>setTimeout(r,100));
-    const sent=calls.filter(x=>x.path==='/command').map(x=>x.body);
-    closeSheet(); const returned=document.querySelector('#shortcuts-sheet').classList.contains('open') && document.activeElement===trigger;
-    closeSheet(); return {opened,focused,sent,returned};
+  assert.equal(await evaluate(`document.querySelector('[data-action="spotlight"]')`),null,'Spotlight icon removed');
+  const hold=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;
+    document.querySelector('#keyboard-open').click();const b=document.querySelector('#right-option-hold');
+    b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:17,button:0,bubbles:true}));await sleep(30);
+    const pressed=b.getAttribute('aria-pressed');
+    b.dispatchEvent(new PointerEvent('pointerup',{pointerId:17,button:0,bubbles:true}));await sleep(60);
+    const result={pressed,released:b.getAttribute('aria-pressed'),commands:calls.filter(x=>x.path==='/command').map(x=>x.body)};closeSheet();return result;
   })()`);
-  assert.equal(spotlightFlow.opened,true,'Spotlight opens the phone keyboard sheet');
-  assert.equal(spotlightFlow.focused,true,'Spotlight focuses the text field during the tap');
-  assert.deepEqual(spotlightFlow.sent,[{type:'action',action:'spotlight'}]);
-  assert.equal(spotlightFlow.returned,true,'closing the keyboard restores Shortcuts and focus');
-  console.log('PASS Spotlight opens focused typing and returns to Shortcuts');
-  const spotlightTyping=await evaluate(`(async()=>{
-    calls.length=0;document.querySelector('#shortcuts-open').click();document.querySelector('[data-action="spotlight"]').click();
-    document.querySelector('#text').value='Calculator';document.querySelector('#text-form button').click();
-    const until=Date.now()+2000;while(active||queue.length||gestureTimer){if(Date.now()>until)throw Error('Timed out');await new Promise(r=>setTimeout(r,10));}
-    const result={commands:calls.filter(c=>c.path==='/command').map(c=>c.body),value:document.querySelector('#text').value};
-    closeSheet();closeSheet();return result;
+  assert.equal(hold.pressed,'true');assert.equal(hold.released,'false');
+  assert.deepEqual(hold.commands,[{type:'rightOption',phase:'start'},{type:'rightOption',phase:'end'}]);
+  const holdCancel=await evaluate(`(async()=>{
+    calls.length=0;document.querySelector('#keyboard-open').click();const b=document.querySelector('#right-option-hold');
+    b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:18,button:0,bubbles:true}));await new Promise(r=>setTimeout(r,30));
+    b.dispatchEvent(new PointerEvent('pointercancel',{pointerId:18,button:0,bubbles:true}));await new Promise(r=>setTimeout(r,50));
+    const result={pressed:b.getAttribute('aria-pressed'),commands:calls.filter(x=>x.path==='/command').map(x=>x.body)};closeSheet();return result;
   })()`);
-  assert.deepEqual(spotlightTyping.commands,[{type:'action',action:'spotlight'},{type:'text',value:'Calculator'}],'Spotlight is sent before text');
-  assert.equal(spotlightTyping.value,'','text clears only after successful submission');
-  console.log('PASS Spotlight typing is sent after the search command');
-
+  assert.equal(holdCancel.pressed,'false');assert.deepEqual(holdCancel.commands,[{type:'rightOption',phase:'start'},{type:'rightOption',phase:'end'}],'touch cancellation releases the key');
+  console.log('PASS Right Option press and release');
   console.log('PASS appearance migration and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});

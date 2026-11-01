@@ -528,6 +528,8 @@ enum RemotePage {
       #shortcut-list.editing .launch { flex:1; justify-content:flex-start; }
       #shortcut-list.editing .shortcut-label { position:static; width:auto; height:auto; clip-path:none; }
       #shortcut-list.editing .shortcut > button:not(.launch) { display:inline-flex; }
+      #right-option-hold { min-height: 52px; touch-action: none; user-select: none; -webkit-user-select: none; }
+      #right-option-hold.on { background: var(--selection); color: var(--selection-ink); }
       #keyboard-sheet .typing-row { display:flex; align-items:center; gap:8px; }
       #keyboard-sheet .typing-row input { flex:1; min-width:0; }
       #keyboard-sheet .typing-row button { flex:0 0 48px; width:48px; padding:0; }
@@ -535,7 +537,7 @@ enum RemotePage {
       #open-form button { flex:0 0 48px; width:48px; padding:0; }
 
       :is(#settings-sheet, #shortcuts-sheet) .field { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding-inline: 4px; }
-      #shortcuts-sheet .shortcut-actions { display: grid; grid-template-columns: repeat(4, minmax(44px, 1fr)); gap: 8px; }
+      #shortcuts-sheet .shortcut-actions { display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: 8px; }
       #shortcuts-sheet .shortcut-actions button { min-height: 52px; border-radius: 12px; }
       #settings-sheet .settings-actions { justify-content: space-between; gap: 4px; }
       #settings-sheet .settings-actions button { border-radius: 12px; }
@@ -708,6 +710,7 @@ enum RemotePage {
           ><button data-mod="option" aria-pressed="false">⌥ Option</button
           ><button data-mod="shift" aria-pressed="false">⇧ Shift</button>
         </div>
+        <button id="right-option-hold" type="button" aria-label="Hold Right Option to dictate with FluidVoice" title="Hold Right Option to dictate" aria-pressed="false">⌥ Right Option · hold to speak</button>
         <div class="keygrid">
           <button data-key="escape">Esc</button><button data-key="tab">Tab</button
           ><button data-key="backspace" aria-label="Backspace">⌫</button><button data-key="delete">Delete</button
@@ -734,7 +737,7 @@ enum RemotePage {
           <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
           <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="present" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
+        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="present" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button></div>
         <div class="shortcut-heading"><span>Saved on your Mac</span><button id="shortcut-edit" data-icon="pen" aria-label="Edit shortcuts" title="Edit shortcuts" aria-pressed="false"></button></div>
         <div id="shortcut-list"></div>
         <details class="shortcut-add"><summary aria-label="Add shortcut" title="Add shortcut">+</summary>
@@ -1043,6 +1046,7 @@ enum RemotePage {
       function showPair() {
         $("#connection").dataset.connected = "false";
         stopPresenting();
+        endRightOption();
         supportState = null;
         updateSupport();
         clearInterval(dragHeartbeat);
@@ -1148,6 +1152,7 @@ enum RemotePage {
         clearTimeout(gestureTimer);
         gestureTimer = 0;
         if (presentUsed) stopPresenting();
+        endRightOption();
         if (drag) endDrag();
         else if (release) command({ type: "drag", phase: "end" });
       }
@@ -1443,15 +1448,7 @@ enum RemotePage {
           if (drag) command({ type: "drag", phase: "move", dx: 0, dy: 0 });
         }, 1000);
       };
-      $$("[data-action]").forEach((b) => (b.onclick = () => {
-        const pending = action(b.dataset.action);
-        if (b.dataset.action === "spotlight" && !locked) {
-          // Focus synchronously within the tap so iOS can show its keyboard.
-          sheet("keyboard-sheet", b);
-          $("#text").focus();
-        }
-        return pending;
-      }));
+      $$("[data-action]").forEach((b) => (b.onclick = () => action(b.dataset.action)));
       $$("[data-mod]").forEach(
         (b) =>
           (b.onclick = () => {
@@ -1504,6 +1501,7 @@ enum RemotePage {
       }
       function closeSheet() {
         const current = sheetStack.pop();
+        if (current?.id === "keyboard-sheet") endRightOption();
         if (current?.id === "present-sheet") {
           stopPresenting();
           if (statusKind === "presenter") status("");
@@ -1640,6 +1638,38 @@ enum RemotePage {
       $("#present-next").onclick = () => presentSlide("right");
       $("#present-exit").onclick = () => { stopPresenting(); command({ type: "key", key: "escape", modifiers: [] }); };
       $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); refresh(true); };
+      let optionPointer = null, optionKeyboard = false, optionHeld = false, optionHeartbeat = 0, optionGeneration = 0;
+      const optionButton = $("#right-option-hold");
+      function endRightOption() {
+        optionPointer = null; optionKeyboard = false;
+        clearInterval(optionHeartbeat); optionHeartbeat = 0;
+        if (!optionHeld) return;
+        optionHeld = false; optionGeneration++;
+        optionButton.classList.remove("on"); optionButton.setAttribute("aria-pressed", "false");
+        command({ type: "rightOption", phase: "end" });
+      }
+      function startRightOption() {
+        if (optionHeld || locked || !key) return;
+        optionHeld = true; const generation = ++optionGeneration;
+        optionButton.classList.add("on"); optionButton.setAttribute("aria-pressed", "true");
+        command({ type: "rightOption", phase: "start" }).then((ok) => { if (!ok && generation === optionGeneration) endRightOption(); });
+        optionHeartbeat = setInterval(() => { if (optionHeld) command({ type: "rightOption", phase: "heartbeat" }); }, 1000);
+      }
+      optionButton.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0 || optionPointer !== null) return;
+        e.preventDefault(); optionPointer = e.pointerId; optionButton.setPointerCapture(e.pointerId); startRightOption();
+      });
+      for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) optionButton.addEventListener(eventName, (e) => {
+        if (optionPointer === e.pointerId) endRightOption();
+      });
+      optionButton.addEventListener("contextmenu", (e) => e.preventDefault());
+      optionButton.addEventListener("keydown", (e) => {
+        if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); optionKeyboard = true; startRightOption(); }
+      });
+      optionButton.addEventListener("keyup", (e) => {
+        if (optionKeyboard && (e.key === " " || e.key === "Enter")) { e.preventDefault(); endRightOption(); }
+      });
+      optionButton.addEventListener("blur", () => { if (optionKeyboard) endRightOption(); });
       $("#keyboard-open").onclick = (e) => sheet("keyboard-sheet", e.currentTarget);
       $("#shortcuts-open").onclick = (e) => sheet("shortcuts-sheet", e.currentTarget);
       $("#settings-open").onclick = (e) => {
@@ -1945,7 +1975,7 @@ enum RemotePage {
           $("main").classList.remove("is-pointing");
           stopPresenting();
           dropQueuedMotion();
-          endDrag();
+          endDrag(); endRightOption();
         }
       });
       window.addEventListener("pagehide", () => {
@@ -1953,7 +1983,7 @@ enum RemotePage {
         $("main").classList.remove("is-pointing");
         stopPresenting();
         dropQueuedMotion();
-        endDrag();
+        endDrag(); endRightOption();
       });
       if (/^\d{6}$/.test(pairCode)) pair(pairCode);
       else refresh();

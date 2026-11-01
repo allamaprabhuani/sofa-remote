@@ -9,6 +9,9 @@ import IOKit.hidsystem
     private let displays: DisplayController
     private var dragging = false
     private var dragDeadline: DispatchWorkItem?
+    private var optionOwner: String?
+    private var optionDeadline: DispatchWorkItem?
+    var rightOptionHeld: Bool { optionOwner != nil }
     private let emit: (CGEvent) -> Void
     private let trusted: () -> Bool
     private let secure: () -> Bool
@@ -78,6 +81,24 @@ import IOKit.hidsystem
                 try move(dx: dx, dy: dy, drag: true); armDragDeadline()
             case .end: reset(clearPointer: false)
             }
+        case .rightOption(let phase):
+            guard let owner = tapSource else { throw RemoteError("Pair with the Mac first.") }
+            switch phase {
+            case .start:
+                guard optionOwner == nil else { throw RemoteError("Right Option is already held.") }
+                guard !CGEventSource.flagsState(.combinedSessionState).contains(.maskAlternate) else {
+                    throw RemoteError("Release the Mac's Option key before starting dictation.")
+                }
+                try postRightOption(down: true)
+                optionOwner = owner
+                armOptionDeadline()
+            case .heartbeat:
+                guard optionOwner == owner else { throw RemoteError("Right Option is no longer held.") }
+                armOptionDeadline()
+            case .end:
+                guard optionOwner == owner else { throw RemoteError("Right Option is no longer held.") }
+                releaseRightOption()
+            }
         case .text(let text):
             let target = NSWorkspace.shared.frontmostApplication?.processIdentifier
             for character in text {
@@ -119,6 +140,7 @@ import IOKit.hidsystem
         lastTap = nil
         dragDeadline?.cancel(); dragDeadline = nil
         if dragging { try? mouse(.leftMouseUp); dragging = false }
+        releaseRightOption()
         if clearPointer { clearPointerAnchor() }
     }
     private func clearPointerAnchor() {
@@ -153,6 +175,28 @@ import IOKit.hidsystem
         guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: position, mouseButton: button) else { throw eventError }
         event.setIntegerValueField(.mouseEventClickState, value: Int64(count))
         emit(event)
+    }
+    private func postRightOption(down: Bool) throws {
+        guard let event = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(kVK_RightOption), keyDown: down) else { throw eventError }
+        event.type = .flagsChanged
+        var flags = CGEventSource.flagsState(.combinedSessionState)
+        let rightOption = CGEventFlags(rawValue: UInt64(NX_DEVICERALTKEYMASK))
+        if down { flags.insert([.maskAlternate, rightOption]) }
+        else { flags.remove([.maskAlternate, rightOption]) }
+        event.flags = flags
+        emit(event)
+    }
+    private func releaseRightOption() {
+        optionDeadline?.cancel(); optionDeadline = nil
+        guard optionOwner != nil else { return }
+        optionOwner = nil
+        try? postRightOption(down: false)
+    }
+    private func armOptionDeadline() {
+        optionDeadline?.cancel()
+        let deadline = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.releaseRightOption() } }
+        optionDeadline = deadline
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4, execute: deadline)
     }
     private func armDragDeadline() {
         dragDeadline?.cancel()
