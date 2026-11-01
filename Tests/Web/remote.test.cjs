@@ -274,6 +274,17 @@ async function main() {
   assert.deepEqual(spotlightFlow.sent,[{type:'action',action:'spotlight'}]);
   assert.equal(spotlightFlow.returned,true,'closing the keyboard restores Shortcuts and focus');
   console.log('PASS Spotlight opens focused typing and returns to Shortcuts');
+  const spotlightTyping=await evaluate(`(async()=>{
+    calls.length=0;document.querySelector('#shortcuts-open').click();document.querySelector('[data-action="spotlight"]').click();
+    document.querySelector('#text').value='Calculator';document.querySelector('#text-form button').click();
+    const until=Date.now()+2000;while(active||queue.length||gestureTimer){if(Date.now()>until)throw Error('Timed out');await new Promise(r=>setTimeout(r,10));}
+    const result={commands:calls.filter(c=>c.path==='/command').map(c=>c.body),value:document.querySelector('#text').value};
+    closeSheet();closeSheet();return result;
+  })()`);
+  assert.deepEqual(spotlightTyping.commands,[{type:'action',action:'spotlight'},{type:'text',value:'Calculator'}],'Spotlight is sent before text');
+  assert.equal(spotlightTyping.value,'','text clears only after successful submission');
+  console.log('PASS Spotlight typing is sent after the search command');
+
   console.log('PASS appearance migration and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
