@@ -4,7 +4,7 @@ Sofa Remote sends mouse, keyboard and control requests from your phone to your M
 
 ## Data kept on your devices
 
-The Mac stores settings, saved shortcut names/addresses, optional display preference and paired-device records in `~/Library/Application Support/Sofa Remote`. Phone names are local pairing labels. Each phone receives a random secret; only its SHA-256 digest is kept on the Mac. The phone browser keeps the secret and its theme/custom-colour preferences in that origin's local storage. Theme choices are not sent to the Mac or included in diagnostic summaries. Anyone able to copy that browser storage may obtain access until you revoke it.
+The Mac stores settings, saved shortcut names/addresses, optional display preference and paired-device records in `~/Library/Application Support/Sofa Remote`. Phone names are local pairing labels. Each phone receives a random secret; only its SHA-256 digest is kept on the Mac. The phone browser keeps the secret in that origin's local storage; older versions may also have saved appearance preferences there. Anyone able to copy that browser storage may obtain access until you revoke it.
 
 Requests necessarily carry the input/website address you ask the Mac to use. Direct LAN HTTP is **unencrypted**: a hostile network participant may observe or alter traffic. Authentication does not encrypt it. Use a trusted network or your own Tailscale encrypted transport; see [Security](../SECURITY.md).
 

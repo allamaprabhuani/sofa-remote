@@ -9,7 +9,7 @@
 <link rel="icon" href="./assets/icon.png" type="image/png" />
 <link rel="apple-touch-icon" href="./assets/icon.png" />
 <link rel="preload" href="./assets/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="./styles.css?v=beta6-blue" />
+<link rel="stylesheet" href="./styles.css?v=dark-ui-1" />
 <meta property="og:title" content="Sofa Remote" />
 <meta property="og:description" content="A free remote for your Mac. Input only, from your phone's browser." />
 <meta property="og:image" content="https://sofa-remote.doublehoney1.chatgpt.site/assets/preview.jpg?v=beta6" />
@@ -18,7 +18,7 @@
 <meta property="og:url" content="https://sofa-remote.doublehoney1.chatgpt.site/" />
 <meta name="twitter:card" content="summary_large_image" />
 </head>
-<body data-site-theme="dark">
+<body>
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="nav" aria-label="Primary">
@@ -63,12 +63,14 @@
       <div class="live-shell">
         <div class="live-head">
           <span id="live-h" class="live-title">Sofa Remote</span>
-          <span class="live-sub">Preview — not connected</span>
+          <button class="live-btn live-shortcuts" type="button" data-act="shortcuts" aria-label="Shortcuts, preview only" title="Shortcuts, preview only">Shortcuts</button>
+          <button class="live-btn live-settings" type="button" data-act="settings" aria-label="Settings, preview only" title="Settings, preview only"><span aria-hidden="true">⚙</span></button>
         </div>
         <div class="live-pad" id="touchpad"
              tabindex="0"
              role="application"
              aria-label="Preview touchpad. Drag to move the cursor. Arrow keys also work; Space or Enter clicks.">
+          <span class="live-pad-title">Touchpad</span>
           <span class="live-hint">Drag to move · tap buttons below</span>
           <div class="live-cursor" id="cursor" aria-hidden="true">
             <svg viewBox="0 0 16 20" width="18" height="22"><path d="M1 1 L1 15 L5 11 L7.5 17 L10 16 L7.5 10 L13 10 Z" fill="#111" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></svg>
@@ -78,10 +80,6 @@
           <button class="live-btn" type="button" data-act="right" title="Right click">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 1 7 7v4a7 7 0 0 1-14 0v-4a7 7 0 0 1 7-7Zm1 1.07V11h5.93A6.01 6.01 0 0 0 13 4.07Z" fill="currentColor"/></svg>
             <span>Right</span>
-          </button>
-          <button class="live-btn" type="button" data-act="double" title="Double click">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l9 5-4 1.5 2 4.5-2 1-2-4.5L6 13V4Zm12 11.5-2 1-1.3-3 1.9-.6 1.4 2.6Z" fill="currentColor"/></svg>
-            <span>Double</span>
           </button>
           <button class="live-btn" type="button" data-act="drag" title="Drag">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4m-9-9h4m10 0h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></svg>
@@ -98,6 +96,8 @@
           <button class="live-btn icon" type="button" data-act="next" aria-label="Next track">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z" fill="currentColor"/></svg>
           </button>
+        </div>
+        <div class="live-row volume">
           <button class="live-btn icon" type="button" data-act="voldown" aria-label="Volume down">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3.5l5-4v14l-5-4H4zM17 11h4v2h-4z" fill="currentColor"/></svg>
           </button>
@@ -105,25 +105,9 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3.5l5-4v14l-5-4H4zM17 11h4v2h-4zM18 7h2v10h-2z" fill="currentColor"/></svg>
           </button>
         </div>
-        <p class="live-status" id="phoneStatus" aria-live="polite">Preview ready.</p>
+        <p class="live-status" id="phoneStatus" aria-live="polite">Preview — not connected.</p>
       </div>
 
-      <div class="theme-strip" role="group" aria-label="Pick a theme to preview">
-        <div class="swatches" id="themeSwatches">
-          <button type="button" class="swatch is-active" data-theme="dark" aria-pressed="true"><span class="dot" style="background:#1f1f1f;border-color:#777"></span>Dark</button>
-          <button type="button" class="swatch" data-theme="black" aria-pressed="false"><span class="dot" style="background:#000;border-color:#737373"></span>Black</button>
-          <button type="button" class="swatch" data-theme="light" aria-pressed="false"><span class="dot" style="background:#f8f8f8;border-color:#767676"></span>Light</button>
-          <button type="button" class="swatch" data-theme="ivory" aria-pressed="false"><span class="dot" style="background:#f6f1e7;border-color:#99836c"></span>Ivory</button>
-          <button type="button" class="swatch" data-theme="plum" aria-pressed="false"><span class="dot" style="background:#f8f2ed;border-color:#9b7f99"></span>Plum</button>
-          <button type="button" class="swatch" data-theme="ocean" aria-pressed="false"><span class="dot" style="background:#062d35;border-color:#75949a"></span>Ocean</button>
-          <button type="button" class="swatch" data-theme="custom" aria-pressed="false"><span class="dot" style="background:#1f1f1f;border-color:#777" id="customDot"></span>Custom</button>
-          <label class="custom-input">
-            <span class="visually-hidden">Custom colour (hex)</span>
-            <input id="customColour" type="color" value="#1f1f1f" aria-label="Custom theme colour" />
-          </label>
-        </div>
-        <p class="theme-strip-note" id="themeStatus">Showing <strong>Dark</strong>. Seven themes, chosen on the phone; the pick lives in the browser.</p>
-      </div>
     </aside>
   </div>
 </section>
@@ -165,8 +149,8 @@
       <p>Choose the audience display and use the phone’s control pad for a laser pointer, pen or highlighter. Marks are temporary and are not saved to slides. The pad does not show the slide. App-window shares may not include the overlay; test it with your display setup first.</p>
     </li>
     <li class="feature">
-      <h3>Make it yours</h3>
-      <p>Choose from quiet dark and light palettes, a custom colour, or playful Pixel Arcade, Playroom, Night Console and Paper Studio styles. Your choice stays in the phone browser.</p>
+      <h3>Reconnect when you need to</h3>
+      <p>Open Sofa Remote on the Mac to show the pairing code, manage paired phones or stop sharing.</p>
     </li>
   </ul>
 </section>
@@ -304,6 +288,6 @@
   <span class="right">© 2026</span>
 </footer>
 
-<script src="./demo.js?v=beta6" defer></script>
+<script src="./demo.js?v=dark-ui-1" defer></script>
 </body>
 </html>

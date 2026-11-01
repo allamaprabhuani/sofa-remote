@@ -291,7 +291,10 @@ import ServiceManagement
                 case .action(.lock):
                     invalidateInput(); try input.handle(command); locallyPaused = true
                     message = "Input paused after Lock. Unlock the Mac and choose Resume input here."
-                default: try input.handle(command)
+                default:
+                    let source = store.authenticate(request.headers["x-sofa-key"])?.id
+                    if command == .tap, source == nil { throw RemoteError("Pair with the Mac first.") }
+                    try input.handle(command, tapSource: source)
                 }
             case "/display":
                 guard accessibilityAllowed else { throw RemoteError("Allow Sofa Remote in Accessibility on the Mac.") }

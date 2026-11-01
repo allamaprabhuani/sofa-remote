@@ -6,6 +6,50 @@ import Testing
 @testable import SofaRemote
 
 @Suite @MainActor struct InputTests {
+    @Test func padTapsEmitImmediateNativeDoubleClickOnlyForSameDeviceAndPosition() throws {
+        var events: [CGEvent] = []
+        var now: TimeInterval = 1
+        var pointer = CGPoint(x: 100, y: 100)
+        let input = InputController(displays: DisplayController(), emit: { events.append($0) }, trusted: { true },
+            secure: { false }, readPosition: { pointer }, clock: { now }, doubleClickInterval: { 0.5 })
+        func states() -> [Int64] { events.map { $0.getIntegerValueField(.mouseEventClickState) } }
+        try input.handle(.tap, tapSource: "phone-a")
+        #expect(states() == [1, 1]) // First click does not wait for a possible second tap.
+        now += 0.2; try input.handle(.tap, tapSource: "phone-a")
+        #expect(states() == [1, 1, 2, 2])
+        events.removeAll(); now += 0.1
+        try input.handle(.tap, tapSource: "phone-a")
+        now += 0.6; try input.handle(.tap, tapSource: "phone-a")
+        #expect(states() == [1, 1, 1, 1])
+        events.removeAll(); input.reset(); now += 1
+        try input.handle(.tap, tapSource: "phone-a")
+        now += 0.1; try input.handle(.tap, tapSource: "phone-b")
+        #expect(states() == [1, 1, 1, 1])
+        events.removeAll(); input.reset(); now += 1
+        try input.handle(.tap, tapSource: "phone-a")
+        pointer.x += 6; now += 0.1; try input.handle(.tap, tapSource: "phone-a")
+        #expect(states() == [1, 1, 1, 1])
+        events.removeAll(); input.reset(); now += 1
+        try input.handle(.tap, tapSource: "phone-a")
+        input.reset(); now += 0.1; try input.handle(.tap, tapSource: "phone-a")
+        #expect(states() == [1, 1, 1, 1])
+        events.removeAll(); input.reset(); now += 1
+        try input.handle(.tap, tapSource: "phone-a")
+        try input.handle(.key("a", [])); events.removeAll()
+        now += 0.1; try input.handle(.tap, tapSource: "phone-a")
+        #expect(states() == [1, 1])
+        events.removeAll(); input.reset(); now += 1
+        try input.handle(.tap, tapSource: "phone-a")
+        try input.handle(.move(2, 0)); now += 0.1
+        try input.handle(.tap, tapSource: "phone-a")
+        #expect(events.filter { $0.type != .mouseMoved }.map { $0.getIntegerValueField(.mouseEventClickState) } == [1, 1, 2, 2])
+        events.removeAll(); input.reset(); now += 1
+        try input.handle(.tap, tapSource: "phone-a")
+        try input.handle(.move(10, 0)); try input.handle(.move(-10, 0)); now += 0.1
+        try input.handle(.tap, tapSource: "phone-a")
+        #expect(events.filter { $0.type != .mouseMoved }.map { $0.getIntegerValueField(.mouseEventClickState) } == [1, 1, 1, 1])
+        #expect(try RemoteCommand(json: ["type": "tap"]) == .tap)
+    }
     @Test func queuedSleepRechecksAuthorizationAndCancellation() async throws {
         for cancel in [false, true] {
             var finishFirst: CheckedContinuation<Void, Error>?

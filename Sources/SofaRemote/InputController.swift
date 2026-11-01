@@ -14,6 +14,8 @@ import IOKit.hidsystem
     private let secure: () -> Bool
     private let readPosition: () -> CGPoint
     private let clock: () -> TimeInterval
+    private let doubleClickInterval: () -> TimeInterval
+    private var lastTap: (time: TimeInterval, position: CGPoint, source: String)?
     private var pointerAnchor: CGPoint?
     private var lastObserved: CGPoint?
     private var recentTargets: [CGPoint] = []
@@ -22,20 +24,40 @@ import IOKit.hidsystem
          trusted: @escaping () -> Bool = { AXIsProcessTrusted() },
          secure: @escaping () -> Bool = { IsSecureEventInputEnabled() },
          readPosition: @escaping () -> CGPoint = { CGEvent(source: nil)?.location ?? .zero },
-         clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
+         clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+         doubleClickInterval: @escaping () -> TimeInterval = { NSEvent.doubleClickInterval }) {
         self.displays = displays; self.emit = emit; self.trusted = trusted; self.secure = secure
         self.readPosition = readPosition; self.clock = clock
+        self.doubleClickInterval = doubleClickInterval
     }
     var accessibilityAllowed: Bool { trusted() }
     var isDragging: Bool { dragging }
     /// Secure input is deliberately treated as unavailable, including secure password fields.
     var secureInput: Bool { secure() }
 
-    func handle(_ command: RemoteCommand) throws {
-        guard accessibilityAllowed else { throw RemoteError("Allow Sofa Remote in System Settings → Privacy & Security → Accessibility.") }
+    func handle(_ command: RemoteCommand, tapSource: String? = nil) throws {
+        guard accessibilityAllowed else { reset(); throw RemoteError("Allow Sofa Remote in System Settings → Privacy & Security → Accessibility.") }
         guard !secureInput else { reset(); throw RemoteError("Input is paused while the Mac uses secure keyboard input.") }
         switch command {
-        case .move(let dx, let dy): try move(dx: dx, dy: dy, drag: dragging)
+        case .tap, .move: break
+        default: lastTap = nil
+        }
+        switch command {
+        case .tap:
+            let current = position, now = clock()
+            let prior = lastTap
+            let elapsed = prior.map { now - $0.time } ?? -.infinity
+            let isDouble = tapSource != nil && prior?.source == tapSource && elapsed >= 0 && elapsed <= doubleClickInterval()
+                && prior.map { hypot(current.x - $0.position.x, current.y - $0.position.y) <= 4 } == true
+            reset(clearPointer: false)
+            let count = isDouble ? 2 : 1
+            try mouse(.leftMouseDown, count: count); try mouse(.leftMouseUp, count: count)
+            if !isDouble, let tapSource { lastTap = (now, current, tapSource) }
+        case .move(let dx, let dy):
+            try move(dx: dx, dy: dy, drag: dragging)
+            if let lastTap, hypot(position.x - lastTap.position.x, position.y - lastTap.position.y) > 4 {
+                self.lastTap = nil
+            }
         case .scroll(let dx, let dy):
             guard let event = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 2,
                                       wheel1: Int32(-dy), wheel2: Int32(-dx), wheel3: 0) else { throw eventError }
@@ -93,6 +115,7 @@ import IOKit.hidsystem
         }
     }
     func reset(clearPointer: Bool = true) {
+        lastTap = nil
         dragDeadline?.cancel(); dragDeadline = nil
         if dragging { try? mouse(.leftMouseUp); dragging = false }
         if clearPointer { clearPointerAnchor() }

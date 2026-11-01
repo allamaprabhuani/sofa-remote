@@ -20,11 +20,11 @@ Direct local HTTP is unencrypted. For encrypted network transport, connect both 
 
 ## 4. Try the touchpad and save it
 
-In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click. Choose an appearance in the remote’s **Settings → Appearance**, including Pixel Arcade, Playroom, Night Console and Paper Studio. Your choice stays in your phone browser. Use two fingers to scroll; the labelled controls provide other clicks and keyboard input. Open **Shortcuts** (the grid icon) to enter a website address or launch saved apps/sites. Test dragging in that disposable window before relying on it elsewhere.
+In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click; tap twice quickly to double-click. Use two fingers to scroll and the Drag button to drag. Open **Shortcuts** for the keyboard, presenter controls, websites and saved apps/sites. Settings also offers an explicit double-click button. Test these controls in the disposable window before relying on them elsewhere.
 
 In iPhone Safari, choose **Share → Add to Home Screen**. Keep that shortcut to return to the remote. If the Mac's network address changes, open a fresh QR link from the Mac instead of the old shortcut, then save the new link if necessary.
 
-The main remote includes **Screen off**, **Wake** and Mac brightness buttons. Brightness sends the Mac's brightness-key events; macOS and the display determine what responds, so some external displays need their own controls. Screen off affects all connected displays and macOS may lock; Wake requires the Mac to remain awake and cannot unlock it. Saved shortcuts use local initials alongside their names, without fetching icons from websites.
+The remote’s **Settings** include **Screen off**, **Wake** and Mac brightness buttons. Brightness sends the Mac's brightness-key events; macOS and the display determine what responds, so some external displays need their own controls. Screen off affects all connected displays and macOS may lock; Wake requires the Mac to remain awake and cannot unlock it. Saved shortcuts use local initials alongside their names, without fetching icons from websites.
 
 ## Present a slideshow
 

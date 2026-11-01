@@ -9,7 +9,7 @@ enum RemoteCommand: Equatable {
         case brightnessUp, brightnessDown
         case appSwitcher, spotlight, showDesktop, downloads, lock, screenOff, screenOn, moveWindow
     }
-    case move(Double, Double), scroll(Double, Double), click(Button, Int)
+    case move(Double, Double), scroll(Double, Double), click(Button, Int), tap
     case drag(Phase, Double, Double), text(String), key(String, Set<String>), action(Action)
 
     init(json: [String: Any]) throws {
@@ -22,6 +22,7 @@ enum RemoteCommand: Equatable {
             return value.doubleValue
         }
         switch json["type"] as? String {
+        case "tap": self = .tap
         case "move": self = .move(try number("dx", limit: 1000), try number("dy", limit: 1000))
         case "scroll": self = .scroll(try number("dx"), try number("dy"))
         case "click":
