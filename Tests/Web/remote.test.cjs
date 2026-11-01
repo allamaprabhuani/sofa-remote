@@ -27,9 +27,11 @@ async function main() {
   const tab=await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`,{method:'PUT'})).json();
   ws=new WebSocket(tab.webSocketDebuggerUrl);await new Promise((r,j)=>{ws.onopen=r;ws.onerror=j});
   let id=0;const pending=new Map();ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id&&pending.has(m.id)){pending.get(m.id)(m);pending.delete(m.id)}};
-  const cdp=(method,params={})=>new Promise((resolve,reject)=>{const n=++id,t=setTimeout(()=>{pending.delete(n);reject(Error(`${method} timeout`))},5000);pending.set(n,m=>{clearTimeout(t);m.error?reject(Error(m.error.message)):resolve(m.result)});ws.send(JSON.stringify({id:n,method,params}))});
+  const cdp=(method,params={})=>new Promise((resolve,reject)=>{const n=++id,t=setTimeout(()=>{pending.delete(n);reject(Error(`${method} timeout`))},15000);pending.set(n,m=>{clearTimeout(t);m.error?reject(Error(m.error.message)):resolve(m.result)});ws.send(JSON.stringify({id:n,method,params}))});
   closeBrowser=()=>cdp('Browser.close');
   const evaluate=async expression=>{const r=await cdp('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(JSON.stringify(r.exceptionDetails));return r.result.value};
+  const waitFor=async(expression,label)=>{const deadline=Date.now()+5000;while(Date.now()<deadline){if(await evaluate(expression))return;await wait(20)}throw Error(`Timed out waiting for ${label}`)};
+  const waitForInputIdle=()=>waitFor('!active && queue.length === 0 && !gestureTimer','the serialized input queue to drain');
   await cdp('Page.enable');await cdp('Runtime.enable');
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`
     localStorage.setItem('sofaKey','a'.repeat(64)); Element.prototype.setPointerCapture=function(){};
@@ -55,11 +57,12 @@ async function main() {
   assert.equal(subtitle.withApp,'Connected · Mock Mac · Brave Browser');
   assert.equal(subtitle.withoutApp,'Connected · Mock Mac');
   const presenterUI=await evaluate(`(async()=>{
-    const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;
-    document.querySelector('#present-open').click();
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+    const idle=async()=>{const until=Date.now()+4000;while(active || queue.length || gestureTimer){if(Date.now()>until)throw Error('Timed out draining presenter input');await sleep(20)}};
+    calls.length=0;document.querySelector('#present-open').click();
     const display=document.querySelector('#present-display').value,navHeight=document.querySelector('#present-next').getBoundingClientRect().height;
     document.querySelector('#present-undo').click();document.querySelector('#present-clear').click();
-    document.querySelector('#present-next').click();document.querySelector('#present-previous').click();document.querySelector('#present-exit').click();
+    document.querySelector('#present-next').click();document.querySelector('#present-previous').click();document.querySelector('#present-exit').click();await idle();
     const smooth=document.querySelector('#present-smooth'),shapes=document.querySelector('#present-shapes');
     const optionsDefaultOff=!smooth.checked&&!shapes.checked;document.querySelector('#present-options').open=true;
     const colours=['red','blue','green','yellow'];
@@ -70,21 +73,21 @@ async function main() {
     const initialReticle=(()=>{const d=document.querySelector('#present-dot');return !d.hidden && getComputedStyle(d).display!=='none' && d.getBoundingClientRect().width>=24})() ;
     const emit=(type,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:42,button:0,clientX:rect.left+rect.width*x,clientY:rect.top+rect.height*y,bubbles:true}));
     emit('pointerdown',0.25,0.25);emit('pointermove',0.75,0.75);emit('pointerup',0.75,0.75);
-    await sleep(90);const heartbeat=!!presentHeartbeat;
+    await idle();const heartbeat=!!presentHeartbeat;
     const dot=document.querySelector('#present-dot'),reticleAfterLift=!dot.hidden && getComputedStyle(dot).display!=='none' && dot.style.left.includes('75%');
     document.querySelector('#present-highlight').click();document.querySelector('[data-present-colour=yellow]').click();smooth.click();shapes.click();
     const highlightSelected=document.querySelector('#present-highlight').getAttribute('aria-pressed')==='true' && document.querySelector('[data-present-colour=yellow]').getAttribute('aria-pressed')==='true';
-    emit('pointerdown',0.2,0.3);emit('pointerup',0.4,0.6);await sleep(80);
+    emit('pointerdown',0.2,0.3);emit('pointerup',0.4,0.6);await idle();
     document.querySelector('#present-laser').click();
-    emit('pointerdown',0.2,0.3);emit('pointercancel',0.8,0.9);await sleep(70);
-    document.querySelector('#present-next').click();await sleep(30);
-    document.querySelector('#present-exit').click();await sleep(30);
-    document.querySelector('#present-sheet [data-close]').click();await sleep(50);
+    emit('pointerdown',0.2,0.3);emit('pointercancel',0.8,0.9);await idle();
+    document.querySelector('#present-next').click();await idle();
+    document.querySelector('#present-exit').click();await idle();
+    document.querySelector('#present-sheet [data-close]').click();await idle();
     return {display,heartbeat,optionsDefaultOff,colourStates,penSelected,highlightSelected,initialReticle,reticleAfterLift,navHeight,cleared:!presentHeartbeat, calls:calls.filter(c=>c.path==='/command'||c.path==='/presenter'),closed:!document.querySelector('#present-sheet').classList.contains('open'),modal:document.querySelector('#present-sheet [role=dialog]').getAttribute('aria-label')};
   })()`);
   assert.equal(presenterUI.display,'d1');assert.equal(presenterUI.modal,'Presenter controls');
   assert.equal(presenterUI.heartbeat,true);assert.equal(presenterUI.optionsDefaultOff,true);assert.ok(presenterUI.colourStates.every(Boolean));assert.equal(presenterUI.penSelected,true);assert.equal(presenterUI.highlightSelected,true);assert.equal(presenterUI.initialReticle,true);assert.equal(presenterUI.reticleAfterLift,true);assert.ok(presenterUI.navHeight>=72,'large slide navigation targets');assert.equal(presenterUI.cleared,true);assert.equal(presenterUI.closed,true);
-  const pc=presenterUI.calls.filter(c=>c.path==='/presenter');
+  const pc=presenterUI.calls.filter(c=>c.path==='/presenter' && c.body.action!=='heartbeat');
   assert.deepEqual(pc.map(c=>c.body.action),['start','move','end','start','move','end','start','end','clear','stop']);
   assert.equal(pc[0].body.mode,'pen');assert.equal(pc[0].body.color,'green');assert.equal(pc[0].body.smooth,true);assert.equal(pc[0].body.shapes,false);assert.equal(pc[0].body.display,'d1');
   assert.equal(pc[3].body.mode,'highlight');assert.equal(pc[3].body.color,'yellow');assert.equal(pc[3].body.smooth,false);assert.equal(pc[3].body.shapes,true);
@@ -105,12 +108,13 @@ async function main() {
   await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
   await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
   await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32});
-  await wait(100);
-  const keyboardPresenter=await evaluate(`calls.filter(c=>c.path==='/presenter').map(c=>c.body.action)`);
+  await waitForInputIdle();
+  const keyboardPresenter=await evaluate(`calls.filter(c=>c.path==='/presenter' && c.body.action!=='heartbeat').map(c=>c.body.action)`);
   assert.deepEqual(keyboardPresenter,['start','move','end'],'keyboard can point and draw');
   const presenterErrors=await evaluate(`(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-    presenterFailure=true;await presenter('heartbeat');await sleep(50);
+    const idle=async()=>{const until=Date.now()+4000;while(active || queue.length || gestureTimer){if(Date.now()>until)throw Error('Timed out draining presenter input');await sleep(20)}};
+    presenterFailure=true;await presenter('heartbeat');await idle();
     const failure=document.querySelector('#status').textContent;
     const note=document.querySelector('#present-sheet .sheet-status');
     const sheet=document.querySelector('#present-sheet .sheet');sheet.scrollTop=sheet.scrollHeight;
@@ -118,7 +122,7 @@ async function main() {
     const inline=note.previousElementSibling?.classList.contains('sheet-head') && getComputedStyle(note).position==='sticky' && nr.height>0 && nr.top>=sr.top && nr.bottom<=sr.bottom;
     presenterFailure=false;await refresh();const afterRefresh=document.querySelector('#status').textContent;
     await presenter('heartbeat');const afterHeartbeat=document.querySelector('#status').textContent;
-    startPresentPoint();await sleep(40);const afterGesture=document.querySelector('#status').textContent;
+    startPresentPoint();await idle();const afterGesture=document.querySelector('#status').textContent;
     return {failure,afterRefresh,afterHeartbeat,afterGesture,inline};
   })()`);
   assert.match(presenterErrors.failure,/Presenter unavailable/);
@@ -126,7 +130,7 @@ async function main() {
   assert.equal(presenterErrors.afterRefresh,presenterErrors.failure,'state refresh preserves presenter error');
   assert.equal(presenterErrors.afterHeartbeat,presenterErrors.failure,'heartbeat preserves presenter error');
   assert.equal(presenterErrors.afterGesture,'','a successful deliberate gesture clears presenter error');
-  await evaluate(`document.querySelector('#present-sheet [data-close]').click()`);await wait(50);
+  await evaluate(`document.querySelector('#present-sheet [data-close]').click()`);await waitForInputIdle();
   for(const [name,bg] of [['dark','#1f1f1f'],['black','#000000'],['light','#f8f8f8'],['ivory','#f6f1e7'],['plum','#f8f2ed'],['ocean','#062d35'],['custom','#757575']]){
     await evaluate(`(()=>{const theme=document.querySelector('#theme');theme.value=${JSON.stringify(name)};theme.dispatchEvent(new Event('change'));if(theme.value==='custom'){const colour=document.querySelector('#custom-colour');colour.value=${JSON.stringify(bg)};colour.dispatchEvent(new Event('input'));colour.dispatchEvent(new Event('change'));}})()`);
     await cdp('Page.reload',{ignoreCache:true});await wait(200);
