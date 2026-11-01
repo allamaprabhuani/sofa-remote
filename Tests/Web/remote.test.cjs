@@ -352,12 +352,13 @@ async function main() {
   const result=await evaluate(`(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms)), pad=document.querySelector('#pad');
     const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
-    calls.length=0;gesture('pointerdown',1,0,0);gesture('pointermove',1,12,4);gesture('pointerup',1,12,4);await sleep(45);
+    calls.length=0;gesture('pointerdown',1,0,0);gesture('pointermove',1,12,4);const hidden=document.querySelector('main').classList.contains('is-pointing');gesture('pointerup',1,12,4);const restored=!document.querySelector('main').classList.contains('is-pointing');await sleep(45);
     document.querySelector('#right').click();await sleep(15);
     document.querySelector('#drag').click();gesture('pointerdown',2,0,0);gesture('pointermove',2,10,5);gesture('pointercancel',2,10,5);await sleep(100);
     gesture('pointerdown',3,0,0);gesture('pointerdown',4,0,0);gesture('pointermove',3,0,12);gesture('pointerup',3,0,12);gesture('pointerup',4,0,0);await sleep(60);
-    return {commands:calls.filter(x=>x.path==='/command').map(x=>x.body),maxActive};
+    return {commands:calls.filter(x=>x.path==='/command').map(x=>x.body),maxActive,hidden,restored};
   })()`);
+  assert.ok(result.hidden && result.restored,'controls recede while moving and return on lift');
   assert.deepEqual(result.commands.map(x=>x.type),['move','click','drag','drag','scroll']);
   assert.equal(result.commands[1].button,'right');
   assert.deepEqual(result.commands.slice(2,4).map(x=>x.phase),['start','end'],'pointercancel drops queued drag-move and still releases the button');

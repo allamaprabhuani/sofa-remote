@@ -100,7 +100,7 @@ enum RemotePage {
       header button { border-radius: 24px; background: transparent; }
       header button:active { background: var(--pressed); }
       header h1 {
-        font-family: ui-rounded, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
         font-weight: 700;
         font-size: 1.1875rem;
         letter-spacing: -0.02em;
@@ -179,21 +179,14 @@ enum RemotePage {
       #pad:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
       #pad .hint {
         position: absolute;
-        bottom: 15px;
+        top: 50%;
+        transform: translateY(-50%);
         left: 8px;
         right: 8px;
         text-align: center;
         color: var(--muted);
         font-size: 12px;
-        pointer-events: none;
-      }
-      .pad-title {
-        position: absolute;
-        top: 15px;
-        left: 18px;
-        font-size: 12px;
-        color: var(--muted);
-        font-weight: 700;
+        opacity: .65;
         pointer-events: none;
       }
       .row {
@@ -228,15 +221,19 @@ enum RemotePage {
       .remote-guide summary { min-height: 44px; display: flex; align-items: center; justify-content: center; width: 44px; border-radius: 50%; cursor: pointer; }
       .remote-guide summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .remote-guide p { margin: 4px 0 12px; color: var(--muted); font-size: 0.875rem; }
-      .remote-panel .control-icon { width: 32px; height: 32px; }
-      .media [data-action="playPause"] .control-icon { width: 38px; height: 38px; }
-      header .control-icon { width: 26px; height: 26px; }
-      main .row button { min-height: 52px; border-radius: 28px; }
+      .remote-panel .control-icon { width: 25px; height: 25px; }
+      .media [data-action="playPause"] .control-icon { width: 30px; height: 30px; }
+      header .control-icon { width: 23px; height: 23px; }
+      main .row button { min-height: 52px; border-radius: 12px; }
       main .row { gap: 10px; }
       main .remote-panel .row button { border: 0; background: transparent; }
       main .remote-panel .row button:active { background: var(--pressed); }
       main .remote-panel .row button.on { background: var(--selection); color: var(--selection-ink); }
+      main.is-pointing header, main.is-pointing .row, main.is-pointing .panel-divider,
+      main.is-pointing .remote-guide, main.is-pointing #pad .hint { opacity: 0; }
+      main.is-pointing header button, main.is-pointing .row button, main.is-pointing .remote-guide { pointer-events: none; }
       @media (prefers-reduced-motion: no-preference) {
+        main header, main .row, main .panel-divider, main .remote-guide, main #pad .hint { transition: opacity 160ms ease; }
         main .remote-panel .row button { transition: transform 100ms ease-out; }
         main .remote-panel .row button:active:not(:disabled) { transform:scale(.96); }
       }
@@ -592,8 +589,7 @@ enum RemotePage {
         tabindex="0"
         aria-label="Touchpad. Drag to move, tap to click, use two fingers to scroll. With a keyboard, use arrow keys to move and Enter or Space to click."
       >
-        <span class="pad-title">Touchpad</span
-        ><span class="hint">Tap to click · Two fingers to scroll</span>
+        <span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
       <div class="panel-divider" aria-hidden="true"></div>
       <div class="row clicks">
@@ -1328,6 +1324,7 @@ enum RemotePage {
         f.x = e.clientX;
         f.y = e.clientY;
         travel += Math.abs(dx) + Math.abs(dy);
+        if (travel >= 8) $("main").classList.add("is-pointing");
         dx = Math.max(-300, Math.min(300, dx));
         dy = Math.max(-300, Math.min(300, dy));
         if (fingers.size > 1) {
@@ -1355,8 +1352,10 @@ enum RemotePage {
       }
       function lift(e) {
         if (!fingers.delete(e.pointerId)) return;
+        if (!fingers.size || e.type !== "pointerup") $("main").classList.remove("is-pointing");
         if (e.type !== "pointerup") {
           fingers.clear();
+          $("main").classList.remove("is-pointing");
           dropQueuedMotion();
           endDrag();
           return;
@@ -1370,6 +1369,7 @@ enum RemotePage {
       pad.addEventListener("lostpointercapture", (e) => {
         if (fingers.has(e.pointerId)) {
           fingers.clear();
+          $("main").classList.remove("is-pointing");
           dropQueuedMotion();
           endDrag();
         }
@@ -1775,6 +1775,7 @@ enum RemotePage {
             locked = !!s.sessionLocked;
             if (locked) {
               fingers.clear();
+              $("main").classList.remove("is-pointing");
               stopPresenting();
               drag = false;
               clearInterval(dragHeartbeat);
@@ -1852,6 +1853,7 @@ enum RemotePage {
         if (document.visibilityState === "visible") refresh();
         else {
           fingers.clear();
+          $("main").classList.remove("is-pointing");
           stopPresenting();
           dropQueuedMotion();
           endDrag();
@@ -1859,6 +1861,7 @@ enum RemotePage {
       });
       window.addEventListener("pagehide", () => {
         fingers.clear();
+        $("main").classList.remove("is-pointing");
         stopPresenting();
         dropQueuedMotion();
         endDrag();
