@@ -20,7 +20,7 @@ Direct local HTTP is unencrypted. For encrypted network transport, connect both 
 
 ## 4. Try the touchpad and save it
 
-In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click; tap twice quickly to double-click. Use two fingers to scroll and the Drag button to drag. Open **Shortcuts** for the keyboard, presenter controls, websites and saved apps/sites. Settings also offers an explicit double-click button. Test these controls in the disposable window before relying on them elsewhere.
+In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click; tap twice quickly to double-click. Use two fingers to scroll and the Drag button to drag. Open **Shortcuts** for the keyboard, presenter controls, websites and saved apps/sites. Test these controls in the disposable window before relying on them elsewhere.
 
 In iPhone Safari, choose **Share → Add to Home Screen**. Keep that shortcut to return to the remote. If the Mac's network address changes, open a fresh QR link from the Mac instead of the old shortcut, then save the new link if necessary.
 

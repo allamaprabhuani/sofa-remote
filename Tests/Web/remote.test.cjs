@@ -179,6 +179,17 @@ async function main() {
   assert.deepEqual(access,{keys:[true,true],present:true,back:true},'keyboard and presenter are discoverable in Shortcuts and retain navigation');
   const sharedPanel=await evaluate(`(()=>{const panel=document.querySelector('.remote-panel'),pad=document.querySelector('#pad');const keys=[...panel.querySelectorAll('button')];return {count:keys.length,separate:keys.every(b=>!pad.contains(b)),borderless:keys.every(b=>getComputedStyle(b).borderTopWidth==='0px'),inside:panel.contains(pad)&&keys.every(b=>panel.contains(b))}})()`);
   assert.deepEqual(sharedPanel,{count:7,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
+  for(const width of [320,390]){
+    await cdp('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:true});
+    const settings=await evaluate(`(()=>{document.querySelector('#settings-open').click();const sheet=document.querySelector('#settings-sheet .sheet');const buttons=[...sheet.querySelectorAll('button')];return {headings:[...sheet.querySelectorAll('h3')].map(x=>x.textContent),buttons:buttons.map(b=>({name:b.getAttribute('aria-label'),title:b.title,text:b.textContent.trim(),icon:!!b.querySelector('svg[aria-hidden="true"]'),w:b.getBoundingClientRect().width,h:b.getBoundingClientRect().height})),scroll:sheet.scrollWidth,client:sheet.clientWidth,double:!!document.querySelector('#double')}})()`);
+    assert.deepEqual(settings.headings,['Display','Mac controls','Sharing','Paired phones','Help']);
+    assert.ok(settings.buttons.every(b=>b.name&&b.title&&!b.text&&b.icon&&b.w>=44&&b.h>=44),`${width}px settings action icons have accessible names and touch targets`);
+    assert.ok(settings.scroll<=settings.client+1,`${width}px settings have no horizontal overflow`);assert.equal(settings.double,false);
+    const guide=await evaluate(`(()=>{calls.length=0;const details=[...document.querySelectorAll('#settings-sheet details')];const collapsed=details.every(x=>!x.open);details.forEach(x=>x.querySelector('summary').click());const open=details.every(x=>x.open);details.forEach(x=>x.querySelector('summary').click());return {collapsed,open,commands:calls.filter(c=>c.path==='/command').length}})()`);
+    assert.deepEqual(guide,{collapsed:true,open:true,commands:0},'icon guides reveal labels without sending actions');
+    if(width===390&&process.env.SOFA_TEST_SETTINGS_SCREENSHOT){const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SETTINGS_SCREENSHOT,Buffer.from(shot.data,'base64'))}
+    await evaluate(`closeSheet()`);
+  }
   await cdp('DOM.enable');await cdp('CSS.enable');const rootNode=await cdp('DOM.getDocument');const focusNode=await cdp('DOM.querySelector',{nodeId:rootNode.root.nodeId,selector:'#right'});
   await cdp('CSS.forcePseudoState',{nodeId:focusNode.nodeId,forcedPseudoClasses:['focus-visible']});
   assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('#right')).outlineStyle`),'none','keyboard focus is visible');
@@ -320,14 +331,14 @@ async function main() {
     const sleep=ms=>new Promise(r=>setTimeout(r,ms)), pad=document.querySelector('#pad');
     const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
     calls.length=0;gesture('pointerdown',1,0,0);gesture('pointermove',1,12,4);gesture('pointerup',1,12,4);await sleep(45);
-    document.querySelector('#right').click();document.querySelector('#double').click();await sleep(15);
+    document.querySelector('#right').click();await sleep(15);
     document.querySelector('#drag').click();gesture('pointerdown',2,0,0);gesture('pointermove',2,10,5);gesture('pointercancel',2,10,5);await sleep(100);
     gesture('pointerdown',3,0,0);gesture('pointerdown',4,0,0);gesture('pointermove',3,0,12);gesture('pointerup',3,0,12);gesture('pointerup',4,0,0);await sleep(60);
     return {commands:calls.filter(x=>x.path==='/command').map(x=>x.body),maxActive};
   })()`);
-  assert.deepEqual(result.commands.map(x=>x.type),['move','click','click','drag','drag','scroll']);
-  assert.equal(result.commands[1].button,'right');assert.equal(result.commands[2].count,2);
-  assert.deepEqual(result.commands.slice(3,5).map(x=>x.phase),['start','end'],'pointercancel drops queued drag-move and still releases the button');
+  assert.deepEqual(result.commands.map(x=>x.type),['move','click','drag','drag','scroll']);
+  assert.equal(result.commands[1].button,'right');
+  assert.deepEqual(result.commands.slice(2,4).map(x=>x.phase),['start','end'],'pointercancel drops queued drag-move and still releases the button');
   assert.equal(result.maxActive,1,'commands are serialized');
   const heartbeat=await evaluate(`(async()=>{
     calls.length=0;document.querySelector('#drag').click();await new Promise(r=>setTimeout(r,1100));

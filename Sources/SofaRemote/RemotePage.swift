@@ -274,6 +274,11 @@ enum RemotePage {
         border: 1px solid var(--line);
         border-radius: 24px 24px 0 0;
       }
+      #settings-sheet .settings-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      #settings-sheet .settings-actions button, #settings-sheet .settings-close, #devices button { flex: 0 0 48px; width: 48px; height: 48px; min-width: 48px; padding: 0; border-radius: 50%; }
+      #settings-sheet .settings-close { min-width: 48px; }
+      #settings-sheet h3 { margin-top: 9px; }
+      #settings-sheet .settings-actions button:focus-visible { outline-offset: 2px; }
       .sheet-head {
         display: flex;
         align-items: center;
@@ -482,6 +487,9 @@ enum RemotePage {
 </g></symbol>
       <symbol id="icon-folder" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
 </g></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+      <symbol id="icon-remove" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6"/></symbol>
+      <symbol id="icon-move-display" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4M7 10h10m-3-3 3 3-3 3"/></symbol>
       <symbol id="icon-screen-off" viewBox="0 0 24 24"><path d="M2 3h20v14H2Zm6 18h8m-4-4v4m-6-9 12-6"/></symbol>
       <symbol id="icon-wake" viewBox="0 0 24 24"><path d="M12 2v8m-5-6a9 9 0 1 0 10 0"/></symbol>
       <symbol id="icon-brightness-down" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M9 12h6M12 1v2m0 18v2M1 12h2m18 0h2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4m0-15.6-1.4 1.4M5.6 18.4l-1.4 1.4"/></symbol>
@@ -571,7 +579,7 @@ enum RemotePage {
         <p>Your touch position maps to the entire selected display. The ring shows your last touch position; look at the screen to aim. This pad does not show the slide.</p>
         <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch the position matching the selected screen and move to point or draw. The ring shows your last position. Keyboard: move with arrow keys, hold Space to point or draw."><span id="present-dot" aria-hidden="true"></span></div>
         <div class="present-tools"><button id="present-undo">Undo</button><button id="present-clear">Clear</button></div>
-        <p>Laser appears while touching. Pen marks stay until cleared; highlights fade after about 2.5 seconds. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
+        <p>Laser appears while touching. Pen marks stay until cleared; highlights disappear after about 2.5 seconds. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
       </div>
     </div>
     <div class="scrim" id="keyboard-sheet">
@@ -666,38 +674,33 @@ enum RemotePage {
     </div>
     <div class="scrim" id="settings-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
-        <div class="sheet-head">
-          <h2>Settings</h2>
-          <button data-close>Done</button>
+        <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
+        <h3>Display</h3>
+        <label for="display">Jump pointer to display</label><select class="field" id="display"></select>
+        <p>The touchpad can move across all connected displays.</p>
+        <div class="settings-actions" role="group" aria-label="Display controls">
+          <button data-icon="move-display" data-action="moveWindow" aria-label="Move front window to selected display" title="Move front window to selected display"></button>
+          <button id="brightness-down" data-icon="brightness-down" data-action="brightnessDown" aria-label="Decrease Mac brightness" title="Decrease Mac brightness"></button>
+          <button id="brightness-up" data-icon="brightness-up" data-action="brightnessUp" aria-label="Increase Mac brightness" title="Increase Mac brightness"></button>
+          <button id="screen-off-main" data-icon="screen-off" data-action="screenOff" aria-label="Turn screens off" title="Turn screens off"></button>
+          <button id="wake-main" data-icon="wake" data-action="screenOn" aria-label="Wake screens" title="Wake screens"></button>
         </div>
-        <a href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">Report a bug</a>
-        <label for="display">Jump pointer to display</label
-        ><select class="field" id="display"></select>
-        <p>Choosing a display jumps the pointer there once. The touchpad still moves the pointer freely across every connected display, like a Mac trackpad.</p>
-        <button data-icon="desktop" data-action="moveWindow" title="Move front window">Move front window to this display</button>
-        <div class="sheet-row">
-          <button data-icon="desktop" data-action="showDesktop" title="Show desktop">Show desktop</button
-          ><button data-icon="folder" data-action="downloads" title="Open Downloads">Downloads</button>
+        <p>Brightness uses Mac keys; external display support varies. Screen off may lock the Mac.</p>
+        <details class="help-disclosure"><summary>About display icons</summary><p>In order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p></details>
+        <h3>Mac controls</h3>
+        <div class="settings-actions" role="group" aria-label="Mac controls">
+          <button data-icon="desktop" data-action="showDesktop" aria-label="Show desktop" title="Show desktop"></button>
+          <button data-icon="folder" data-action="downloads" aria-label="Open Downloads" title="Open Downloads"></button>
+          <button data-icon="mute" data-action="mute" aria-label="Mute" title="Mute"></button>
+          <button class="danger" data-icon="lock" id="lock" aria-label="Lock Mac" title="Lock Mac"></button>
         </div>
-        <div class="sheet-row"><button data-icon="mute" data-action="mute" title="Mute">Mute</button><button id="double" data-icon="double-click" title="Double click">Double click</button></div>
-        <div class="sheet-row"><button id="brightness-down" aria-label="Decrease Mac brightness" data-icon="brightness-down" data-action="brightnessDown" title="Decrease Mac brightness">Mac brightness −</button><button id="brightness-up" aria-label="Increase Mac brightness" data-icon="brightness-up" data-action="brightnessUp" title="Increase Mac brightness">Mac brightness +</button></div>
-        <p>Brightness uses Mac keys; external display support varies.</p>
-        <div class="sheet-row">
-          <button id="screen-off-main" aria-label="Turn screens off" data-icon="screen-off" data-action="screenOff" title="Turn displays off">Screen off</button
-          ><button id="wake-main" aria-label="Wake screens" data-icon="wake" data-action="screenOn" title="Wake displays">Wake screen</button>
-        </div>
-        <p>Screen off turns every connected display dark; macOS may lock while the display is off.</p>
-        <label class="sheet-row"
-          ><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake"
-        /></label>
+        <details class="help-disclosure"><summary>About Mac control icons</summary><p>In order: show desktop, open Downloads, mute, and lock the Mac.</p></details>
+        <p>Waking does not unlock your Mac. Unlock on the Mac; Apple Watch unlock is a separate macOS setting.</p>
+        <h3>Sharing</h3>
+        <label class="sheet-row"><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake" /></label>
         <p>Prevents idle system sleep; the display can still sleep.</p>
-        <button class="danger" data-icon="lock" id="lock" title="Lock Mac">Lock Mac…</button>
-        <p>
-          Waking the screen does not unlock your Mac. Unlock on the Mac; Apple Watch unlock is a separate
-          macOS setting.
-        </p>
-        <div id="devices"></div>
-        <button data-help data-icon="help" title="About and Help">About &amp; Help</button>
+        <h3>Paired phones</h3><div id="devices"></div>
+        <h3>Help</h3><div class="settings-actions"><button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button></div>
       </div>
     </div>
     <div class="scrim" id="help-sheet">
@@ -784,7 +787,7 @@ enum RemotePage {
       const $ = (s) => document.querySelector(s),
         $$ = (s) => [...document.querySelectorAll(s)];
       // Reuse small local SVG paths; icons never fetch a library or contact a service.
-      $$('[data-icon]').forEach((button) => {
+      function addIcon(button) {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("class", "control-icon");
         svg.setAttribute("viewBox", "0 0 24 24");
@@ -794,7 +797,8 @@ enum RemotePage {
         use.setAttribute("href", "#icon-" + button.dataset.icon);
         svg.append(use);
         button.prepend(svg);
-      });
+      }
+      $$('[data-icon]').forEach(addIcon);
       // Retire old appearance preferences; they never affect pairing or shortcuts.
       try { localStorage.removeItem("sofaTheme"); localStorage.removeItem("sofaColour"); } catch {}
       const storage = {
@@ -1293,7 +1297,6 @@ enum RemotePage {
         }
       });
       $("#right").onclick = () => command({ type: "click", button: "right", count: 1 });
-      $("#double").onclick = () => command({ type: "click", button: "left", count: 2 });
       $("#drag").onclick = () => {
         if (drag) {
           endDrag();
@@ -1644,8 +1647,10 @@ enum RemotePage {
             label.className = "shortcut-label";
             label.textContent = d.name + (d.current ? " · this phone" : "");
             const remove = document.createElement("button");
-            remove.textContent = "Remove";
+            remove.dataset.icon = "remove";
+            remove.title = `Remove ${d.name}`;
             remove.setAttribute("aria-label", `Remove ${d.name}`);
+            addIcon(remove);
             remove.onclick = async () => {
               if (!confirm(`Remove ${d.name}?`)) return;
               try {
