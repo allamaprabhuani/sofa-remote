@@ -2,7 +2,7 @@
 
 ## 1. Install on the Mac
 
-Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.6), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
+Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.7), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
 
 This preview is certificate-signed, **not Apple-verified or Developer ID notarised**. macOS may block first launch. If you trust the source and intentionally downloaded this beta, review the blocked-app option in **System Settings → Privacy & Security**. Availability depends on macOS and device-management policy. Do not disable Gatekeeper globally or paste commands from an untrusted issue. Building from the [source](../README.md#build-from-source) is another development option.
 
@@ -20,9 +20,21 @@ Direct local HTTP is unencrypted. For encrypted network transport, connect both 
 
 ## 4. Try the touchpad and save it
 
-In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click. Choose Dark, Black, Light, Ivory (brown), Plum, Ocean or Custom in the remote’s **Settings → Appearance**. The colour choice stays in your phone browser. Use two fingers to scroll; the labelled controls provide other clicks and keyboard input. Open **Shortcuts** (the grid icon) to enter a website address or launch saved apps/sites. Test dragging in that disposable window before relying on it elsewhere.
+In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click; tap twice quickly to double-click. Use two fingers to scroll and the Drag button to drag. Open **Shortcuts** for the keyboard, presenter controls, websites and saved apps/sites. Test these controls in the disposable window before relying on them elsewhere.
 
 In iPhone Safari, choose **Share → Add to Home Screen**. Keep that shortcut to return to the remote. If the Mac's network address changes, open a fresh QR link from the Mac instead of the old shortcut, then save the new link if necessary.
+
+The remote’s **Settings** include **Screen off**, **Wake** and Mac brightness buttons. Brightness sends the Mac's brightness-key events; macOS and the display determine what responds, so some external displays need their own controls. Screen off affects all connected displays and macOS may lock; Wake requires the Mac to remain awake and cannot unlock it. Saved shortcuts use local initials alongside their names, without fetching icons from websites.
+
+## Present a slideshow
+
+Start your slideshow on the Mac in Keynote, PowerPoint or Google Slides, and keep the slideshow as the active app. On the phone, choose **Present**. Previous and Next send the Mac's left and right arrow keys; **End slideshow** sends Escape. Animated builds may consume a press before the slide changes.
+
+Choose the display showing your audience's slides. Select **Laser**, **Pen** or **Highlight** and a colour, then touch and move on the phone's presentation pad. The ring shows your position on the pad, and a matching marker appears on the display while you touch it. The pad is a control surface: it does not show or stream the slide. The laser disappears when you lift your finger; highlights disappear about 2½ seconds after you finish each stroke. Pen marks are temporary, are not saved to the presentation, and clear when you change slides, close Present, or lose connection for 30 seconds. Undo and Clear remove marks. The overlay may not be included when sharing only an app window; share the display if your meeting software supports it. Full-screen stacking and display configurations vary, so try it with your setup before a presentation.
+
+Open **Stroke options** to enable smoothing or shape correction for pen and highlighter strokes. Both are off by default. Shape correction attempts near-straight lines and closed circles after you lift your finger; other strokes remain freehand. Try these options before presenting to see whether they suit your drawing style.
+
+The overlay has a limit of 100 strokes or 10,000 points. In this preview, reaching the limit can clear the overlay; use Clear periodically during long presentations.
 
 ## Find the Mac controls again
 

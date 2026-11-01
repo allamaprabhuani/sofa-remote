@@ -6,6 +6,7 @@
 - **Sleep and unlock:** a sleeping/unreachable Mac cannot receive Wake screen. Display sleep can trigger macOS lock; unlock on the Mac. Lock/session signals are conservative and have not been verified for every manually locked state. Stop sharing when the desktop is unattended.
 - **Browser clipboard:** HTTP pages may not have clipboard API access. Select and copy the diagnostic preview manually when the phone reports that copying is unavailable.
 - **Display/window control:** native fullscreen transitions, unplug/reconnect races and every third-party window have not been verified. A refused move should leave control with the owner; use a disposable test window when reporting it.
+- **Presenter:** the overlay may be excluded from a single-window screen share, and reaching 100 strokes or 10,000 points can clear it. Try your display and sharing setup before presenting.
 - **Media:** global media keys follow macOS/app behaviour. Provider sign-ins, DRM, subtitles and ad blocking remain the responsibility of the existing browser/player.
 - **Accessibility:** labels and touch targets are improved, but a complete real-device VoiceOver and large-text audit is pending.
 - **Updates:** Check for updates opens release information manually. There is no automatic downloader/installer or silent background update check.

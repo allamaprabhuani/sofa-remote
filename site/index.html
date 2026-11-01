@@ -4,12 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Sofa Remote — a remote for your Mac</title>
-<meta name="description" content="A small, free Mac helper. Your phone's browser becomes a touchpad, keyboard and media remote on the same local network. Input only — no screen streaming." />
+<meta name="description" content="A free Mac helper: use your phone as a touchpad, keyboard and presentation remote. Input only, with no screen streaming." />
 <meta name="theme-color" content="#F6F3EC" />
 <link rel="icon" href="./assets/icon.png" type="image/png" />
 <link rel="apple-touch-icon" href="./assets/icon.png" />
 <link rel="preload" href="./assets/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="./styles.css?v=beta6-blue" />
+<link rel="stylesheet" href="./styles.css?v=dark-ui-1" />
 <meta property="og:title" content="Sofa Remote" />
 <meta property="og:description" content="A free remote for your Mac. Input only, from your phone's browser." />
 <meta property="og:image" content="https://sofa-remote.doublehoney1.chatgpt.site/assets/preview.jpg?v=beta6" />
@@ -18,7 +18,7 @@
 <meta property="og:url" content="https://sofa-remote.doublehoney1.chatgpt.site/" />
 <meta name="twitter:card" content="summary_large_image" />
 </head>
-<body data-site-theme="dark">
+<body>
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="nav" aria-label="Primary">
@@ -42,11 +42,11 @@
     <div class="hero-copy">
       <h1 id="hero-h"><span class="hero-sans">A phone remote</span><br /><span class="hero-serif">for your Mac.</span></h1>
       <p class="lede">
-        Use your phone as a touchpad, keyboard and media remote. Install the
-        Mac helper, scan its QR code and open the remote in your browser.
+        Use your phone as a touchpad, keyboard, media and presentation remote.
+        Install the Mac helper, scan its QR code and open the remote in your browser.
       </p>
       <div class="cta-row">
-        <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.6/Sofa-Remote-preview.dmg">
+        <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.7/Sofa-Remote-preview.dmg">
           <svg class="apple-glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
           <span>Download for Mac</span>
         </a>
@@ -63,27 +63,27 @@
       <div class="live-shell">
         <div class="live-head">
           <span id="live-h" class="live-title">Sofa Remote</span>
-          <span class="live-sub">Preview — not connected</span>
+          <button class="live-btn live-shortcuts" type="button" data-act="shortcuts" aria-label="Shortcuts, preview only" title="Shortcuts, preview only">Shortcuts</button>
+          <button class="live-btn live-settings" type="button" data-act="settings" aria-label="Settings, preview only" title="Settings, preview only"><span aria-hidden="true">⚙</span></button>
         </div>
+        <div class="live-panel">
         <div class="live-pad" id="touchpad"
              tabindex="0"
              role="application"
              aria-label="Preview touchpad. Drag to move the cursor. Arrow keys also work; Space or Enter clicks.">
-          <span class="live-hint">Drag to move · tap buttons below</span>
+          <span class="live-pad-title">Touchpad</span>
+          <span class="live-hint">Drag to move · tap to click</span>
           <div class="live-cursor" id="cursor" aria-hidden="true">
             <svg viewBox="0 0 16 20" width="18" height="22"><path d="M1 1 L1 15 L5 11 L7.5 17 L10 16 L7.5 10 L13 10 Z" fill="#111" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></svg>
           </div>
         </div>
+        <div class="live-divider" aria-hidden="true"></div>
         <div class="live-row clicks">
-          <button class="live-btn" type="button" data-act="right" title="Right click">
+          <button class="live-btn" type="button" data-act="right" aria-label="Right click" title="Right click">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 1 7 7v4a7 7 0 0 1-14 0v-4a7 7 0 0 1 7-7Zm1 1.07V11h5.93A6.01 6.01 0 0 0 13 4.07Z" fill="currentColor"/></svg>
-            <span>Right</span>
+            <span>Right click</span>
           </button>
-          <button class="live-btn" type="button" data-act="double" title="Double click">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l9 5-4 1.5 2 4.5-2 1-2-4.5L6 13V4Zm12 11.5-2 1-1.3-3 1.9-.6 1.4 2.6Z" fill="currentColor"/></svg>
-            <span>Double</span>
-          </button>
-          <button class="live-btn" type="button" data-act="drag" title="Drag">
+          <button class="live-btn" type="button" data-act="drag" title="Drag" aria-pressed="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4m-9-9h4m10 0h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></svg>
             <span>Drag</span>
           </button>
@@ -98,6 +98,8 @@
           <button class="live-btn icon" type="button" data-act="next" aria-label="Next track">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z" fill="currentColor"/></svg>
           </button>
+        </div>
+        <div class="live-row volume">
           <button class="live-btn icon" type="button" data-act="voldown" aria-label="Volume down">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3.5l5-4v14l-5-4H4zM17 11h4v2h-4z" fill="currentColor"/></svg>
           </button>
@@ -105,31 +107,16 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h3.5l5-4v14l-5-4H4zM17 11h4v2h-4zM18 7h2v10h-2z" fill="currentColor"/></svg>
           </button>
         </div>
-        <p class="live-status" id="phoneStatus" aria-live="polite">Preview ready.</p>
+        </div>
+        <p class="live-status" id="phoneStatus" aria-live="polite">Preview — not connected.</p>
       </div>
 
-      <div class="theme-strip" role="group" aria-label="Pick a theme to preview">
-        <div class="swatches" id="themeSwatches">
-          <button type="button" class="swatch is-active" data-theme="dark" aria-pressed="true"><span class="dot" style="background:#1f1f1f;border-color:#777"></span>Dark</button>
-          <button type="button" class="swatch" data-theme="black" aria-pressed="false"><span class="dot" style="background:#000;border-color:#737373"></span>Black</button>
-          <button type="button" class="swatch" data-theme="light" aria-pressed="false"><span class="dot" style="background:#f8f8f8;border-color:#767676"></span>Light</button>
-          <button type="button" class="swatch" data-theme="ivory" aria-pressed="false"><span class="dot" style="background:#f6f1e7;border-color:#99836c"></span>Ivory</button>
-          <button type="button" class="swatch" data-theme="plum" aria-pressed="false"><span class="dot" style="background:#f8f2ed;border-color:#9b7f99"></span>Plum</button>
-          <button type="button" class="swatch" data-theme="ocean" aria-pressed="false"><span class="dot" style="background:#062d35;border-color:#75949a"></span>Ocean</button>
-          <button type="button" class="swatch" data-theme="custom" aria-pressed="false"><span class="dot" style="background:#1f1f1f;border-color:#777" id="customDot"></span>Custom</button>
-          <label class="custom-input">
-            <span class="visually-hidden">Custom colour (hex)</span>
-            <input id="customColour" type="color" value="#1f1f1f" aria-label="Custom theme colour" />
-          </label>
-        </div>
-        <p class="theme-strip-note" id="themeStatus">Showing <strong>Dark</strong>. Seven themes, chosen on the phone; the pick lives in the browser.</p>
-      </div>
     </aside>
   </div>
 </section>
 
 <section id="capabilities" class="capabilities" aria-labelledby="cap-h">
-  <h2 id="cap-h">Mouse, keys and media.</h2>
+  <h2 id="cap-h">Mouse, keys and slides.</h2>
   <p class="section-lede">
     Control the active Mac app and connected displays from your phone.
     The remote sends your input; your screen stays on the Mac.
@@ -157,8 +144,16 @@
       <p>Keep shortcuts for your favourite apps and websites. Open them with one tap, and add, rename or remove shortcuts from the phone.</p>
     </li>
     <li class="feature">
-      <h3>Seven themes, local to the phone</h3>
-      <p>Dark, Black, Light, Ivory, Plum, Ocean, or a custom colour with automatic high-contrast text. The pick is stored in the phone browser; the Mac does not see it.</p>
+      <h3>Present from your phone</h3>
+      <p>Start a slideshow in Keynote, PowerPoint or Google Slides on your Mac and keep it active. Use Present on your phone to go forward, go back or end the show.</p>
+    </li>
+    <li class="feature">
+      <h3>Point and draw on a display</h3>
+      <p>Choose the audience display and use the phone’s control pad for a laser pointer, pen or highlighter. Marks are temporary and are not saved to slides. The pad does not show the slide. App-window shares may not include the overlay; test it with your display setup first.</p>
+    </li>
+    <li class="feature">
+      <h3>Reconnect when you need to</h3>
+      <p>Open Sofa Remote on the Mac to show the pairing code, manage paired phones or stop sharing.</p>
     </li>
   </ul>
 </section>
@@ -209,15 +204,15 @@
     </p>
 
     <div class="cta-row">
-      <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.6/Sofa-Remote-preview.dmg">
+      <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/preview-v0.1.0-beta.7/Sofa-Remote-preview.dmg">
         <svg class="apple-glyph" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
         <span>Sofa-Remote-preview.dmg</span>
       </a>
-      <a class="btn link" href="https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.6">Release notes →</a>
+      <a class="btn link" href="https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.7">Release notes →</a>
     </div>
 
     <p class="meta">
-      v0.1.0 beta 6 · build 12 · Intel &amp; Apple Silicon ·
+      v0.1.0 beta 7 · build 18 · Intel &amp; Apple Silicon ·
       <strong>certificate-signed preview, not notarised</strong>.
       The first launch may be blocked by Gatekeeper; follow the
       <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md">setup guide</a>
@@ -246,7 +241,7 @@
   <div class="faq-list">
     <details>
       <summary>Does it mirror or record my screen?</summary>
-      <p>No. Sofa Remote only sends input — pointer, keystrokes, media keys. There is no screen capture, no recording, no streaming, no remote-view window.</p>
+      <p>No. Sofa Remote sends input and presentation controls to the Mac, and can draw temporary marks on a display. There is no screen capture, recording, streaming or remote-view window.</p>
     </details>
     <details>
       <summary>Do I need an account or a cloud service?</summary>
@@ -296,6 +291,6 @@
   <span class="right">© 2026</span>
 </footer>
 
-<script src="./demo.js?v=beta6" defer></script>
+<script src="./demo.js?v=dark-ui-1" defer></script>
 </body>
 </html>

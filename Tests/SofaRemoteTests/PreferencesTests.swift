@@ -71,6 +71,12 @@ import Testing
         ] { #expect(throws: RemoteError.self) { _ = try RemoteCommand(json: json) } }
     }
 
+    @Test func brightnessActionsAreExplicitlyAllowlisted() throws {
+        #expect(try RemoteCommand(json: ["type":"action", "action":"brightnessUp"]) == .action(.brightnessUp))
+        #expect(try RemoteCommand(json: ["type":"action", "action":"brightnessDown"]) == .action(.brightnessDown))
+        #expect(throws: RemoteError.self) { _ = try RemoteCommand(json: ["type":"action", "action":"setBrightness"]) }
+    }
+
     @Test func rejectsMalformedInputAndPreservesUnicodeText() throws {
         #expect(try RemoteCommand(json: ["type": "text", "value": "Hello 👋 ಕನ್ನಡ"]) == .text("Hello 👋 ಕನ್ನಡ"))
         let invalid: [[String: Any]] = [

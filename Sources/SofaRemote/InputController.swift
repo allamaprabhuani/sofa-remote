@@ -2,6 +2,7 @@ import AppKit
 import ApplicationServices
 import Carbon
 import IOKit.pwr_mgt
+import IOKit.hidsystem
 
 /// Sends input like a physical mouse/keyboard. Never observes or records the user's input.
 @MainActor final class InputController {
@@ -13,6 +14,8 @@ import IOKit.pwr_mgt
     private let secure: () -> Bool
     private let readPosition: () -> CGPoint
     private let clock: () -> TimeInterval
+    private let doubleClickInterval: () -> TimeInterval
+    private var lastTap: (time: TimeInterval, position: CGPoint, source: String)?
     private var pointerAnchor: CGPoint?
     private var lastObserved: CGPoint?
     private var recentTargets: [CGPoint] = []
@@ -21,20 +24,41 @@ import IOKit.pwr_mgt
          trusted: @escaping () -> Bool = { AXIsProcessTrusted() },
          secure: @escaping () -> Bool = { IsSecureEventInputEnabled() },
          readPosition: @escaping () -> CGPoint = { CGEvent(source: nil)?.location ?? .zero },
-         clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
+         clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+         doubleClickInterval: @escaping () -> TimeInterval = { NSEvent.doubleClickInterval }) {
         self.displays = displays; self.emit = emit; self.trusted = trusted; self.secure = secure
         self.readPosition = readPosition; self.clock = clock
+        self.doubleClickInterval = doubleClickInterval
     }
     var accessibilityAllowed: Bool { trusted() }
     var isDragging: Bool { dragging }
+    func cancelTapSequence() { lastTap = nil }
     /// Secure input is deliberately treated as unavailable, including secure password fields.
     var secureInput: Bool { secure() }
 
-    func handle(_ command: RemoteCommand) throws {
-        guard accessibilityAllowed else { throw RemoteError("Allow Sofa Remote in System Settings → Privacy & Security → Accessibility.") }
+    func handle(_ command: RemoteCommand, tapSource: String? = nil) throws {
+        guard accessibilityAllowed else { reset(); throw RemoteError("Allow Sofa Remote in System Settings → Privacy & Security → Accessibility.") }
         guard !secureInput else { reset(); throw RemoteError("Input is paused while the Mac uses secure keyboard input.") }
         switch command {
-        case .move(let dx, let dy): try move(dx: dx, dy: dy, drag: dragging)
+        case .tap, .move: break
+        default: lastTap = nil
+        }
+        switch command {
+        case .tap:
+            let current = position, now = clock()
+            let prior = lastTap
+            let elapsed = prior.map { now - $0.time } ?? -.infinity
+            let isDouble = tapSource != nil && prior?.source == tapSource && elapsed >= 0 && elapsed <= doubleClickInterval()
+                && prior.map { hypot(current.x - $0.position.x, current.y - $0.position.y) <= 4 } == true
+            reset(clearPointer: false)
+            let count = isDouble ? 2 : 1
+            try mouse(.leftMouseDown, count: count); try mouse(.leftMouseUp, count: count)
+            if !isDouble, let tapSource { lastTap = (now, current, tapSource) }
+        case .move(let dx, let dy):
+            try move(dx: dx, dy: dy, drag: dragging)
+            if let lastTap, hypot(position.x - lastTap.position.x, position.y - lastTap.position.y) > 4 {
+                self.lastTap = nil
+            }
         case .scroll(let dx, let dy):
             guard let event = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 2,
                                       wheel1: Int32(-dy), wheel2: Int32(-dx), wheel3: 0) else { throw eventError }
@@ -76,6 +100,10 @@ import IOKit.pwr_mgt
             case .volumeUp: try mediaKey(0)
             case .volumeDown: try mediaKey(1)
             case .mute: try mediaKey(7)
+            // Simulate the Mac's brightness keys; display support and targeting are
+            // determined by macOS and the connected hardware, not this app.
+            case .brightnessUp: try mediaKey(Int(NX_KEYTYPE_BRIGHTNESS_UP))
+            case .brightnessDown: try mediaKey(Int(NX_KEYTYPE_BRIGHTNESS_DOWN))
             case .fullscreen: try keyPress("f", modifiers: ["control", "command"])
             case .appSwitcher: try keyPress("tab", modifiers: ["command"])
             case .spotlight: try keyPress("space", modifiers: ["command"])
@@ -88,6 +116,7 @@ import IOKit.pwr_mgt
         }
     }
     func reset(clearPointer: Bool = true) {
+        lastTap = nil
         dragDeadline?.cancel(); dragDeadline = nil
         if dragging { try? mouse(.leftMouseUp); dragging = false }
         if clearPointer { clearPointerAnchor() }
@@ -185,11 +214,75 @@ enum DisplayPower {
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { IOPMAssertionRelease(acquired) }
         return true
     }
-    static func sleepDisplays() throws {
+    static func sleepDisplays() async throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
         process.arguments = ["displaysleepnow"]
         // Fixed executable/argument; no shell and no system-sleep command.
         try process.run()
+        // Do not block the main actor. Bound a stuck pmset before allowing a
+        // queued wake through, so it cannot sleep the displays afterwards.
+        let timeout = DispatchWorkItem {
+            if process.isRunning { Darwin.kill(process.processIdentifier, SIGKILL) }
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3, execute: timeout)
+        await Task.detached { process.waitUntilExit() }.value
+        timeout.cancel()
+        guard process.terminationStatus == 0 else {
+            throw RemoteError("macOS could not turn the displays off.")
+        }
+    }
+}
+
+/// Serializes display intent even when an HTTP request is cancelled.
+private final class DisplayRequestCancellation: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+    func cancel() { lock.lock(); cancelled = true; lock.unlock() }
+    var isCancelled: Bool { lock.lock(); defer { lock.unlock() }; return cancelled }
+}
+
+@MainActor final class DisplayPowerCoordinator {
+    private let sleep: () async throws -> Void
+    private let wakeDisplay: () -> Bool
+    private var pending: Task<Void, Error>?
+    private var generation = 0
+    var sleepPending: Bool { pending != nil }
+
+    init(sleep: @escaping () async throws -> Void = { try await DisplayPower.sleepDisplays() },
+         wake: @escaping () -> Bool = { DisplayPower.wake() }) {
+        self.sleep = sleep; self.wakeDisplay = wake
+    }
+    func sleepDisplays(isAllowed: @escaping @MainActor () -> Bool = { true }) async throws {
+        let cancellation = DisplayRequestCancellation()
+        try await withTaskCancellationHandler {
+            try await enqueue {
+                guard !cancellation.isCancelled, isAllowed() else {
+                    throw RemoteError("Display request ended before it could run.")
+                }
+                try await self.sleep()
+            }
+        } onCancel: {
+            cancellation.cancel()
+        }
+    }
+    func wake() async throws {
+        try await enqueue {
+            guard self.wakeDisplay() else { throw RemoteError("macOS did not accept the display wake request.") }
+        }
+    }
+    private func enqueue(_ action: @escaping @MainActor () async throws -> Void) async throws {
+        let previous = pending
+        generation += 1
+        let started = generation
+        let operation = Task {
+            // A failed sleep must not prevent a later wake.
+            if let previous { _ = try? await previous.value }
+            guard self.generation == started else { throw RemoteError("Display request was superseded by a newer action.") }
+            try await action()
+        }
+        pending = operation
+        defer { if generation == started { pending = nil } }
+        try await operation.value
     }
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## Certificate preview beta 7 — build 18
+
+- Add presenter controls with previous/next, end slideshow, a laser, coloured pen and automatically disappearing highlighter on a chosen display.
+- Add optional smoothing and correction for simple hand-drawn shapes.
+- Simplify the phone remote to a single dark appearance with borderless controls in one panel and a compact icon-led Settings view; show local initials beside saved shortcuts.
+- Keep presenter traffic authenticated, bounded and rate limited; temporary marks clear on exit, slide navigation and connection loss.
+- Presenter controls were tested from an iPhone with Keynote, PowerPoint and Google Slides; other display and sharing configurations need physical testing.
+
 ## Certificate preview beta 6 — build 12
 
 - Require stable certificate signing for normal local builds and check update identity across all architectures. Reject ad-hoc updates, changed signers, modified signatures and weakened requirements.

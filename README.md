@@ -6,15 +6,16 @@ Control your Mac from your phone.
 
 A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen streaming, Screen Recording permission, accounts, ads, analytics, subscriptions or cloud relay. Keep using your existing browser, Finder and player.
 
-[Website](https://sofa-remote.doublehoney1.chatgpt.site/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.6) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
+[Website](https://sofa-remote.doublehoney1.chatgpt.site/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.7) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
 
 **Beta software, macOS 14 or later, Apple silicon and Intel.** Current preview downloads are certificate-signed, **not Apple-verified or Developer ID notarised**; macOS may block first launch. See the [installation guide](docs/SETUP.md). Direct LAN HTTP is **unencrypted**: use a trusted private network or your own Tailscale connection. Never forward its port to the internet. See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
 ## What it does
 
 - Touchpad movement, click, right/double click, drag and two-finger scrolling. Clear local SVG icons and accessible labels.
-- Seven phone themes: Dark, Black, Light, Ivory, Plum, Ocean and a custom colour picker. Preferences stay in your phone browser.
+- A simple dark phone interface with a large touchpad and accessible controls.
 - Unicode text, keyboard shortcuts, app switcher, Spotlight, media keys, volume and mute.
+- Presenter controls for previous/next and ending a slideshow, plus a laser, pen and disappearing highlighter in four colours on a chosen display. Start the slideshow on the Mac first; marks are not saved to slides.
 - Open websites in installed Brave, falling back to your default browser; save and reorder app/website shortcuts.
 - Open Downloads in Finder and control IINA's existing playback/subtitle tools with mouse and keyboard input.
 - Move the pointer across connected displays. Jump to a chosen display or explicitly move the front window there.

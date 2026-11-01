@@ -8,7 +8,7 @@ enum RemotePage {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="theme-color" content="#1f1f1f" />
+    <meta name="theme-color" content="#101117" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/png" href="/icon-192.png" />
@@ -17,17 +17,17 @@ enum RemotePage {
     <style>
       :root {
         color-scheme: dark;
-        --bg: #1f1f1f;
-        --card: #292929;
-        --line: #777777;
-        --muted: #b8b8b8;
-        --accent: #a9cdf5;
-        --ink: #ededed;
-        --pad: #181818;
-        --sheet: #1f1f1f;
-        --pressed: #383838;
-        --selection: #ededed;
-        --selection-ink: #1f1f1f;
+        --bg: #101117;
+        --card: #222329;
+        --line: #888a93;
+        --muted: #c6c7ca;
+        --accent: #d5e4f7;
+        --ink: #f5f5f5;
+        --pad: #292a30;
+        --sheet: #101117;
+        --pressed: #34363e;
+        --selection: #f5f5f5;
+        --selection-ink: #101117;
         --danger: #ffb4ab;
         --error: #ffb4ab;
       }
@@ -91,6 +91,7 @@ enum RemotePage {
         align-items: center;
         gap: 10px;
       }
+      header button { border-radius: 24px; }
       header h1 {
         font-family: ui-rounded, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         font-weight: 700;
@@ -147,17 +148,26 @@ enum RemotePage {
       .address button {
         font-weight: 700;
       }
+      .remote-panel {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 0 10px 12px;
+        background: var(--pad);
+        border: 1px solid var(--line);
+        border-radius: 36px;
+      }
       #pad {
         flex: 1 1 auto;
         min-height: 180px;
-        max-height: 420px;
         border-radius: 28px;
-        border: 1px solid var(--line);
-        background: var(--pad);
+        background: transparent;
         touch-action: none;
         position: relative;
         user-select: none;
       }
+      #pad:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
       #pad .hint {
         position: absolute;
         bottom: 15px;
@@ -172,9 +182,7 @@ enum RemotePage {
         position: absolute;
         top: 15px;
         left: 18px;
-        font-size: 11px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
+        font-size: 12px;
         color: var(--muted);
         font-weight: 700;
         pointer-events: none;
@@ -184,13 +192,10 @@ enum RemotePage {
         gap: 7px;
       }
       .clicks {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .media {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-      }
-      .actions {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .row button {
         padding: 0 4px;
@@ -206,6 +211,35 @@ enum RemotePage {
       .media button {
         font-size: 1.25rem;
       }
+      .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panel-divider { width: 42px; height: 1px; align-self: center; flex: 0 0 auto; background: var(--line); opacity: 0.5; }
+      .media .control-icon, .volume .control-icon { width: 25px; height: 25px; }
+      main .row button { min-height: 52px; border-radius: 28px; }
+      main .row { gap: 10px; }
+      main .remote-panel .row button { border: 0; background: transparent; }
+      main .remote-panel .row button:active { background: var(--pressed); }
+      main .remote-panel .row button.on { background: var(--selection); color: var(--selection-ink); }
+      .present-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .present-nav button { min-height: 78px; font-size: 1.125rem; font-weight: 700; }
+      #present-sheet .sheet-status:empty { display: none; }
+      #present-sheet .sheet-status:not(:empty) { position: sticky; top: 0; z-index: 2; margin: 0; padding: 10px 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; }
+      #present-sheet .sheet-status.error { color: var(--error); }
+      .present-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+      .present-tools button { flex: 1 1 auto; min-height: 56px; }
+      .present-mode, .present-colours { display: grid; gap: 7px; }
+      .present-mode { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); }
+      .present-colours { grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.75rem), 1fr)); }
+      .present-mode button, .present-colours button { min-width: 0; min-height: 56px; padding: 5px 3px; font-weight: 650; }
+      .present-mode button[aria-pressed="true"], .present-colours button[aria-pressed="true"] { background: var(--selection); color: var(--selection-ink); }
+      .present-mode button[aria-pressed="true"]::after, .present-colours button[aria-pressed="true"]::after { content: " ✓"; }
+      .present-colours button { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; font-size: 0.8125rem; }
+      #present-options summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 650; }
+      #present-options label { min-height: 48px; display: flex; align-items: center; gap: 10px; }
+      #present-options input { width: 24px; height: 24px; flex: none; accent-color: var(--accent); }
+      .present-chip { width: 16px; height: 16px; border-radius: 50%; background: var(--chip); border: 1px solid #fff; box-shadow: 0 0 0 1px #161616; flex: 0 0 auto; }
+      #present-pad { position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 150px; max-height: 300px; border: 2px solid var(--line); border-radius: 15px; background: var(--pad); touch-action: none; user-select: none; display: grid; place-items: center; text-align: center; padding: 16px; }
+      #present-pad:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+      #present-dot { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #fff; background: var(--present-colour, #e21b2d); box-shadow: 0 0 0 2px #161616; transform: translate(-50%, -50%); pointer-events: none; }
       .status {
         font-size: 12px;
         color: var(--muted);
@@ -240,6 +274,11 @@ enum RemotePage {
         border: 1px solid var(--line);
         border-radius: 24px 24px 0 0;
       }
+      #settings-sheet .settings-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      #settings-sheet .settings-actions button, #settings-sheet .settings-close, #devices button { flex: 0 0 48px; width: 48px; height: 48px; min-width: 48px; padding: 0; border-radius: 50%; }
+      #settings-sheet .settings-close { min-width: 48px; }
+      #settings-sheet h3 { margin-top: 9px; }
+      #settings-sheet .settings-actions button:focus-visible { outline-offset: 2px; }
       .sheet-head {
         display: flex;
         align-items: center;
@@ -262,8 +301,6 @@ enum RemotePage {
         margin: 0;
       }
       a { color: var(--accent); overflow-wrap: anywhere; }
-      .theme-controls { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 10px; }
-      .theme-controls label { display: flex; flex-direction: column; gap: 6px; overflow-wrap: anywhere; }
       .sheet a { min-height: 44px; display: flex; align-items: center; }
       input[type="color"] { padding: 4px; width: 100%; height: 46px; }
       .help-links { display: grid; gap: 6px; }
@@ -317,7 +354,7 @@ enum RemotePage {
         gap: 6px;
         align-items: center;
       }
-      .shortcut span {
+      .shortcut .shortcut-label {
         flex: 1;
         min-width: 0;
         overflow: hidden;
@@ -331,7 +368,24 @@ enum RemotePage {
       .shortcut .launch {
         text-align: left;
         flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
       }
+      .shortcut-initial {
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: var(--selection);
+        color: var(--selection-ink);
+        font-weight: 700;
+        line-height: 1;
+      }
+      .shortcut-initial .control-icon { width: 19px; height: 19px; }
       .danger {
         color: var(--danger);
       }
@@ -433,8 +487,13 @@ enum RemotePage {
 </g></symbol>
       <symbol id="icon-folder" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
 </g></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+      <symbol id="icon-remove" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6"/></symbol>
+      <symbol id="icon-move-display" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4M7 10h10m-3-3 3 3-3 3"/></symbol>
       <symbol id="icon-screen-off" viewBox="0 0 24 24"><path d="M2 3h20v14H2Zm6 18h8m-4-4v4m-6-9 12-6"/></symbol>
       <symbol id="icon-wake" viewBox="0 0 24 24"><path d="M12 2v8m-5-6a9 9 0 1 0 10 0"/></symbol>
+      <symbol id="icon-brightness-down" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M9 12h6M12 1v2m0 18v2M1 12h2m18 0h2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4m0-15.6-1.4 1.4M5.6 18.4l-1.4 1.4"/></symbol>
+      <symbol id="icon-brightness-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M9 12h6m-3-3v6M12 1v2m0 18v2M1 12h2m18 0h2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4m0-15.6-1.4 1.4M5.6 18.4l-1.4 1.4"/></symbol>
       <symbol id="icon-lock" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
 </g></symbol>
       <symbol id="icon-help" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 0 1-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 0 1-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 0 1-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584ZM12 18a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
@@ -460,10 +519,10 @@ enum RemotePage {
     <main>
       <header>
         <h1>Sofa Remote<small id="connection">Connecting…</small></h1>
-        <button class="icon" data-icon="mute" data-action="mute" aria-label="Mute" title="Mute"></button
-        ><button class="icon icon-caption toolbar-caption" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"><span>Shortcuts</span></button
+        <button class="icon icon-caption toolbar-caption" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"><span>Shortcuts</span></button
         ><button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </header>
+      <div class="remote-panel">
       <div
         id="pad"
         role="group"
@@ -473,21 +532,20 @@ enum RemotePage {
         <span class="pad-title">Touchpad</span
         ><span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
+      <div class="panel-divider" aria-hidden="true"></div>
       <div class="row clicks">
-        <button id="right" data-icon="right-click" class="icon-caption" title="Right click"><span>Right click</span></button><button id="double" data-icon="double-click" class="icon-caption" title="Double click"><span>Double click</span></button
-        ><button id="drag" data-icon="drag" class="icon-caption" aria-pressed="false" title="Drag: toggle to hold or release"><span>Drag</span></button>
+        <button id="right" data-icon="right-click" class="icon-caption" title="Right click"><span>Right click</span></button>
+        <button id="drag" data-icon="drag" class="icon-caption" aria-pressed="false" title="Drag: toggle to hold or release"><span>Drag</span></button>
       </div>
       <div class="row media">
-        <button data-icon="previous" data-action="previous" aria-label="Previous track" title="Previous track"></button
-        ><button data-icon="play-pause" data-action="playPause" aria-label="Play or pause" title="Play or pause"></button
-        ><button data-icon="next" data-action="next" aria-label="Next track" title="Next track"></button
-        ><button data-icon="volume-down" data-action="volumeDown" aria-label="Volume down" title="Volume down"></button
-        ><button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
+        <button data-icon="previous" data-action="previous" aria-label="Previous track" title="Previous track"></button>
+        <button data-icon="play-pause" data-action="playPause" aria-label="Play or pause" title="Play or pause"></button>
+        <button data-icon="next" data-action="next" aria-label="Next track" title="Next track"></button>
       </div>
-      <div class="row actions">
-        <button id="keyboard-open" data-icon="keyboard" class="icon-caption" title="Keyboard"><span>Keyboard</span></button><button data-icon="apps" class="icon-caption" data-action="appSwitcher" aria-label="App switcher" title="App switcher"><span>Apps</span></button
-        ><button data-icon="fullscreen" class="icon-caption" data-action="fullscreen" title="Full screen"><span>Full screen</span></button
-        ><button data-icon="search" class="icon-caption" data-action="spotlight" title="Spotlight search"><span>Spotlight</span></button>
+      <div class="row volume">
+        <button data-icon="volume-down" data-action="volumeDown" aria-label="Volume down" title="Volume down"></button>
+        <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
+      </div>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
@@ -495,6 +553,35 @@ enum RemotePage {
         <div class="sheet-row"><button id="reconnect">Try reconnecting</button><button data-help data-icon="help" title="About and Help">About &amp; Help</button></div>
       </aside>
     </main>
+    <div class="scrim" id="present-sheet">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Presenter controls">
+        <div class="sheet-head"><h2>Present</h2><button data-close>Done</button></div>
+        <p>Start your slideshow on the Mac. Previous and Next send arrow keys to the active app.</p>
+        <div class="present-nav"><button id="present-previous" aria-label="Previous slide">← Previous</button><button id="present-next" aria-label="Next slide">Next →</button></div>
+        <div class="present-tools"><button id="present-exit">End slideshow</button></div>
+        <label for="present-display">Presentation display</label><select class="field" id="present-display" aria-label="Presentation display"></select>
+        <p>Choose the screen showing your slides. Changing display clears marks.</p>
+        <div class="present-mode" role="group" aria-label="Pointer and annotation tools">
+          <button id="present-laser" aria-pressed="true">Laser</button><button id="present-pen" aria-pressed="false">Pen</button><button id="present-highlight" aria-pressed="false">Highlight</button>
+        </div>
+        <div class="present-colours" role="group" aria-label="Pointer and ink colour">
+          <button data-present-colour="red" aria-pressed="true"><span class="present-chip" aria-hidden="true" style="--chip: #e21b2d"></span>Red</button>
+          <button data-present-colour="blue" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #2476ed"></span>Blue</button>
+          <button data-present-colour="green" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #138748"></span>Green</button>
+          <button data-present-colour="yellow" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #f4cd16"></span>Yellow</button>
+        </div>
+        <details id="present-options"><summary>Stroke options</summary>
+          <p>Optional for pen and highlight. Choose before drawing.</p>
+          <label><input type="checkbox" id="present-smooth" /> Smooth lines</label>
+          <label><input type="checkbox" id="present-shapes" /> Correct shapes</label>
+          <p>Shape correction adjusts near-straight lines and closed circles after you lift your finger. Uncertain shapes stay freehand.</p>
+        </details>
+        <p>Your touch position maps to the entire selected display. The ring shows your last touch position; look at the screen to aim. This pad does not show the slide.</p>
+        <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch the position matching the selected screen and move to point or draw. The ring shows your last position. Keyboard: move with arrow keys, hold Space to point or draw."><span id="present-dot" aria-hidden="true"></span></div>
+        <div class="present-tools"><button id="present-undo">Undo</button><button id="present-clear">Clear</button></div>
+        <p>Laser appears while touching. Pen marks stay until cleared; highlights disappear after about 2.5 seconds. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
+      </div>
+    </div>
     <div class="scrim" id="keyboard-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard">
         <div class="sheet-head">
@@ -546,6 +633,8 @@ enum RemotePage {
           <h2>Shortcuts</h2>
           <button data-close>Done</button>
         </div>
+        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" title="Slideshow controls">Present</button><button id="keyboard-open" data-icon="keyboard" title="Keyboard">Keyboard</button></div>
+        <div class="sheet-row"><button data-icon="apps" data-action="appSwitcher" title="App switcher">Apps</button><button data-icon="fullscreen" data-action="fullscreen" title="Full screen">Full screen</button><button data-icon="search" data-action="spotlight" title="Spotlight search">Spotlight</button></div>
         <label for="url">Open a website on your Mac</label>
       <form class="address" id="open-form">
         <input
@@ -585,40 +674,33 @@ enum RemotePage {
     </div>
     <div class="scrim" id="settings-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
-        <div class="sheet-head">
-          <h2>Settings</h2>
-          <button data-close>Done</button>
+        <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
+        <h3>Display</h3>
+        <label for="display">Jump pointer to display</label><select class="field" id="display"></select>
+        <p>The touchpad can move across all connected displays.</p>
+        <div class="settings-actions" role="group" aria-label="Display controls">
+          <button data-icon="move-display" data-action="moveWindow" aria-label="Move front window to selected display" title="Move front window to selected display"></button>
+          <button id="brightness-down" data-icon="brightness-down" data-action="brightnessDown" aria-label="Decrease Mac brightness" title="Decrease Mac brightness"></button>
+          <button id="brightness-up" data-icon="brightness-up" data-action="brightnessUp" aria-label="Increase Mac brightness" title="Increase Mac brightness"></button>
+          <button id="screen-off-main" data-icon="screen-off" data-action="screenOff" aria-label="Turn screens off" title="Turn screens off"></button>
+          <button id="wake-main" data-icon="wake" data-action="screenOn" aria-label="Wake screens" title="Wake screens"></button>
         </div>
-        <div class="theme-controls">
-          <label for="theme">Appearance<select class="field" id="theme"><option value="dark">Dark</option><option value="black">Black</option><option value="light">Light</option><option value="ivory">Ivory · brown</option><option value="plum">Ivory · plum</option><option value="ocean">Ocean</option><option value="custom">Custom</option></select></label>
-          <label for="custom-colour">Custom background colour<input class="field" type="color" id="custom-colour" value="#1f1f1f" disabled /></label>
+        <p>Brightness uses Mac keys; external display support varies. Screen off may lock the Mac.</p>
+        <details class="help-disclosure"><summary>About display icons</summary><p>In order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p></details>
+        <h3>Mac controls</h3>
+        <div class="settings-actions" role="group" aria-label="Mac controls">
+          <button data-icon="desktop" data-action="showDesktop" aria-label="Show desktop" title="Show desktop"></button>
+          <button data-icon="folder" data-action="downloads" aria-label="Open Downloads" title="Open Downloads"></button>
+          <button data-icon="mute" data-action="mute" aria-label="Mute" title="Mute"></button>
+          <button class="danger" data-icon="lock" id="lock" aria-label="Lock Mac" title="Lock Mac"></button>
         </div>
-        <p>Appearance is saved only in this phone browser. Custom colours get automatic high-contrast text.</p>
-        <a href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">Report a bug</a>
-        <label for="display">Jump pointer to display</label
-        ><select class="field" id="display"></select>
-        <p>Choosing a display jumps the pointer there once. The touchpad still moves the pointer freely across every connected display, like a Mac trackpad.</p>
-        <button data-icon="desktop" data-action="moveWindow" title="Move front window">Move front window to this display</button>
-        <div class="sheet-row">
-          <button data-icon="desktop" data-action="showDesktop" title="Show desktop">Show desktop</button
-          ><button data-icon="folder" data-action="downloads" title="Open Downloads">Downloads</button>
-        </div>
-        <div class="sheet-row">
-          <button data-icon="screen-off" data-action="screenOff" title="Turn displays off">Screen off</button
-          ><button data-icon="wake" data-action="screenOn" title="Wake displays">Wake screen</button>
-        </div>
-        <p>Screen off turns every connected display dark; macOS may lock while the display is off.</p>
-        <label class="sheet-row"
-          ><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake"
-        /></label>
+        <details class="help-disclosure"><summary>About Mac control icons</summary><p>In order: show desktop, open Downloads, mute, and lock the Mac.</p></details>
+        <p>Waking does not unlock your Mac. Unlock on the Mac; Apple Watch unlock is a separate macOS setting.</p>
+        <h3>Sharing</h3>
+        <label class="sheet-row"><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake" /></label>
         <p>Prevents idle system sleep; the display can still sleep.</p>
-        <button class="danger" data-icon="lock" id="lock" title="Lock Mac">Lock Mac…</button>
-        <p>
-          Waking the screen does not unlock your Mac. Unlock on the Mac; Apple Watch unlock is a separate
-          macOS setting.
-        </p>
-        <div id="devices"></div>
-        <button data-help data-icon="help" title="About and Help">About &amp; Help</button>
+        <h3>Paired phones</h3><div id="devices"></div>
+        <h3>Help</h3><div class="settings-actions"><button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button></div>
       </div>
     </div>
     <div class="scrim" id="help-sheet">
@@ -705,7 +787,7 @@ enum RemotePage {
       const $ = (s) => document.querySelector(s),
         $$ = (s) => [...document.querySelectorAll(s)];
       // Reuse small local SVG paths; icons never fetch a library or contact a service.
-      $$('[data-icon]').forEach((button) => {
+      function addIcon(button) {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("class", "control-icon");
         svg.setAttribute("viewBox", "0 0 24 24");
@@ -715,66 +797,10 @@ enum RemotePage {
         use.setAttribute("href", "#icon-" + button.dataset.icon);
         svg.append(use);
         button.prepend(svg);
-      });
-      // Neutral surfaces inspired by VS Code's built-in modern themes.
-      // Stronger control borders keep the phone touch targets distinguishable.
-      const themes = {
-        dark: { bg: "#1f1f1f", card: "#292929", pad: "#181818", sheet: "#1f1f1f", line: "#777777", muted: "#b8b8b8", accent: "#a9cdf5", ink: "#ededed", pressed: "#383838", selection: "#ededed", "selection-ink": "#1f1f1f", danger: "#ffb4ab", error: "#ffb4ab" },
-        black: { bg: "#000000", card: "#000000", pad: "#000000", sheet: "#000000", line: "#737373", muted: "#bdbdbd", accent: "#c7dcf5", ink: "#f5f5f5", pressed: "#222222", selection: "#f5f5f5", "selection-ink": "#000000", danger: "#ffb4ab", error: "#ffb4ab" },
-        ivory: { bg: "#f6f1e7", card: "#fffaf0", pad: "#eee7da", sheet: "#fffaf0", line: "#99836c", muted: "#645141", accent: "#754726", ink: "#35261c", pressed: "#e4d8c7", selection: "#754726", "selection-ink": "#fffaf0", danger: "#962e2e", error: "#962e2e" },
-        plum: { bg: "#f8f2ed", card: "#fff9f5", pad: "#efe4ec", sheet: "#fff9f5", line: "#9b7f99", muted: "#685369", accent: "#704381", ink: "#38233c", pressed: "#e7d9e5", selection: "#704381", "selection-ink": "#fff9f5", danger: "#952d49", error: "#952d49" },
-        ocean: { bg: "#062d35", card: "#103c45", pad: "#0b343d", sheet: "#0b343d", line: "#75949a", muted: "#bcd8dd", accent: "#a1e9ee", ink: "#f4ffff", pressed: "#244e57", selection: "#c5f4f5", "selection-ink": "#062d35", danger: "#ffb8b8", error: "#ffb8b8" },
-        light: { bg: "#f8f8f8", card: "#ffffff", pad: "#f0f0f0", sheet: "#ffffff", line: "#767676", muted: "#555555", accent: "#005fb8", ink: "#242424", pressed: "#e5e5e5", selection: "#242424", "selection-ink": "#ffffff", danger: "#9d1e2c", error: "#a51627" },
-      };
-      const safeColour = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : "#1f1f1f";
-      function luminance(hex) {
-        const channels = [1, 3, 5].map((n) => {
-          const value = parseInt(hex.slice(n, n + 2), 16) / 255;
-          return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-        });
-        return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
       }
-      function contrast(a, b) {
-        const first = luminance(a), second = luminance(b);
-        return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
-      }
-      function mixColour(a, b, ratio) {
-        return "#" + [1, 3, 5].map((n) => Math.round(parseInt(a.slice(n, n + 2), 16) * (1 - ratio) + parseInt(b.slice(n, n + 2), 16) * ratio).toString(16).padStart(2, "0")).join("");
-      }
-      function customTheme(colour) {
-        const bg = safeColour(colour);
-        const ink = contrast(bg, "#ffffff") >= contrast(bg, "#000000") ? "#ffffff" : "#000000";
-        const shade = ink === "#ffffff" ? "#000000" : "#ffffff";
-        const card = mixColour(bg, shade, 0.12), pad = mixColour(bg, shade, 0.06);
-        let line = ink;
-        for (const ratio of [0.55, 0.7, 0.85, 1]) {
-          const candidate = mixColour(bg, ink, ratio);
-          if (contrast(candidate, bg) >= 3 && contrast(candidate, card) >= 3) { line = candidate; break; }
-        }
-        return { bg, card, pad, sheet: card, line, muted: ink, accent: ink, ink,
-          pressed: mixColour(bg, shade, 0.2), selection: ink, "selection-ink": bg, danger: ink, error: ink };
-      }
-      let themeState = { name: "dark", colour: "#1f1f1f" };
-      function applyTheme(name, colour) {
-        const requested = ({ oxford: "dark", imperial: "dark" })[name] || name;
-        const known = ["dark", "black", "light", "ivory", "plum", "ocean", "custom"].includes(requested) ? requested : "dark";
-        themeState = { name: known, colour: safeColour(colour) };
-        const palette = known === "custom" ? customTheme(themeState.colour) : themes[known];
-        Object.entries(palette).forEach(([key, value]) => document.documentElement.style.setProperty("--" + key, value));
-        document.documentElement.style.colorScheme = contrast(palette.bg, "#000000") > contrast(palette.bg, "#ffffff") ? "light" : "dark";
-        $("meta[name=theme-color]").content = palette.bg;
-        $("#theme").value = known;
-        $("#custom-colour").value = themeState.colour;
-        $("#custom-colour").disabled = known !== "custom";
-      }
-      function saveTheme() {
-        try { localStorage.setItem("sofaTheme", themeState.name); localStorage.setItem("sofaColour", themeState.colour); } catch {}
-      }
-      try { applyTheme(localStorage.getItem("sofaTheme"), localStorage.getItem("sofaColour")); }
-      catch { applyTheme("dark", "#1f1f1f"); }
-      $("#theme").onchange = (e) => { applyTheme(e.target.value, themeState.colour); saveTheme(); };
-      $("#custom-colour").oninput = (e) => applyTheme("custom", e.target.value);
-      $("#custom-colour").onchange = saveTheme;
+      $$('[data-icon]').forEach(addIcon);
+      // Retire old appearance preferences; they never affect pairing or shortcuts.
+      try { localStorage.removeItem("sofaTheme"); localStorage.removeItem("sofaColour"); } catch {}
       const storage = {
         get() {
           try {
@@ -897,9 +923,11 @@ enum RemotePage {
         const note = document.createElement("p");
         note.className = "sheet-status";
         note.setAttribute("role", "status");
-        sheet.append(note);
+        if (sheet.parentElement?.id === "present-sheet") sheet.querySelector(".sheet-head").after(note);
+        else sheet.append(note);
       });
       function showPair() {
+        stopPresenting();
         supportState = null;
         updateSupport();
         clearInterval(dragHeartbeat);
@@ -995,7 +1023,8 @@ enum RemotePage {
         return (
           body.type === "move" ||
           body.type === "scroll" ||
-          (body.type === "drag" && body.phase === "move")
+          (body.type === "drag" && body.phase === "move") ||
+          (body.type === "presenter" && body.action === "move")
         );
       }
       function discardQueuedInput() {
@@ -1003,6 +1032,7 @@ enum RemotePage {
         while (queue.length) queue.shift().done(false);
         clearTimeout(gestureTimer);
         gestureTimer = 0;
+        if (presentUsed) stopPresenting();
         if (drag) endDrag();
         else if (release) command({ type: "drag", phase: "end" });
       }
@@ -1031,7 +1061,11 @@ enum RemotePage {
           return;
         }
         let outbound;
-        if (motion) {
+        if (motion && body.type === "presenter") {
+          queue.shift();
+          outbound = body;
+          lastGesture = Date.now();
+        } else if (motion) {
           // Split accumulated travel into bounded packets so the server never sees
           // out-of-range deltas. The head keeps the remainder in correct order so trailing
           // clicks/drag-end stay queued behind the full gesture.
@@ -1051,14 +1085,15 @@ enum RemotePage {
         }
         const controller = new AbortController();
         active = controller;
-        request("/command", outbound, true, controller.signal)
+        request(body.type === "presenter" ? "/presenter" : "/command", outbound, true, controller.signal)
           .then(
             () => {
-              clearRuntimeError();
+              if (body.type === "presenter" && !["heartbeat", "stop"].includes(body.action) && statusKind === "presenter") status("");
+              else clearRuntimeError();
               return true;
             },
             (e) => {
-              if (e.message !== "unpaired" && e.message !== "cancelled") status(e.message, true, "runtime");
+              if (e.message !== "unpaired" && e.message !== "cancelled") status(e.message, true, body.type === "presenter" ? "presenter" : "runtime");
               return false;
             },
           )
@@ -1093,6 +1128,13 @@ enum RemotePage {
             last.body.type === body.type &&
             last.body.phase === body.phase
           ) {
+            if (body.type === "presenter") {
+              // Absolute points are coalesced to the latest position under load.
+              last.body.x = body.x; last.body.y = body.y;
+              last.queuedAt = Date.now();
+              resolve(true);
+              return;
+            }
             // Keep exact accumulated proportional travel; splitting at pump time bounds the
             // per-packet delta sent to the server.
             const dx = (last.body.dx || 0) + (body.dx || 0),
@@ -1107,6 +1149,10 @@ enum RemotePage {
             last.body.dy = dy;
             resolve(true);
             return;
+          }
+          if (body.type === "presenter" && body.action === "stop") {
+            // Always make room for cleanup without overtaking the in-flight request.
+            while (queue.length >= 12) queue.pop().done(false);
           }
           if (body.type === "drag" && body.phase === "end") {
             while (queue.length >= 12) {
@@ -1239,7 +1285,7 @@ enum RemotePage {
         }
         // Ordinary lift flushes: queued motion stays queued, click is appended after it.
         if (!fingers.size && !multi && !drag && travel < 8 && Date.now() - down < 300)
-          command({ type: "click", button: "left", count: 1 });
+          command({ type: "tap" });
       }
       pad.addEventListener("pointerup", lift);
       pad.addEventListener("pointercancel", lift);
@@ -1251,7 +1297,6 @@ enum RemotePage {
         }
       });
       $("#right").onclick = () => command({ type: "click", button: "right", count: 1 });
-      $("#double").onclick = () => command({ type: "click", button: "left", count: 2 });
       $("#drag").onclick = () => {
         if (drag) {
           endDrag();
@@ -1324,6 +1369,10 @@ enum RemotePage {
       }
       function closeSheet() {
         const current = sheetStack.pop();
+        if (current?.id === "present-sheet") {
+          stopPresenting();
+          if (statusKind === "presenter") status("");
+        }
         $$(".scrim").forEach((x) => x.classList.remove("open"));
         const previous = sheetStack.at(-1);
         if (previous && (!locked || previous.id === "help-sheet")) $("#" + previous.id).classList.add("open");
@@ -1333,6 +1382,106 @@ enum RemotePage {
         else if (activeOverlay()) activeOverlay().querySelector("button,input,a")?.focus();
         else $("#settings-open").focus();
       }
+      let presentMode = "laser", presentColour = "red", presentPointer = null, presentUsed = false, presentKeyboardDown = false, presentHeartbeat = 0;
+      let presentX = 0.5, presentY = 0.5;
+      const presentPad = $("#present-pad"), presentDot = $("#present-dot"), presentDisplay = $("#present-display");
+      function presenter(action, values = {}, urgent = false) {
+        return command({ type: "presenter", action, ...values }, urgent);
+      }
+      function stopPresenting() {
+        presentPointer = null; presentKeyboardDown = false;
+        clearInterval(presentHeartbeat); presentHeartbeat = 0;
+        if (presentUsed) {
+          presentUsed = false;
+          dropQueuedMotion();
+          // Preserve ordering with any in-flight start. An abort could let that start
+          // arrive after stop; the Mac also expires disconnected overlays.
+          presenter("stop");
+        }
+      }
+      function markPosition(x, y) {
+        presentX = Math.max(0, Math.min(1, x)); presentY = Math.max(0, Math.min(1, y));
+        presentDot.style.left = `clamp(15px, ${presentX * 100}%, calc(100% - 15px))`;
+        presentDot.style.top = `clamp(15px, ${presentY * 100}%, calc(100% - 15px))`;
+      }
+      function pointFromEvent(e) {
+        const r = presentPad.getBoundingClientRect();
+        if (!r.width || !r.height) return false;
+        markPosition((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+        return true;
+      }
+      function startPresentPoint() {
+        if (!presentDisplay.value || locked || !key) { status("Choose a connected presentation display.", true); return; }
+        presentUsed = true;
+        if (!presentHeartbeat) presentHeartbeat = setInterval(() => {
+          if (presentUsed && !document.hidden && $("#present-sheet").classList.contains("open")) presenter("heartbeat");
+        }, 10000);
+        presenter("start", { mode: presentMode, color: presentColour, smooth: $("#present-smooth").checked, shapes: $("#present-shapes").checked, display: presentDisplay.value, x: presentX, y: presentY });
+      }
+      function endPresentPoint() { if (presentUsed) presenter("end"); }
+      presentPad.addEventListener("pointerdown", (e) => {
+        if (presentPointer !== null || e.button !== 0 || locked || !key || !pointFromEvent(e)) return;
+        e.preventDefault(); presentPointer = e.pointerId; presentPad.setPointerCapture(e.pointerId); startPresentPoint();
+      });
+      presentPad.addEventListener("pointermove", (e) => {
+        if (presentPointer !== e.pointerId || !pointFromEvent(e)) return;
+        e.preventDefault(); if (presentUsed) presenter("move", { x: presentX, y: presentY });
+      });
+      function liftPresentPoint(e) {
+        if (presentPointer !== e.pointerId) return;
+        if (e.type === "pointerup" && presentUsed) {
+          const previousX = presentX, previousY = presentY;
+          if (pointFromEvent(e) && (presentX !== previousX || presentY !== previousY))
+            presenter("move", { x: presentX, y: presentY });
+        }
+        presentPointer = null; endPresentPoint();
+      }
+      presentPad.addEventListener("pointerup", liftPresentPoint);
+      presentPad.addEventListener("pointercancel", liftPresentPoint);
+      presentPad.addEventListener("lostpointercapture", liftPresentPoint);
+      presentPad.addEventListener("keydown", (e) => {
+        if (locked || !key || e.altKey || e.ctrlKey || e.metaKey) return;
+        const movement = { ArrowLeft: [-0.02, 0], ArrowRight: [0.02, 0], ArrowUp: [0, -0.02], ArrowDown: [0, 0.02] }[e.key];
+        if (movement) {
+          e.preventDefault(); markPosition(presentX + movement[0], presentY + movement[1]);
+          if (presentKeyboardDown && presentUsed) presenter("move", { x: presentX, y: presentY });
+        } else if (e.key === " " && !e.repeat && !presentKeyboardDown) {
+          e.preventDefault(); presentKeyboardDown = true; markPosition(presentX, presentY); startPresentPoint();
+        }
+      });
+      presentPad.addEventListener("keyup", (e) => {
+        if (e.key === " " && presentKeyboardDown) { e.preventDefault(); presentKeyboardDown = false; endPresentPoint(); }
+      });
+      presentPad.addEventListener("blur", () => { if (presentKeyboardDown) { presentKeyboardDown = false; endPresentPoint(); } });
+      for (const mode of ["laser", "pen", "highlight"]) $("#present-" + mode).onclick = () => {
+        if (presentPointer !== null || presentKeyboardDown) return;
+        presentMode = mode;
+        for (const item of ["laser", "pen", "highlight"]) $("#present-" + item).setAttribute("aria-pressed", String(item === mode));
+      };
+      const presentColours = { red: "#e21b2d", blue: "#2476ed", green: "#138748", yellow: "#f4cd16" };
+      $$("[data-present-colour]").forEach((button) => button.onclick = () => {
+        if (presentPointer !== null || presentKeyboardDown) return;
+        presentColour = button.dataset.presentColour;
+        presentPad.style.setProperty("--present-colour", presentColours[presentColour]);
+        $$("[data-present-colour]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      });
+      presentDisplay.onchange = () => stopPresenting();
+      function presentMarks(action) {
+        if (!presentUsed) return;
+        presentPointer = null; presentKeyboardDown = false;
+        dropQueuedMotion();
+        presenter(action);
+      }
+      $("#present-undo").onclick = () => presentMarks("undo");
+      $("#present-clear").onclick = () => presentMarks("clear");
+      function presentSlide(key) {
+        presentMarks("clear");
+        command({ type: "key", key, modifiers: [] });
+      }
+      $("#present-previous").onclick = () => presentSlide("left");
+      $("#present-next").onclick = () => presentSlide("right");
+      $("#present-exit").onclick = () => { stopPresenting(); command({ type: "key", key: "escape", modifiers: [] }); };
+      $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); };
       $("#keyboard-open").onclick = (e) => sheet("keyboard-sheet", e.currentTarget);
       $("#shortcuts-open").onclick = (e) => sheet("shortcuts-sheet", e.currentTarget);
       $("#settings-open").onclick = (e) => {
@@ -1354,7 +1503,7 @@ enum RemotePage {
           e.preventDefault(); closeSheet(); return;
         }
         if (e.key !== "Tab") return;
-        const focusable = [...overlay.querySelectorAll("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary")]
+        const focusable = [...overlay.querySelectorAll("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,[tabindex]:not([tabindex='-1'])")]
           .filter((x) => {
             if (!x.getClientRects().length || x.closest("[inert]")) return false;
             for (let parent = x.parentElement; parent; parent = parent.parentElement) {
@@ -1436,7 +1585,24 @@ enum RemotePage {
           row.className = "shortcut";
           const launch = document.createElement("button");
           launch.className = "launch";
-          launch.textContent = item.name;
+          const name = typeof item.name === "string" ? item.name : "";
+          const icon = document.createElement("span");
+          icon.className = "shortcut-initial";
+          icon.setAttribute("aria-hidden", "true");
+          if (item.kind === "downloads") {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("class", "control-icon");
+            svg.setAttribute("viewBox", "0 0 24 24");
+            svg.setAttribute("focusable", "false");
+            const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+            use.setAttribute("href", "#icon-folder"); svg.append(use); icon.append(svg);
+          } else {
+            icon.textContent = (Array.from(name.trim())[0] || "•").toUpperCase();
+          }
+          const label = document.createElement("span");
+          label.className = "shortcut-label"; label.textContent = name;
+          launch.setAttribute("aria-label", name || "Open shortcut");
+          launch.append(icon, label);
           launch.onclick = () => mutate("/launch", { id: item.id });
           row.append(launch);
           for (const [label, offset] of [
@@ -1478,9 +1644,13 @@ enum RemotePage {
             const row = document.createElement("div");
             row.className = "shortcut";
             const label = document.createElement("span");
+            label.className = "shortcut-label";
             label.textContent = d.name + (d.current ? " · this phone" : "");
             const remove = document.createElement("button");
-            remove.textContent = "Remove";
+            remove.dataset.icon = "remove";
+            remove.title = `Remove ${d.name}`;
+            remove.setAttribute("aria-label", `Remove ${d.name}`);
+            addIcon(remove);
             remove.onclick = async () => {
               if (!confirm(`Remove ${d.name}?`)) return;
               try {
@@ -1527,6 +1697,7 @@ enum RemotePage {
             locked = !!s.sessionLocked;
             if (locked) {
               fingers.clear();
+              stopPresenting();
               drag = false;
               clearInterval(dragHeartbeat);
               dragHeartbeat = 0;
@@ -1571,6 +1742,13 @@ enum RemotePage {
               }
               select.value = currentDisplay;
               select.disabled = !select.options.length;
+              const previousPresentDisplay = presentDisplay.value;
+              presentDisplay.replaceChildren();
+              for (const d of s.displays || []) {
+                const option = document.createElement("option"); option.value = d.id; option.textContent = d.name; presentDisplay.append(option);
+              }
+              presentDisplay.value = [...presentDisplay.options].some((o) => o.value === previousPresentDisplay) ? previousPresentDisplay : currentDisplay;
+              presentDisplay.disabled = !presentDisplay.options.length;
             }
             $("#awake").checked = !!s.keepAwake;
             return true;
@@ -1594,12 +1772,14 @@ enum RemotePage {
         if (document.visibilityState === "visible") refresh();
         else {
           fingers.clear();
+          stopPresenting();
           dropQueuedMotion();
           endDrag();
         }
       });
       window.addEventListener("pagehide", () => {
         fingers.clear();
+        stopPresenting();
         dropQueuedMotion();
         endDrag();
       });

@@ -15,7 +15,12 @@ import ServiceManagement
     let store: PairingStore
     private let preferences: Preferences?
     private let input: InputController
+    private let presenter = PresenterOverlay()
+    private var presenterOwner: String?
+    private var presenterLastActivity: TimeInterval = 0
+    private var presenterGuard: Timer?
     private let awake = AwakeAssertion()
+    private let displayPower = DisplayPowerCoordinator()
     private var server: RemoteServer?
     private var observers: [NSObjectProtocol] = []
     private var sessionActive = true
@@ -49,7 +54,7 @@ import ServiceManagement
         if let failure { message = failure }
         let center = NSWorkspace.shared.notificationCenter
         observers.append(center.addObserver(forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.screenSleeping = true; self?.input.reset() }
+            MainActor.assumeIsolated { self?.screenSleeping = true; self?.invalidateInput() }
         })
         observers.append(center.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.screenSleeping = false }
@@ -128,7 +133,23 @@ import ServiceManagement
         do { try store.revoke(id: id); invalidateInput(); objectWillChange.send() }
         catch { message = "Could not save device removal." }
     }
-    private func invalidateInput() { controlGeneration += 1; input.reset() }
+    private func stopPresenter() {
+        presenterGuard?.invalidate(); presenterGuard = nil
+        presenter.stop(); presenterOwner = nil
+    }
+    private func guardPresenter() {
+        guard presenterGuard == nil else { return }
+        presenterGuard = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if !self.sharing || self.inputPaused || !self.accessibilityAllowed || !self.presenter.isVisible {
+                    self.stopPresenter()
+                }
+            }
+        }
+        presenterGuard?.tolerance = 0.2
+    }
+    private func invalidateInput() { controlGeneration += 1; input.reset(); stopPresenter() }
     func setKeepAwake(_ value: Bool) throws {
         guard let preferences else { throw RemoteError("Settings are unavailable.") }
         try preferences.update { $0.keepAwake = value }
@@ -140,7 +161,8 @@ import ServiceManagement
         objectWillChange.send()
     }
     func state() -> [String: Any] {
-        ["name": Host.current().localizedName ?? "Mac", "sharing": sharing,
+        if inputPaused || !accessibilityAllowed { stopPresenter() }
+        return ["name": Host.current().localizedName ?? "Mac", "sharing": sharing,
          "appVersion": SupportInfo.version, "appBuild": SupportInfo.build,
          "macOSVersion": SupportInfo.macOSVersion, "signingStatus": SigningStatus.current.rawValue,
          "accessibility": accessibilityAllowed, "sessionLocked": inputPaused, "screenSleeping": screenSleeping,
@@ -153,16 +175,69 @@ import ServiceManagement
         let body = (try? JSONSerialization.jsonObject(with: request.body)) as? [String: Any] ?? [:]
         guard request.method == "POST" else { return nil }
         guard sharing, !Task.isCancelled else { return .json(["error": "Sharing stopped or request cancelled."], status: "409 Conflict") }
+        // Actions outside the input controller can change the focused window or
+        // display. They must not leave a previous tap eligible for double-click.
+        if request.path != "/command" { input.cancelTapSequence() }
         if inputPaused {
-            input.reset()
+            input.reset(); stopPresenter()
             guard request.path == "/command", body["type"] as? String == "action", body["action"] as? String == "screenOn" else {
                 return .json(["error": "Input is paused. Unlock the Mac, then use Resume input in Sofa Remote on the Mac if needed."], status: "403 Forbidden")
             }
         }
         do {
             switch request.path {
+            case "/presenter":
+                guard accessibilityAllowed, !input.secureInput else {
+                    stopPresenter()
+                    throw RemoteError("Allow Accessibility access and leave secure input before presenting.")
+                }
+                guard let device = store.authenticate(request.headers["x-sofa-key"]) else {
+                    throw RemoteError("Pair with the Mac first.")
+                }
+                let command = try PresenterCommand(json: body)
+                let now = ProcessInfo.processInfo.systemUptime
+                if presenterOwner != nil && now - presenterLastActivity >= 30 {
+                    stopPresenter()
+                }
+                if let owner = presenterOwner, owner != device.id {
+                    throw RemoteError("Another paired device is using the presenter tools.")
+                }
+                switch command.action {
+                case .start:
+                    guard let mode = command.mode.flatMap({ PresenterOverlay.Mode(rawValue: $0.rawValue) }),
+                          let color = command.color.flatMap({ PresenterOverlay.Color(rawValue: $0.rawValue) }),
+                          let display = command.display, let x = command.x, let y = command.y else {
+                        throw RemoteError("Choose a presentation tool and display.")
+                    }
+                    guard presenter.begin(displayID: display, mode: mode, color: color, smoothing: command.smoothing,
+                                          shapeCorrection: command.shapeCorrection, x: x, y: y) else {
+                        throw RemoteError("Presenter tool is unavailable. Check the display and finish the previous gesture.")
+                    }
+                    presenterOwner = device.id; guardPresenter()
+                case .move:
+                    guard presenterOwner == device.id, presenter.move(x: command.x!, y: command.y!) else {
+                        throw RemoteError("Presenter gesture ended. Touch the pad again.")
+                    }
+                case .end:
+                    guard presenterOwner == device.id else { throw RemoteError("Start a presenter gesture first.") }
+                    presenter.end()
+                case .clear:
+                    guard presenterOwner == device.id else { throw RemoteError("Start a presenter gesture first.") }
+                    presenter.clear()
+                case .undo:
+                    guard presenterOwner == device.id else { throw RemoteError("Start a presenter gesture first.") }
+                    presenter.undo()
+                case .heartbeat:
+                    guard presenterOwner == device.id, presenter.keepAlive() else {
+                        stopPresenter(); throw RemoteError("Presenter tools timed out. Touch the pad to start again.")
+                    }
+                case .stop:
+                    stopPresenter()
+                }
+                presenterLastActivity = now
             case "/command":
                 let command = try RemoteCommand(json: body)
+                if case .action = command { input.cancelTapSequence() }
                 var measuredMotionStart: TimeInterval?
                 if inputDiagnosticsEnabled {
                     switch command {
@@ -185,10 +260,25 @@ import ServiceManagement
                         if motionDurations.count > 40 { motionDurations.removeFirst() }
                     }
                 }
-                if screenSleeping, command != .action(.screenOff) { try wake() }
+                if (screenSleeping || displayPower.sleepPending), command != .action(.screenOff), command != .action(.screenOn) {
+                    try await wake()
+                    // The Mac may lock, sharing may stop, or pairing may be
+                    // revoked while waiting for a pending display sleep.
+                    guard sharing, !Task.isCancelled, !inputPaused,
+                          store.authenticate(request.headers["x-sofa-key"]) != nil else {
+                        throw RemoteError("Input paused or connection ended. Reconnect after unlocking the Mac.")
+                    }
+                }
                 switch command {
-                case .action(.screenOn): try wake()
-                case .action(.screenOff): invalidateInput(); try DisplayPower.sleepDisplays()
+                case .action(.screenOn): try await wake()
+                case .action(.screenOff):
+                    invalidateInput(); lastWake = -.infinity
+                    let credential = request.headers["x-sofa-key"]
+                    let generation = controlGeneration
+                    try await displayPower.sleepDisplays { [weak self] in
+                        guard let self else { return false }
+                        return self.sharing && !self.inputPaused && self.controlGeneration == generation && self.store.authenticate(credential) != nil
+                    }
                 case .action(.downloads): try openDownloads()
                 case .action(.moveWindow):
                     guard accessibilityAllowed else { throw RemoteError("Allow Sofa Remote in Accessibility on the Mac.") }
@@ -205,7 +295,10 @@ import ServiceManagement
                 case .action(.lock):
                     invalidateInput(); try input.handle(command); locallyPaused = true
                     message = "Input paused after Lock. Unlock the Mac and choose Resume input here."
-                default: try input.handle(command)
+                default:
+                    let source = store.authenticate(request.headers["x-sofa-key"])?.id
+                    if command == .tap, source == nil { throw RemoteError("Pair with the Mac first.") }
+                    try input.handle(command, tapSource: source)
                 }
             case "/display":
                 guard accessibilityAllowed else { throw RemoteError("Allow Sofa Remote in Accessibility on the Mac.") }
@@ -260,10 +353,10 @@ import ServiceManagement
             try Task.checkCancellation()
             // Pointer/key commands change the desktop, not this native setup view.
             // Avoid scheduling a SwiftUI redraw for every high-frequency input packet.
-            if request.path != "/command" { objectWillChange.send() }
+            if request.path != "/command" && request.path != "/presenter" { objectWillChange.send() }
             return .json(["ok": true])
         } catch is CancellationError {
-            input.reset()
+            input.reset(); stopPresenter()
             return .json(["error": "The operation was cancelled."], status: "409 Conflict")
         } catch let error as RemoteError {
             return .json(["error": error.localizedDescription], status: "400 Bad Request")
@@ -272,11 +365,11 @@ import ServiceManagement
             return .json(["error": "The operation failed. Check Sofa Remote on the Mac."], status: "500 Internal Server Error")
         }
     }
-    private func wake() throws {
+    private func wake() async throws {
         let now = ProcessInfo.processInfo.systemUptime
-        guard now - lastWake >= 0.5 else { return }
-        guard DisplayPower.wake() else { throw RemoteError("macOS did not accept the display wake request.") }
-        lastWake = now
+        guard displayPower.sleepPending || now - lastWake >= 0.5 else { return }
+        try await displayPower.wake()
+        lastWake = ProcessInfo.processInfo.systemUptime
     }
     private func openDownloads() throws {
         guard let folder = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first,
