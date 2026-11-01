@@ -34,7 +34,7 @@ async function main() {
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`
     localStorage.setItem('sofaKey','a'.repeat(64)); Element.prototype.setPointerCapture=function(){};
     window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';window.stateFailure=false;window.commandLatency=3;window.illegalMotion=[];
-    window.testState={name:'Mock Mac',frontApp:'Brave Browser',appVersion:'0.1.0',appBuild:'7',macOSVersion:'15.0.1',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
+    window.testState={name:'Mock Mac',frontApp:'Brave Browser',appVersion:'0.1.0',appBuild:'7',macOSVersion:'15.0.1',signingStatus:'ad-hoc',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
     const realTimeout=window.setTimeout;window.setTimeout=(fn,ms,...args)=>realTimeout(fn,ms===9000&&window.hang?30:ms,...args);
     const motionBody=b=>b&&(b.type==='move'||b.type==='scroll'||(b.type==='drag'&&b.phase==='move'));
     const badDelta=(v,limit)=>!Number.isFinite(v)||Math.abs(v)>limit;
@@ -111,6 +111,24 @@ async function main() {
   await cdp('Emulation.setPageScaleFactor',{pageScaleFactor:1});
   await evaluate(`closeSheet();closeSheet();window.scrollTo(0,0)`);
   console.log('PASS trusted double taps send exactly two clicks without page zoom; two-finger scroll and outside-pad pinch remain available');
+  const signingDiagnostics=await evaluate(`(async()=>{
+    const samples=[];
+    for(const value of ['ad-hoc','certificate-signed','unsigned','unknown','SECRET_CERT_SUBJECT/CDHash/TeamID','__proto__','constructor']) {
+      testState.signingStatus=value;await refresh();
+      samples.push({summary:document.querySelector('#diagnostics').value,help:document.querySelector('#signing-help').textContent});
+    }
+    testState.signingStatus='ad-hoc';await refresh();return samples;
+  })()`);
+  const signingLabels=['Ad hoc','Certificate-signed','Unsigned','Unknown','Unknown','Unknown','Unknown'];
+  signingDiagnostics.forEach((sample,index)=>{
+    assert.ok(sample.summary.includes('Signing: '+signingLabels[index]),'signing diagnostic uses a fixed public label');
+    assert.doesNotMatch(sample.summary,/SECRET_CERT|CDHash|TeamID|Authority=|notari[sz]ed/,'signing diagnostics contain no identity or notarisation claims');
+    assert.ok(sample.help.includes('Signing: '+signingLabels[index]));
+  });
+  assert.match(signingDiagnostics[0].help,/updates may require Accessibility permission again/);
+  assert.match(signingDiagnostics[2].help,/updates may require Accessibility permission again/);
+  assert.match(signingDiagnostics[1].help,/does not verify Developer ID, notarisation or permission continuity/);
+  console.log('PASS fixed signing labels, unknown-value redaction and permission-continuity guidance');
   const help=await evaluate(`(async()=>{
     const q=s=>document.querySelector(s);
     Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.copiedDiagnostic=value}}});
@@ -131,23 +149,23 @@ async function main() {
     const copied=window.copiedDiagnostic,networkAfterCopy=calls.length-before;
     Object.defineProperty(navigator,'clipboard',{configurable:true,value:undefined});await q('#copy-diagnostics').onclick();
     const fallback={selection:q('#diagnostics').selectionEnd-q('#diagnostics').selectionStart,result:q('#copy-result').textContent};
-    testState.appVersion='TOKEN-IN-VERSION';await refresh();const sanitized=q('#diagnostics').value;
+    testState.appVersion='TOKEN-IN-VERSION';testState.signingStatus='SECRET_CERT_SUBJECT/CDHash/TeamID';await refresh();const sanitized=q('#diagnostics').value;
     document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
     const restored={settings:q('#settings-sheet').classList.contains('open'),focus:document.activeElement===q('#settings-sheet [data-help]')};
     q('#settings-sheet [data-close]').click();
     const restoredMain={inert:q('main').inert,focus:document.activeElement===q('#settings-open')};
     Object.defineProperty(navigator,'userAgent',{configurable:true,value:oldUA});
-    testState.appVersion='0.1.0';testState.name='Mock Mac';testState.frontApp='Brave Browser';testState.displayID='d1';testState.shortcuts=[];
+    testState.appVersion='0.1.0';testState.signingStatus='ad-hoc';testState.name='Mock Mac';testState.frontApp='Brave Browser';testState.displayID='d1';testState.shortcuts=[];
     q('#text').value='';q('#url').value='';await refresh();
     return {initial,wrapped,copied,networkAfterCopy,fallback,sanitized,restored,restoredMain};
   })()`);
   assert.equal(help.initial.diagnosticsCollapsed,true,'diagnostics start collapsed');assert.equal(help.initial.collapsedWrap,true,'Tab skips hidden disclosure contents and wraps');
   assert.equal(help.initial.open,true);assert.equal(help.initial.mainInert,true);assert.equal(help.initial.settingsInert,true);assert.equal(help.initial.focus,true);
-  assert.match(help.initial.summary,/App version: 0\.1\.0/);assert.match(help.initial.summary,/Build: 7/);assert.match(help.initial.summary,/macOS: 15\.0\.1/);assert.match(help.initial.summary,/Browser: Chrome 123\.0\.1\.2/);assert.match(help.initial.summary,/Accessibility allowed: Yes/);
+  assert.match(help.initial.summary,/App version: 0\.1\.0/);assert.match(help.initial.summary,/Build: 7/);assert.match(help.initial.summary,/macOS: 15\.0\.1/);assert.match(help.initial.summary,/Browser: Chrome 123\.0\.1\.2/);assert.match(help.initial.summary,/Accessibility allowed: Yes/);assert.match(help.initial.summary,/Signing: Ad hoc/);
   assert.doesNotMatch(help.initial.summary,/SECRET|private\.example|PrivatePhone|secret-ua|a{64}|private-id/,'diagnostics exclude personal fields, full UA and tokens');
   assert.equal(help.copied,help.initial.summary);assert.equal(help.networkAfterCopy,0,'diagnostic copy never uploads');
   assert.equal(help.wrapped,true);assert.equal(help.fallback.selection,help.initial.summary.length);assert.match(help.fallback.result,/Automatic copy is unavailable/);
-  assert.match(help.sanitized,/App version: Unavailable/);assert.doesNotMatch(help.sanitized,/TOKEN-IN-VERSION/,'untrusted version fields cannot inject data into diagnostics');
+  assert.match(help.sanitized,/App version: Unavailable/);assert.doesNotMatch(help.sanitized,/TOKEN-IN-VERSION|SECRET_CERT|CDHash|TeamID/,'untrusted version and signing fields cannot inject data into diagnostics');assert.match(help.sanitized,/Signing: Unknown/);
   assert.deepEqual(help.restored,{settings:true,focus:true});assert.deepEqual(help.restoredMain,{inert:false,focus:true});
   for(const [width,height] of [[320,568],[390,844],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
@@ -330,7 +348,7 @@ async function main() {
   assert.equal(pairing.hash,'','pairing code removed from address bar');
   assert.equal(pairing.call.body.code,'123456');assert.equal(pairing.call.key,undefined,'pairing uses no device credential');
   const unpairedHelp=await evaluate(`(()=>{key='';storage.set('');showPair();document.querySelector('#pair [data-help]').click();const result={help:document.querySelector('#help-sheet').classList.contains('open'),pairInert:document.querySelector('#pair').inert,summary:document.querySelector('#diagnostics').value};closeSheet();result.pairRestored=!document.querySelector('#pair').inert;return result})()`);
-  assert.equal(unpairedHelp.help,true);assert.equal(unpairedHelp.pairInert,true);assert.equal(unpairedHelp.pairRestored,true);assert.match(unpairedHelp.summary,/App version: Unavailable/);assert.match(unpairedHelp.summary,/Connect to the Mac/);
+  assert.equal(unpairedHelp.help,true);assert.equal(unpairedHelp.pairInert,true);assert.equal(unpairedHelp.pairRestored,true);assert.match(unpairedHelp.summary,/App version: Unavailable/);assert.match(unpairedHelp.summary,/Connect to the Mac/);assert.match(unpairedHelp.summary,/Signing: Unknown/);
   console.log('PASS gestures, drag release, heartbeat, UI actions, pairing, serial transport and locked-session wake');
 }
 (async()=>{try{await main()}catch(e){console.error(e);process.exitCode=1}finally{

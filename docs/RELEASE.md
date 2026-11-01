@@ -9,9 +9,11 @@ Keep the app free and MIT-licensed. Building locally does not require a paid dev
 3. Run `./build.sh`, then `./scripts/package-release.sh`. The package script produces the drag-to-Applications disk image, ZIP and SHA256SUMS from `build/Sofa Remote.app`.
 4. Verify both architectures, code signature, bundled licences/icon, archive/checksums and a mounted disk image. Quit before updating an installed bundle. Test the actual downloaded artifact after publication, not just a local build.
 
-For a publisher-signed build, provide `SOFA_SIGN_IDENTITY` with the Developer ID Application identity. Optional `SOFA_NOTARY_PROFILE` refers to a notarytool keychain profile configured by the publisher; the package script requires the signing identity for notarisation. Keep credentials in Keychain/CI secrets and never place them in source, issue reports or command output. Inspect the scripts for exact environment handling.
+Normal public releases require `SOFA_PUBLIC_RELEASE=1`, `SOFA_SIGN_IDENTITY` (Developer ID Application), `SOFA_TEAM_ID` and `SOFA_NOTARY_PROFILE`. Set `SOFA_SIGN_KEYCHAIN` if needed. Missing credentials fail before compilation; ad-hoc signatures cannot be normal public updates. Keep publisher credentials in Keychain/CI secrets and never put them in source, issue reports or command output.
 
-Without those credentials, publish only an explicitly labelled **ad-hoc signed, not notarised beta**. Do not call a strict ad-hoc signature check a Gatekeeper/notarisation pass.
+A free, explicitly selected certificate-signed preview route is described in [Signing](SIGNING.md). It keeps the private signing key on the publisher’s Mac, uses the same certificate across updates, and is not Apple-notarised or Apple-verified publisher identity. Gatekeeper or managed-device policy may block it. Use a `preview-v…` tag and mark it prerelease; it does not use the normal `v*` publishing workflow. Older ad-hoc beta files remain experimental and do not acquire stable identity retroactively.
+
+CI’s explicit ad-hoc development artifacts are separate, differently named files. Do not publish them as updates or call a signature-integrity check a Gatekeeper/notarisation pass.
 
 ## Publish and verify
 
@@ -28,3 +30,9 @@ The current app provides manual release links only. No updater polls, silently d
 ## Encrypted transport investigation
 
 Tailscale IP links provide the currently documented encrypted network option. Native HTTPS pairing would need a certificate trust/renewal plan compatible with iPhone Safari and changing local addresses; a self-signed warning is not a usable solution. Browser WebCrypto also has secure-context constraints, and application-layer encryption needs a reviewed authenticated protocol and key lifecycle. No new cryptographic protocol, certificate installer or HTTPS endpoint is claimed by this release. Revisit this work with a specific threat model and usability prototype before broad promotion beyond trusted-network beta users.
+
+## Website and Homebrew
+
+The primary public app site is <https://sofa-remote.doublehoney1.chatgpt.site/>. Its public static source is `site/`; `./scripts/build-site.sh` copies only those assets into ignored `dist/`. `.openai/hosting.json` preserves the existing Sites project identity. Publish through the Sites source/version/deployment workflow for that ID; do not register a replacement site. The GitHub Pages URL remains a compatible mirror and its canonical metadata points to the primary site. Never package app settings, build outputs or signing credentials as website assets.
+
+The independent [Homebrew tap](https://github.com/allamaprabhuani/homebrew-tap) contains `Casks/sofa-remote.rb`. After publishing and independently downloading an intended release, update the cask version, exact asset URL and SHA-256 checksum. Run `ruby -c` and `brew style` on the cask, then verify `brew fetch --cask` without installing over a running helper. Keep preview/Gatekeeper caveats; never strip quarantine in a cask. This is separate from acceptance into Homebrew's official catalogue.

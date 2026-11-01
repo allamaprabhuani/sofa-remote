@@ -4,13 +4,14 @@ import Testing
 
 @Suite struct SupportInfoTests {
     @Test func diagnosticSummaryContainsOnlyTheDocumentedFields() {
-        let summary = SupportInfo.diagnosticSummary(version: "0.1.0-beta.1", build: "7", macOS: "15.1.0", architecture: "arm64",
+        let summary = SupportInfo.diagnosticSummary(version: "0.1.0-beta.1", build: "7", macOS: "15.1.0", architecture: "arm64", signing: .adHoc,
                                                     accessibilityAllowed: true, sharing: false, inputPaused: true)
         #expect(summary == """
         Sofa Remote diagnostic summary
         App: 0.1.0-beta.1 (7)
         macOS: 15.1.0
         Architecture: arm64
+        Signing: Ad hoc
         Accessibility: allowed
         Sharing: stopped
         Input: stopped (Sharing off)
@@ -56,8 +57,21 @@ import Testing
         #expect(!summary.contains("secret"))
         #expect(!summary.contains("Personal Mac"))
     }
+    @Test func diagnosticSigningFieldUsesOnlyFixedLabels() {
+        for signing in SigningStatus.allCases {
+            let summary = SupportInfo.diagnosticSummary(version: "0.1", build: "1", macOS: "15.0", architecture: "arm64",
+                                                        signing: signing, accessibilityAllowed: true, sharing: true, inputPaused: false)
+            let fields = summary.split(separator: "\n").filter { $0.hasPrefix("Signing:") }
+            #expect(fields == ["Signing: \(signing.label)"])
+            #expect(!summary.contains("Developer ID"))
+            #expect(!summary.contains("notarised"))
+            #expect(!summary.contains("TeamIdentifier"))
+            #expect(!summary.contains("CDHash"))
+            #expect(!summary.contains("Authority="))
+        }
+    }
     @Test func supportLinksUseOnlyThePublicProject() {
-        for link in [SupportInfo.repository, SupportInfo.setup, SupportInfo.privacy, SupportInfo.licence, SupportInfo.credits,
+        for link in [SupportInfo.repository, SupportInfo.setup, SupportInfo.signing, SupportInfo.privacy, SupportInfo.licence, SupportInfo.credits,
                      SupportInfo.releases, SupportInfo.discussions, SupportInfo.security, SupportInfo.bugReport, SupportInfo.featureRequest] {
             #expect(link.scheme == "https")
             #expect(link.host == "github.com")

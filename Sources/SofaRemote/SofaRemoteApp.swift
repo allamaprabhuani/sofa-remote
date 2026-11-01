@@ -225,6 +225,14 @@ private struct SetupView: View {
                         .controlSize(.small)
                         .help("Re-reads the Accessibility permission from macOS. Does not grant it.")
                 }
+                if let warning = SigningStatus.current.permissionContinuityWarning {
+                    GroupBox("Signing and permission updates") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(warning).font(.callout)
+                            Link("Signing and update guidance", destination: SupportInfo.signing)
+                        }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
+                    }
+                }
                 if !model.accessibilityAllowed {
                     GroupBox("Allow mouse and keyboard control") {
                         VStack(alignment: .leading, spacing: 10) {
@@ -322,6 +330,7 @@ private struct SetupInstructions: View {
             Text("4. In iPhone Safari, choose Share → Add to Home Screen to keep the remote easy to find.")
             Text("Cannot connect? Keep the Mac awake, check Start sharing and the network, then scan a fresh QR. If permission was just enabled, reopen Sofa Remote. A changed Wi-Fi address may need a fresh Home Screen shortcut.")
             Link("Full setup and troubleshooting guide", destination: SupportInfo.setup)
+            Link("Signing and permission continuity", destination: SupportInfo.signing)
         }.font(.callout).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -358,6 +367,7 @@ private struct AboutHelpView: View {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Sofa Remote").font(.largeTitle.bold())
                 Text(SupportInfo.versionLabel).textSelection(.enabled)
+                Text("Signing: \(SigningStatus.current.label)").font(.caption).foregroundStyle(.secondary)
                 Link("By \(SupportInfo.developer)", destination: SupportInfo.developerWebsite)
                 DisclosureGroup("Setup and connection help", isExpanded: $setupExpanded) {
                     SetupInstructions(showPractice: showPractice).padding(.top, 8)
@@ -372,7 +382,7 @@ private struct AboutHelpView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 DisclosureGroup("Diagnostic summary", isExpanded: $diagnosticsExpanded) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Versions, architecture and permission/sharing status only. No input, tokens, personal URLs, names or screenshots. Nothing is uploaded.")
+                        Text("Versions, signing type, architecture and permission/sharing status only. No input, tokens, personal URLs, names or screenshots. Nothing is uploaded.")
                             .font(.callout)
                         if !summary.isEmpty {
                             Text(summary).font(.system(.callout, design: .monospaced))
@@ -394,10 +404,11 @@ private struct AboutHelpView: View {
                 DisclosureGroup("Privacy, security and credits") {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Direct LAN HTTP is unencrypted. Use a trusted network or your own encrypted Tailscale connection. Stop sharing closes the listener; revoke a phone to remove its access.")
+                        Text("The signing type does not verify Developer ID, notarisation or permission continuity.").font(.caption).foregroundStyle(.secondary)
                         Link("Privacy", destination: SupportInfo.privacy)
                         Link("Report a vulnerability privately", destination: SupportInfo.security)
                         Link("MIT licence", destination: SupportInfo.licence)
-                        Link("Credits and Mac TV attribution", destination: SupportInfo.credits)
+                        Link("Licences and credits", destination: SupportInfo.credits)
                         Link("Source code and contributions", destination: SupportInfo.repository)
                         if let notices = SupportInfo.bundledNotices {
                             DisclosureGroup("Read bundled licences and credits offline") {

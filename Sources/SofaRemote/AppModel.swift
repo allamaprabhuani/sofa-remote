@@ -142,7 +142,7 @@ import ServiceManagement
     func state() -> [String: Any] {
         ["name": Host.current().localizedName ?? "Mac", "sharing": sharing,
          "appVersion": SupportInfo.version, "appBuild": SupportInfo.build,
-         "macOSVersion": SupportInfo.macOSVersion,
+         "macOSVersion": SupportInfo.macOSVersion, "signingStatus": SigningStatus.current.rawValue,
          "accessibility": accessibilityAllowed, "sessionLocked": inputPaused, "screenSleeping": screenSleeping,
          "frontApp": inputPaused ? "" : (NSWorkspace.shared.frontmostApplication?.localizedName ?? ""),
          "displayID": displays.selectedID ?? "", "displays": displays.options,

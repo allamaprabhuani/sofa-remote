@@ -2,7 +2,14 @@ Sofa Remote is a free, MIT-licensed Mac helper that turns a phone browser into a
 
 This public beta includes the Mac TV-inspired pointer improvements, fractional movement, short-lived pointer tracking across displays, and fewer requests for accelerated swipes. Occasional pointer stepping or acceleration changes remain a known issue; native-trackpad smoothness is not claimed.
 
-New in beta 5 (build 11):
+New in certificate preview beta 6 (build 12):
+
+- Persistent certificate signing for local updates, with strict signature and update-identity checks. The first move from an ad-hoc build may need one manual Accessibility review. This preview remains unnotarised and is not an Apple-verified distribution.
+- Signing status in Mac and phone help/diagnostics, and a free local signing guide.
+- Separate public app website and a Homebrew cask in our independent tap.
+- Disposable signing regression fixtures; ordinary release packaging now requires Developer ID and successful notarisation.
+
+Included from beta 5 (build 11):
 
 - A working remote preview and all seven theme choices at the top of the static website, with a neutral palette, clearer typography and simpler navigation/download controls.
 - Refined native setup and monochrome help icons. Input status distinguishes missing Accessibility permission, stopped sharing, startup and paused input. Check again re-reads permission; it does not grant access.

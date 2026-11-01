@@ -9,3 +9,6 @@ work/
 # Disposable UI review artefacts
 .taste-skill/
 .playwright-cli/
+
+# Static website deployment output
+dist/
