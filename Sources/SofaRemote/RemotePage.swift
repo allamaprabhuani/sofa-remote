@@ -386,6 +386,7 @@ enum RemotePage {
       .control-deck { display:grid; grid-template-columns:1fr 132px; align-items:end; gap:12px; }
       .primary-controls { display:grid; grid-template-columns:repeat(2, minmax(44px, 1fr)); align-content:end; gap:4px; }
       .primary-controls button { min-height:48px; padding:0; background:transparent; border-radius:12px; touch-action:none; }
+      .primary-controls button[aria-pressed="true"] { background:var(--selection); color:var(--selection-ink); outline:2px solid var(--accent); outline-offset:2px; }
       .primary-controls .control-icon { width:30px; height:30px; }
       .primary-controls .play { grid-column:1 / -1; }
       .main-navigation { display:flex; flex-direction:column; justify-content:end; align-items:center; gap:8px; }

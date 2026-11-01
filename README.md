@@ -6,7 +6,7 @@ Control your Mac from your phone.
 
 A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen streaming, Screen Recording permission, accounts, ads, analytics, subscriptions or cloud relay. Keep using your existing browser, Finder and player.
 
-[Website](https://sofa-remote.doublehoney1.chatgpt.site/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.12) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
+[Website](https://sofa-remote.doublehoney1.chatgpt.site/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.13) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
 
 **Beta software, macOS 14 or later, Apple silicon and Intel.** Current preview downloads are certificate-signed, **not Apple-verified or Developer ID notarised**; macOS may block first launch. See the [installation guide](docs/SETUP.md). Direct LAN HTTP is **unencrypted**: use a trusted private network or your own Tailscale connection. Never forward its port to the internet. See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 

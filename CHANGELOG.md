@@ -1,5 +1,9 @@
 # Changelog
 
+## Certificate preview beta 13 — build 38
+
+- The drag icon clearly indicates when drag is active.
+
 ## Certificate preview beta 12 — build 37
 
 - Hold to speak clearly indicates when its key is held down.
