@@ -8,6 +8,6 @@ List the automated checks and any physical hardware checks performed, with versi
 
 ## Scope and privacy
 
-- Preserve input-only scope and Mac TV attribution.
+- Preserve input-only scope and third-party copyright notices.
 - Include no app data, credentials, personal URLs, screenshots or generated build files.
 - Note changes to permissions, network exposure, resource use or dependencies.
