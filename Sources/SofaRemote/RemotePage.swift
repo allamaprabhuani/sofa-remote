@@ -379,6 +379,19 @@ enum RemotePage {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
       }
+      .keygrid button { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+      body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+      input, textarea { user-select: text; -webkit-user-select: text; -webkit-touch-callout: default; }
+      .main-navigation { display:flex; justify-content:center; align-items:center; gap:24px; }
+      .direction-pad { display:grid; grid-template: repeat(3, 44px) / repeat(3, 44px); }
+      .direction-pad button { min-height:44px; padding:0; background:transparent; font-size:23px; touch-action:none; }
+      .direction-pad .up { grid-area:1 / 2; } .direction-pad .left { grid-area:2 / 1; }
+      .direction-pad .enter { grid-area:2 / 2; } .direction-pad .right { grid-area:2 / 3; }
+      .direction-pad .down { grid-area:3 / 2; }
+      #main-option-hold { width:88px; height:88px; padding:8px; touch-action:none; line-height:1.2; }
+      #main-option-hold.on { background:var(--selection); color:var(--selection-ink); }
+      main.is-pointing .main-navigation { opacity:0; pointer-events:none; }
+      @media (prefers-reduced-motion: no-preference) { main .main-navigation { transition:opacity 160ms ease; } }
       .shortcut-add summary { min-height: 44px; width: 48px; display: grid; place-items: center; cursor: pointer; font-size: 1.5rem; border-radius: 12px; }
       .shortcut-add summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .shortcut-add[open] form { margin-top: 8px; }
@@ -635,6 +648,16 @@ enum RemotePage {
         aria-label="Touchpad. Drag to move, tap to click, use two fingers to scroll. With a keyboard, use arrow keys to move and Enter or Space to click."
       >
         <span class="hint">Tap to click · Two fingers to scroll</span>
+      </div>
+      <div class="main-navigation">
+        <div class="direction-pad" role="group" aria-label="Arrow and return keys">
+          <button class="up" data-key="up" aria-label="Up arrow" title="Up arrow">↑</button>
+          <button class="left" data-key="left" aria-label="Left arrow" title="Left arrow">←</button>
+          <button class="enter" data-key="enter" aria-label="Return" title="Return">↵</button>
+          <button class="right" data-key="right" aria-label="Right arrow" title="Right arrow">→</button>
+          <button class="down" data-key="down" aria-label="Down arrow" title="Down arrow">↓</button>
+        </div>
+        <button id="main-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
       </div>
       <div class="row clicks">
         <button id="right" data-icon="right-click" aria-label="Right click" title="Right click"></button>
@@ -1380,6 +1403,7 @@ enum RemotePage {
         travel += Math.abs(dx) + Math.abs(dy);
         if (travel >= 8) {
           touchSurface.classList.add("is-pointing");
+          stopKeyRepeat(); endRightOption();
           if (f.origin) swipeClickGuard = { target: f.origin, until: Date.now() + 500 };
           if (!beganOnPad && !touchSurface.hasPointerCapture(e.pointerId)) touchSurface.setPointerCapture(e.pointerId);
         }
@@ -1496,7 +1520,7 @@ enum RemotePage {
           b.setPointerCapture(e.pointerId);
           const repeat = async () => {
             if (hold.stopped || locked || !key || Date.now() - hold.start > 15000) { stopKeyRepeat(); return; }
-            hold.repeated = true;
+            hold.repeated = true; suppressClick = true;
             const ok = await (hold.firstSent ? command({ type: "key", key: b.dataset.key, modifiers: hold.modifiers }) : sendKey(b.dataset.key));
             hold.firstSent = true;
             if (!hold.stopped && ok) hold.timer = setTimeout(repeat, 100);
@@ -1682,22 +1706,23 @@ enum RemotePage {
       $("#present-exit").onclick = () => { stopPresenting(); command({ type: "key", key: "escape", modifiers: [] }); };
       $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); refresh(true); };
       let optionPointer = null, optionKeyboard = false, optionHeld = false, optionHeartbeat = 0, optionGeneration = 0;
-      const optionButton = $("#right-option-hold");
+      const optionButtons = [$("#right-option-hold"), $("#main-option-hold")];
       function endRightOption() {
         optionPointer = null; optionKeyboard = false;
         clearInterval(optionHeartbeat); optionHeartbeat = 0;
         if (!optionHeld) return;
         optionHeld = false; optionGeneration++;
-        optionButton.classList.remove("on"); optionButton.setAttribute("aria-pressed", "false");
+        optionButtons.forEach((b) => { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); });
         command({ type: "rightOption", phase: "end" });
       }
       function startRightOption() {
         if (optionHeld || locked || !key) return;
         optionHeld = true; const generation = ++optionGeneration;
-        optionButton.classList.add("on"); optionButton.setAttribute("aria-pressed", "true");
+        optionButtons.forEach((b) => { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); });
         command({ type: "rightOption", phase: "start" }).then((ok) => { if (!ok && generation === optionGeneration) endRightOption(); });
         optionHeartbeat = setInterval(() => { if (optionHeld) command({ type: "rightOption", phase: "heartbeat" }); }, 1000);
       }
+      optionButtons.forEach((optionButton) => {
       optionButton.addEventListener("pointerdown", (e) => {
         if (e.button !== 0 || optionPointer !== null) return;
         e.preventDefault(); optionPointer = e.pointerId; optionButton.setPointerCapture(e.pointerId); startRightOption();
@@ -1713,6 +1738,7 @@ enum RemotePage {
         if (optionKeyboard && (e.key === " " || e.key === "Enter")) { e.preventDefault(); endRightOption(); }
       });
       optionButton.addEventListener("blur", () => { if (optionKeyboard) endRightOption(); });
+      });
       $("#keyboard-open").onclick = (e) => sheet("keyboard-sheet", e.currentTarget);
       $("#shortcuts-open").onclick = (e) => sheet("shortcuts-sheet", e.currentTarget);
       $("#settings-open").onclick = (e) => {
