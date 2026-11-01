@@ -202,7 +202,7 @@ async function main() {
   await cdp('Page.reload',{ignoreCache:true});await wait(150);
   const migrated=await evaluate(`({theme:localStorage.getItem('sofaTheme'),colour:localStorage.getItem('sofaColour'),background:getComputedStyle(document.body).backgroundColor,hasTheme:!!document.querySelector('#theme')})`);
   assert.deepEqual(migrated,{theme:'custom',colour:'#ff0000',background:'rgb(17, 18, 20)',hasTheme:false},'older colour preferences remain intact and the new appearance defaults safely');
-  for(const name of ['soft','velvet','paper']){
+  for(const name of ['soft','velvet','paper','black']){
     await evaluate(`(()=>{const select=document.querySelector('#appearance');select.value='${name}';select.dispatchEvent(new Event('change'))})()`);
     await cdp('Page.reload',{ignoreCache:true});await wait(150);
     const appearance=await evaluate(`(()=>{const s=getComputedStyle(document.documentElement),v=k=>s.getPropertyValue('--'+k).trim();const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]};const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};return {name:document.querySelector('#appearance').value,stored:localStorage.getItem('sofaAppearance'),readable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('ink'),v(k))>=4.5),muted:['bg','pad','sheet'].every(k=>contrast(v('muted'),v(k))>=4.5),selected:contrast(v('selection'),v('selection-ink'))>=4.5,focus:contrast(v('accent'),v('pad'))>=3}})()`);

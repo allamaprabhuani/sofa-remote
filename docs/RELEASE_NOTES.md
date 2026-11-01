@@ -2,8 +2,9 @@ Sofa Remote is a free, MIT-licensed Mac helper that turns a phone browser into a
 
 This public beta includes the pointer improvements, fractional movement, short-lived pointer tracking across displays, and fewer requests for accelerated swipes. Occasional pointer stepping or acceleration changes remain a known issue; native-trackpad smoothness is not claimed.
 
-New in certificate preview beta 10 (build 35):
+New in certificate preview beta 10 (build 36):
 
+- A pitch-black appearance with gray controls, alongside the existing appearances.
 - Arrow keys and Return on the main remote; hold navigation and editing keys to repeat, release to stop.
 - Hold to speak sends Right Option to a compatible dictation tool on the Mac; audio stays with that tool on the Mac.
 - App-specific presentation shortcuts and a connection check. PowerPoint controls were tested on the owner’s iPhone; app-specific controls for Keynote and Google Slides need further checks.

@@ -34,6 +34,7 @@ enum RemotePage {
       html[data-appearance="velvet"] { --bg:#191417; --card:#302329; --pad:#302329; --online:#59db88; --sheet:#191417; --line:#9d8583; --muted:#dec9ba; --accent:#ddb65e; --ink:#f7ede1; --pressed:#49393a; --selection:#f7ede1; --selection-ink:#191417; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
       html[data-appearance="paper"] { --bg:#f6f3ec; --card:#f6f3ec; --pad:#ebe5d9; --online:#187544; --sheet:#f6f3ec; --line:#71665d; --muted:#5b534c; --accent:#a22f1d; --ink:#252322; --pressed:#ded5c7; --selection:#252322; --selection-ink:#f6f3ec; --danger:#9d1e2c; --error:#9d1e2c; color-scheme:light; }
       html[data-appearance="soft"] { --bg:#111214; --card:#28272f; --pad:#28272f; --online:#59db88; --sheet:#111214; --line:#8e8c9c; --muted:#d4cdec; --accent:#c4b8ff; --ink:#f7f6fb; --pressed:#3d3b49; --selection:#f7f6fb; --selection-ink:#111214; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="black"] { --bg:#000000; --card:#1b1b1b; --pad:#141414; --online:#bdbdbd; --sheet:#000000; --line:#8a8a8a; --muted:#a8a8a8; --accent:#c5c5c5; --ink:#dedede; --pressed:#303030; --selection:#c8c8c8; --selection-ink:#000000; --danger:#e5e5e5; --error:#e5e5e5; color-scheme:dark; }
       html[data-appearance="paper"] .remote-panel { border-radius:24px; }
       html[data-appearance="soft"] .remote-panel { border-radius:38px; }
       * {
@@ -811,7 +812,7 @@ enum RemotePage {
     <div class="scrim" id="settings-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-help data-icon="help" aria-label="About and Help" title="About and Help"></button><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
-        <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option></select>
+        <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option><option value="black">Pitch Black</option></select>
         <h3>Display</h3>
         <label for="display">Jump pointer to display</label><select class="field" id="display"></select>
         <div class="settings-actions" role="group" aria-label="Display controls">
@@ -938,10 +939,10 @@ enum RemotePage {
       $$('[data-icon]').forEach(addIcon);
       // Older appearance preferences remain untouched for reversible migration.
       function applyAppearance(value) {
-        const appearance = ["soft", "velvet", "paper"].includes(value) ? value : "soft";
+        const appearance = ["soft", "velvet", "paper", "black"].includes(value) ? value : "soft";
         document.documentElement.dataset.appearance = appearance;
         $("#appearance").value = appearance;
-        $("meta[name=theme-color]").content = {soft:"#111214", velvet:"#191417", paper:"#f6f3ec"}[appearance];
+        $("meta[name=theme-color]").content = {soft:"#111214", velvet:"#191417", paper:"#f6f3ec", black:"#000000"}[appearance];
       }
       try { applyAppearance(localStorage.getItem("sofaAppearance")); } catch { applyAppearance("soft"); }
       $("#appearance").onchange = (event) => {

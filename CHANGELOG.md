@@ -1,7 +1,8 @@
 # Changelog
 
-## Certificate preview beta 10 — build 35
+## Certificate preview beta 10 — build 36
 
+- Adds a pitch-black appearance with gray controls.
 - Main remote adds directional and Return keys and Hold to speak; navigation and editing keys repeat while held.
 - Presenter controls add app-aware shortcuts and a connection check.
 - Spotlight shortcut removed after input failures on the tested Mac.
