@@ -34,7 +34,6 @@ enum RemotePage {
       html[data-appearance="velvet"] { --bg:#191417; --card:#302329; --pad:#302329; --online:#59db88; --sheet:#191417; --line:#9d8583; --muted:#dec9ba; --accent:#ddb65e; --ink:#f7ede1; --pressed:#49393a; --selection:#f7ede1; --selection-ink:#191417; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
       html[data-appearance="paper"] { --bg:#f6f3ec; --card:#f6f3ec; --pad:#ebe5d9; --online:#187544; --sheet:#f6f3ec; --line:#71665d; --muted:#5b534c; --accent:#a22f1d; --ink:#252322; --pressed:#ded5c7; --selection:#252322; --selection-ink:#f6f3ec; --danger:#9d1e2c; --error:#9d1e2c; color-scheme:light; }
       html[data-appearance="soft"] { --bg:#111214; --card:#28272f; --pad:#28272f; --online:#59db88; --sheet:#111214; --line:#8e8c9c; --muted:#d4cdec; --accent:#c4b8ff; --ink:#f7f6fb; --pressed:#3d3b49; --selection:#f7f6fb; --selection-ink:#111214; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
-      html[data-appearance="velvet"] header h1, html[data-appearance="paper"] header h1 { font-family: Georgia, serif; }
       html[data-appearance="paper"] .remote-panel { border-radius:24px; }
       html[data-appearance="soft"] .remote-panel { border-radius:38px; }
       * {
@@ -97,14 +96,16 @@ enum RemotePage {
         display: flex;
         align-items: center;
         gap: 10px;
+        padding: 8px 4px 14px;
       }
       header button { border-radius: 24px; background: transparent; }
       header button:active { background: var(--pressed); }
       header h1 {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        font-weight: 700;
-        font-size: 1.25rem;
-        letter-spacing: -0.055em;
+        font-weight: 650;
+        font-size: 1.5rem;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
         margin: 0;
         flex: 1;
         min-width: 0;
@@ -112,9 +113,12 @@ enum RemotePage {
       }
       header small {
         display: block;
-        font-size: 0.75rem;
+        margin-top: 7px;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        letter-spacing: normal;
         color: var(--muted);
-        font-weight: 500;
+        font-weight: 400;
       }
       #connection[data-connected="true"]::before { content:""; display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%; background:var(--online); vertical-align:1px; }
       button,
@@ -222,7 +226,7 @@ enum RemotePage {
       .bottom-tools button:active { background: var(--pressed); }
       .bottom-tools .control-icon { width: 23px; height: 23px; }
       .remote-guide { position: relative; }
-      .guide-content { position: absolute; right: -104px; bottom: calc(100% + 8px); width: min(310px, calc(100vw - 32px)); max-height: 50dvh; overflow: auto; z-index: 3; padding: 16px; border-radius: 16px; background: var(--sheet); box-shadow: 0 4px 24px rgba(0,0,0,.2); }
+      .guide-content { position: absolute; right: -156px; bottom: calc(100% + 8px); width: min(310px, calc(100vw - 32px)); max-height: 50dvh; overflow: auto; z-index: 3; padding: 16px; border-radius: 16px; background: var(--sheet); box-shadow: 0 4px 24px rgba(0,0,0,.2); }
       .remote-guide summary { min-height: 44px; display: flex; align-items: center; justify-content: center; width: 44px; border-radius: 50%; cursor: pointer; }
       .remote-guide summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
       .remote-guide p { margin: 0 0 12px; color: var(--muted); font-size: 0.875rem; }
@@ -615,10 +619,11 @@ enum RemotePage {
       </div>
       <nav class="bottom-tools" aria-label="Remote navigation">
         <details class="remote-guide"><summary aria-label="Explain remote icons" title="Explain remote icons">?</summary><div class="guide-content">
-          <p>The mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume. The grid opens Shortcuts and the gear opens Settings.</p>
+          <p>The mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
           <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
           <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
         </div></details>
+        <button class="icon" data-icon="keyboard" id="keyboard-open" aria-label="Keyboard" title="Keyboard"></button>
         <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button>
         <button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </nav>
@@ -710,7 +715,7 @@ enum RemotePage {
           <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
           <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" aria-label="Present" title="Present"></button><button id="keyboard-open" data-icon="keyboard" aria-label="Keyboard" title="Keyboard"></button></div>
+        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" aria-label="Present" title="Present"></button></div>
         <div class="sheet-row"><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
         <label for="url">Open a website on your Mac</label>
       <form class="address" id="open-form">
@@ -795,7 +800,7 @@ enum RemotePage {
           <a data-icon="updates" href="https://github.com/allamaprabhuani/sofa-remote/releases" target="_blank" rel="noopener noreferrer" aria-label="Check for updates and release notes" title="Check for updates and release notes"></a>
         </nav>
         <details class="help-disclosure"><summary>Remote and settings icons</summary>
-          <p>The mouse icon is right click and the hand toggles drag. Playback and volume follow below. The grid opens Shortcuts and the gear opens Settings.</p>
+          <p>The mouse icon is right click and the hand toggles drag. Playback and volume follow below. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
           <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
           <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
         </details>

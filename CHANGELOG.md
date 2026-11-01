@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased — build 20
+## Unreleased — build 21
 
+- Put Keyboard in the bottom navigation and use the system font across phone appearances.
 - Allow a swipe to begin over any main remote control or empty space without triggering the underlying button.
 - Remove decorative lines and refine the title.
 

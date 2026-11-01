@@ -1,18 +1,3 @@
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("./assets/fonts/inter-latin.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Instrument Serif";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("./assets/fonts/instrument-serif-italic-latin.woff2") format("woff2");
-}
-
 /* Palette: warm ivory, charcoal text and Delft blue actions. */
 :root {
   --bone: #F6F3EC;
@@ -37,7 +22,7 @@ body {
   margin: 0;
   background: var(--bone);
   color: var(--ink);
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 17px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -97,8 +82,8 @@ h1 {
   color: var(--ink);
 }
 .hero-serif {
-  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
-  font-style: italic;
+  font-family: inherit;
+  font-style: normal;
   font-weight: 400;
   letter-spacing: -0.01em;
   font-size: clamp(2.6rem, 6.2vw, 4.4rem);
@@ -653,4 +638,4 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
 .live-bottom .live-btn:active { background:#454750; }
 
 .live-row.volume::before { display:none; }
-.live-title { font-weight:700; font-size:1.25rem; letter-spacing:-.055em; }
+.live-title { font-weight:650; font-size:1.5rem; letter-spacing:-.03em; line-height:1.2; }
