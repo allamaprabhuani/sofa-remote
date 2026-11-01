@@ -2,7 +2,7 @@
 
 ## 1. Install on the Mac
 
-Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.8), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
+Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/preview-v0.1.0-beta.9), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
 
 This preview is certificate-signed, **not Apple-verified or Developer ID notarised**. macOS may block first launch. If you trust the source and intentionally downloaded this beta, review the blocked-app option in **System Settings → Privacy & Security**. Availability depends on macOS and device-management policy. Do not disable Gatekeeper globally or paste commands from an untrusted issue. Building from the [source](../README.md#build-from-source) is another development option.
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — build 26
+## Certificate preview beta 9 — build 26
 
 - Show the Brave icon and request a new window when its app is already running.
 - Search Google from the address field and place the typing send button beside the field.

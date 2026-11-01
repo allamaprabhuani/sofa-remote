@@ -2,6 +2,13 @@ Sofa Remote is a free, MIT-licensed Mac helper that turns a phone browser into a
 
 This public beta includes the pointer improvements, fractional movement, short-lived pointer tracking across displays, and fewer requests for accelerated swipes. Occasional pointer stepping or acceleration changes remain a known issue; native-trackpad smoothness is not claimed.
 
+New in certificate preview beta 9 (build 26):
+
+- Cleaner phone remote, three appearances, bottom keyboard, and simplified Settings and Shortcuts.
+- Swipe from the main remote surface, including over controls; deliberate taps still activate buttons. The controls fade while pointing.
+- Brave's shortcut requests a new window; the owner confirmed it works on their Mac. The address field supports Google search.
+- Automated tests cover gesture and control interactions; further physical-device testing is needed across devices and network conditions.
+
 New in certificate preview beta 7 (build 18):
 
 - A single dark remote with a large touchpad and borderless controls, a compact Settings panel, local shortcut initials and a native touchpad double-click gesture.
