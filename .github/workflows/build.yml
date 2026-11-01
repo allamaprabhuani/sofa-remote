@@ -1,0 +1,34 @@
+name: Build and test
+on: [push, pull_request]
+permissions:
+  contents: read
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Swift and browser tests
+        run: |
+          swift test --disable-xctest
+          node Tests/Web/transport.test.cjs
+          node Tests/Web/remote.test.cjs
+      - name: Build universal app
+        run: ./build.sh
+      - name: Verify and package
+        run: |
+          codesign --verify --deep --strict 'build/Sofa Remote.app'
+          lipo -archs 'build/Sofa Remote.app/Contents/MacOS/SofaRemote'
+          ditto -c -k --sequesterRsrc --keepParent 'build/Sofa Remote.app' build/Sofa-Remote.zip
+          shasum -a 256 build/Sofa-Remote.zip > build/Sofa-Remote.zip.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sofa-Remote
+          path: |
+            build/Sofa-Remote.zip
+            build/Sofa-Remote.zip.sha256
