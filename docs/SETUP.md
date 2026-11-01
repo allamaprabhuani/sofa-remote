@@ -2,7 +2,7 @@
 
 ## 1. Install on the Mac
 
-Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.2), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
+Requires macOS 14 or later, Apple silicon or Intel. Download the disk image from the [public beta release](https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.4), open it and drag **Sofa Remote** to **Applications**. Eject the disk image, then open the app from Applications.
 
 This beta is ad-hoc signed, **not Developer ID notarised**. macOS may block first launch. If you trust the source and intentionally downloaded this beta, review the blocked-app option in **System Settings → Privacy & Security**. Availability depends on macOS and device-management policy. Do not disable Gatekeeper globally or paste commands from an untrusted issue. Building from the [source](../README.md#build-from-source) is another development option.
 
@@ -20,7 +20,7 @@ Direct local HTTP is unencrypted. For encrypted network transport, connect both 
 
 ## 4. Try the touchpad and save it
 
-In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click. Choose Imperial blue, Light, Ocean or Custom in the remote’s **Settings → Appearance**. The colour choice stays in your phone browser. Use two fingers to scroll; the labelled controls provide other clicks and keyboard input. Open **Shortcuts** (the grid icon) to enter a website address or launch saved apps/sites. Test dragging in that disposable window before relying on it elsewhere.
+In **About & Help → Setup and connection help**, open the disposable practice window, or use your own empty test window. Move one finger on the phone touchpad and tap once to click. Choose Dark, Black, Light, Ivory (brown), Plum, Ocean or Custom in the remote’s **Settings → Appearance**. The colour choice stays in your phone browser. Use two fingers to scroll; the labelled controls provide other clicks and keyboard input. Open **Shortcuts** (the grid icon) to enter a website address or launch saved apps/sites. Test dragging in that disposable window before relying on it elsewhere.
 
 In iPhone Safari, choose **Share → Add to Home Screen**. Keep that shortcut to return to the remote. If the Mac's network address changes, open a fresh QR link from the Mac instead of the old shortcut, then save the new link if necessary.
 

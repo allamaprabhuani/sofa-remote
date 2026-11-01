@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sofa Remote — Put your Mac within reach</title>
+<title>Sofa Remote — A remote for your Mac</title>
 <meta name="description" content="A small, free Mac helper that lets your iPhone's browser point, type and press play. Input only. No screen streaming, no accounts." />
 <meta name="theme-color" content="#003E74" />
 <link rel="icon" href="./assets/icon.png" type="image/png" />
 <link rel="apple-touch-icon" href="./assets/icon.png" />
 <link rel="stylesheet" href="./styles.css" />
 <meta property="og:title" content="Sofa Remote" />
-<meta property="og:description" content="Put your Mac within reach. Free, open source, input only." />
+<meta property="og:description" content="A remote for your Mac. Free, open source, input only." />
 <meta property="og:image" content="https://allamaprabhuani.github.io/sofa-remote/assets/preview.jpg" />
 <link rel="canonical" href="https://allamaprabhuani.github.io/sofa-remote/" />
 <meta property="og:type" content="website" />
@@ -20,202 +20,275 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<header class="site-header">
-  <div class="wrap row">
+<header class="nav" aria-label="Primary">
+  <div class="nav-pill">
     <a class="brand" href="./">
-      <img src="./assets/icon.png" alt="" width="32" height="32" />
-      <span class="brand-name">Sofa Remote</span>
+      <img src="./assets/icon.png" alt="" width="22" height="22" />
+      <span>Sofa Remote</span>
     </a>
-    <nav aria-label="Primary">
-      <a href="https://github.com/allamaprabhuani/sofa-remote" rel="noopener">Source</a>
+    <nav>
+      <a href="#demo">Demo</a>
       <a href="#setup">Setup</a>
-      <a href="#support">Support</a>
-      <a href="#download">Download</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/allamaprabhuani/sofa-remote" rel="noopener">Source</a>
     </nav>
+    <a class="nav-cta" href="#download">Download</a>
   </div>
 </header>
 
 <main id="main">
 
-<section class="hero">
-  <div class="wrap">
-    <h1>Put your Mac within reach.</h1>
+<section class="hero" aria-labelledby="hero-h">
+  <div class="hero-inner">
+    <p class="eyebrow light">Mac menu-bar helper · open source</p>
+    <h1 id="hero-h">
+      A <em>remote</em><br />
+      for your Mac.
+    </h1>
     <p class="lede">
-      Point, type and press play from your iPhone. A small, free Mac helper
-      keeps your usual apps in control.
+      Point, type and press play from your phone's browser.
+      Your usual apps, controlled from wherever you're sitting.
     </p>
-    <p class="cta-row">
-      <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/v0.1.0-beta.2/Sofa-Remote.dmg">Download for macOS</a>
-      <a class="btn link" href="#setup">Read the setup</a>
-    </p>
-    <p class="beta-line">
-      Beta — not notarised. See <a href="#setup">Setup</a> for the first-launch step.
+    <div class="cta-row">
+      <a class="pill primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/v0.1.0-beta.4/Sofa-Remote.dmg">
+        <svg class="laptop" viewBox="0 0 24 16" width="22" height="15" aria-hidden="true">
+          <rect x="2" y="1" width="20" height="12" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="0" y="13" width="24" height="2.4" rx="1.2" fill="currentColor"/>
+        </svg>
+        Download for Mac
+      </a>
+      <a class="pill ghost" href="#demo">Try the remote →</a>
+    </div>
+    <p class="hero-meta">
+      v0.1.0 beta 4 (build 10) · macOS 14+ · Intel &amp; Apple Silicon ·
+      beta, not notarised — <a href="#download">first-launch note</a>.
     </p>
   </div>
 </section>
 
-<hr class="rule" />
+<section id="demo" class="demo" aria-labelledby="demo-h">
+  <div class="section-head">
+    <p class="eyebrow">The demo</p>
+    <h2 id="demo-h">Try it <em>here.</em></h2>
+    <p class="section-lede">
+      Drag the touchpad and watch the cursor move. Arrow keys work too; Space or Enter clicks.
+      This preview stays in your browser and doesn’t connect to your Mac.
+    </p>
+  </div>
 
-<section id="demo" class="demo-section" aria-labelledby="demo-heading">
-  <div class="wrap demo-wrap">
-    <p id="demo-heading" class="eyebrow">Interactive demo</p>
-    <div class="stage">
-      <div class="mac" role="img" aria-label="Illustration of a Mac desktop">
-        <div class="mac-screen">
-          <div class="mac-menubar">
-            <span class="apple" aria-hidden="true">●</span>
-            <span class="menu-item">Finder</span>
-            <span class="menu-item">File</span>
-            <span class="menu-item">Edit</span>
-            <span class="spacer"></span>
-            <span class="menu-item icon-slot" aria-hidden="true">
-              <img src="./assets/icon.png" alt="" width="12" height="12" />
-            </span>
-            <span class="menu-item mono">10:24</span>
+  <div class="stage" aria-hidden="false">
+    <span class="illus-badge">Interactive preview</span>
+
+    <div class="mac" role="img" aria-label="Illustration of a Mac desktop">
+      <div class="mac-screen">
+        <div class="mac-menubar">
+          <span class="apple" aria-hidden="true">●</span>
+          <span class="menu-item">Finder</span>
+          <span class="menu-item">File</span>
+          <span class="menu-item">Edit</span>
+          <span class="spacer"></span>
+          <span class="menu-item icon-slot" aria-hidden="true">
+            <img src="./assets/icon.png" alt="" width="12" height="12" />
+          </span>
+          <span class="menu-item mono">10:24</span>
+        </div>
+        <div class="mac-desktop" id="desktop">
+          <div class="window">
+            <div class="win-bar">
+              <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
+              <span class="win-title">Preview</span>
+            </div>
+            <div class="win-body">
+              <p class="placeholder">Your existing app stays a normal Mac window.</p>
+            </div>
           </div>
-          <div class="mac-desktop" id="desktop">
-            <div class="window">
-              <div class="win-bar">
-                <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
-                <span class="win-title">Preview</span>
-              </div>
-              <div class="win-body">
-                <p class="placeholder">Your existing app stays a regular Mac window.</p>
-              </div>
-            </div>
-            <div class="cursor" id="cursor" aria-hidden="true">
-              <svg viewBox="0 0 16 20" width="16" height="20"><path d="M1 1 L1 15 L5 11 L7.5 17 L10 16 L7.5 10 L13 10 Z" fill="#111" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></svg>
-            </div>
+          <div class="cursor" id="cursor" aria-hidden="true">
+            <svg viewBox="0 0 16 20" width="16" height="20"><path d="M1 1 L1 15 L5 11 L7.5 17 L10 16 L7.5 10 L13 10 Z" fill="#111" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></svg>
           </div>
         </div>
-        <div class="mac-stand"></div>
-        <div class="mac-foot"></div>
       </div>
+      <div class="mac-stand"></div>
+      <div class="mac-foot"></div>
+    </div>
 
-      <div class="phone">
-        <div class="phone-notch" aria-hidden="true"></div>
-        <div class="phone-screen">
-          <p class="phone-top">Sofa Remote</p>
-          <div class="touchpad" id="touchpad"
-               tabindex="0"
-               role="application"
-               aria-label="Touchpad. Drag to move the demo cursor. Arrow keys also work; Space or Enter clicks.">
-            <span class="hint">Try the touchpad</span>
-          </div>
-          <div class="pad-row">
-            <button class="pad-btn" type="button" data-act="left">Click</button>
-            <button class="pad-btn" type="button" data-act="right">Right</button>
-          </div>
-          <div class="media-row">
-            <button class="media-btn" type="button" data-act="voldown" aria-label="Volume down">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z M16 10l4 4 M20 10l-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <button class="media-btn" type="button" data-act="play" id="playBtn" aria-label="Play or pause">
-              <svg viewBox="0 0 24 24" aria-hidden="true" id="playIcon"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>
-            </button>
-            <button class="media-btn" type="button" data-act="volup" aria-label="Volume up">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z M17 8c2 1.5 2 6.5 0 8 M20 5c4 3 4 11 0 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
-          <p class="phone-status" id="phoneStatus" aria-live="polite">Demo ready</p>
+    <div class="phone">
+      <div class="phone-notch" aria-hidden="true"></div>
+      <div class="phone-screen">
+        <p class="phone-top">Sofa Remote</p>
+        <div class="touchpad" id="touchpad"
+             tabindex="0"
+             role="group"
+             aria-label="Touchpad. Drag to move the demo cursor. Arrow keys also work; Space or Enter clicks.">
+          <span class="hint">Drag here</span>
         </div>
+        <div class="pad-row">
+          <button class="pad-btn" type="button" data-act="left">Click</button>
+          <button class="pad-btn ghost-btn" type="button" data-act="right">Right</button>
+        </div>
+        <div class="media-row">
+          <button class="media-btn" type="button" data-act="voldown" aria-label="Volume down">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z M16 10l4 4 M20 10l-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="media-btn" type="button" data-act="play" id="playBtn" aria-label="Play or pause">
+            <svg viewBox="0 0 24 24" aria-hidden="true" id="playIcon"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>
+          </button>
+          <button class="media-btn" type="button" data-act="volup" aria-label="Volume up">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z M17 8c2 1.5 2 6.5 0 8 M20 5c4 3 4 11 0 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <p class="phone-status" id="phoneStatus" aria-live="polite">Demo ready</p>
       </div>
     </div>
-    <p class="caption">A browser-only preview. Try the touchpad.</p>
   </div>
 </section>
 
-<hr class="rule" />
-
-<section class="section" aria-labelledby="what-heading">
-  <div class="wrap narrow">
-    <h2 id="what-heading">What it does</h2>
-    <p>
-      Touchpad with click, right-click, double-click, drag and two-finger scroll.
-      A keyboard that types Unicode into whatever Mac window has focus.
-      Media and volume keys. Saved shortcuts for websites and apps.
-      Cross-display pointer with an explicit window move. Sleep or wake the
-      display while the Mac stays awake.
-    </p>
-    <p class="meta">
-      Four lightweight themes ship in beta 2: Imperial (default), Light, Ocean, and a custom colour picker.
-    </p>
+<section class="what" aria-labelledby="what-h">
+  <div class="section-head narrow">
+    <p class="eyebrow light">What ships today</p>
+    <h2 id="what-h">Your Mac. <em>A little closer.</em></h2>
   </div>
+  <ul class="jobs">
+    <li>
+      <h3>Touchpad</h3>
+      <p>Click, right-click, double-click, drag and scroll with two fingers. Move the pointer across all your displays.</p>
+    </li>
+    <li>
+      <h3>Keyboard</h3>
+      <p>Type into the active Mac window, or pause your music and adjust the volume.</p>
+    </li>
+    <li>
+      <h3>Shortcuts</h3>
+      <p>Saved launchers for websites and apps, so one tap opens the thing you came for.</p>
+    </li>
+    <li>
+      <h3>Display &amp; windows</h3>
+      <p>Move the front window to another display. Turn the screens off and wake them while the Mac stays awake.</p>
+    </li>
+    <li>
+      <h3>Your colours</h3>
+      <p>Dark, Black, Light, Ivory, Plum, Ocean, or your own colour. Choose what feels right on your phone.</p>
+      <details class="theme-previews"><summary>See theme previews</summary><p class="theme-links"><a href="./assets/remote-dark.png">Dark</a><a href="./assets/remote-black.png">Black</a><a href="./assets/remote-light.png">Light</a><a href="./assets/remote-ivory.png">Ivory</a><a href="./assets/remote-plum.png">Plum</a><a href="./assets/remote-ocean.png">Ocean</a><a href="./assets/remote-custom.png">Custom</a></p></details>
+    </li>
+    <li>
+      <h3>Free &amp; open source</h3>
+      <p>MIT-licensed. No accounts, ads, analytics, subscriptions, or screen streaming.</p>
+    </li>
+  </ul>
 </section>
 
-<hr class="rule" />
-
-<section id="setup" class="section" aria-labelledby="setup-heading">
-  <div class="wrap">
-    <h2 id="setup-heading">Setup</h2>
-    <ol class="steps">
-      <li>
-        <span class="num">01</span>
-        <p>Open the DMG, drag Sofa Remote to Applications, and grant Accessibility when macOS asks.</p>
-      </li>
-      <li>
-        <span class="num">02</span>
-        <p>Open the menu-bar icon and scan its QR code with your iPhone's camera; Safari opens the remote.</p>
-      </li>
-      <li>
-        <span class="num">03</span>
-        <p>Add it to your Home Screen from Safari's Share menu, on the same trusted Wi-Fi or your Tailscale network.</p>
-      </li>
-    </ol>
-    <p class="meta">
-      Full written guide:
-      <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md">docs/SETUP.md</a>.
-    </p>
+<section id="setup" class="setup" aria-labelledby="setup-h">
+  <div class="section-head">
+    <p class="eyebrow">Setup</p>
+    <h2 id="setup-h">Open. Scan. <em>Connect.</em></h2>
   </div>
+  <ol class="steps">
+    <li>
+      <span class="num">01</span>
+      <p>Open the DMG, drag Sofa Remote to Applications, grant Accessibility when macOS asks.</p>
+    </li>
+    <li>
+      <span class="num">02</span>
+      <p>Open the menu-bar icon and scan its QR code with your iPhone's camera. Safari opens the remote.</p>
+    </li>
+    <li>
+      <span class="num">03</span>
+      <p>Add to Home Screen from Safari's Share menu. Keep both devices on the same trusted Wi-Fi, or route them through your own Tailscale network.</p>
+    </li>
+  </ol>
+  <p class="section-foot">
+    Full written guide:
+    <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md">docs/SETUP.md</a>.
+  </p>
 </section>
 
-<hr class="rule" />
-
-<section id="download" class="section" aria-labelledby="dl-heading">
-  <div class="wrap narrow">
-    <h2 id="dl-heading">Download</h2>
-    <p class="dl-line">
-      <a class="btn primary" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/v0.1.0-beta.2/Sofa-Remote.dmg">Sofa Remote.dmg</a>
-      <a class="btn link" href="https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.2">Release notes</a>
+<section id="download" class="download" aria-labelledby="dl-h">
+  <div class="download-inner">
+    <p class="eyebrow light">Download</p>
+    <h2 id="dl-h">Get the beta.</h2>
+    <p class="section-lede light">
+      One universal build for macOS 14 or later. Direct from GitHub Releases.
     </p>
+
+    <div class="cta-row">
+      <a class="pill primary dark" href="https://github.com/allamaprabhuani/sofa-remote/releases/download/v0.1.0-beta.4/Sofa-Remote.dmg">
+        <svg class="laptop" viewBox="0 0 24 16" width="22" height="15" aria-hidden="true">
+          <rect x="2" y="1" width="20" height="12" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="0" y="13" width="24" height="2.4" rx="1.2" fill="currentColor"/>
+        </svg>
+        Sofa-Remote.dmg
+      </a>
+      <a class="pill ghost light" href="https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.4">Release notes →</a>
+    </div>
+
     <p class="dl-meta">
-      v0.1.0-beta.2 (build 8) · macOS 14 or later · Intel &amp; Apple Silicon ·
-      <strong>Beta, not notarised</strong> — see <a href="#setup">Setup</a> for the first-launch step.
+      v0.1.0 beta 4 · build 10 · Intel &amp; Apple Silicon ·
+      <strong>beta, not notarised</strong>.
     </p>
 
-    <h3 class="sub">Before you install</h3>
-    <ul class="plain">
-      <li>Ad-hoc signed and not notarised; macOS may block the first launch — the setup guide shows how to allow it.</li>
-      <li>Accessibility permission is required so the helper can send clicks and keystrokes.</li>
-      <li>Direct LAN is unencrypted HTTP; use a trusted Wi-Fi or route devices through your own Tailscale network. </li>
-      <li>The Mac must stay awake. The remote can sleep or wake the display but cannot wake a sleeping Mac or unlock it.</li>
-      <li>Occasional pointer jitter and provider compatibility caveats apply — see <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/KNOWN_ISSUES.md">Known Issues</a>.</li>
-    </ul>
+    <details class="disc">
+      <summary>Before you install</summary>
+      <ul class="plain">
+        <li>Ad-hoc signed and not notarised; macOS may block the first launch. The <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/SETUP.md">setup guide</a> shows how to allow it.</li>
+        <li>Accessibility permission is required so the helper can send clicks and keystrokes. Screen Recording is not needed.</li>
+        <li>Direct LAN is <strong>unencrypted HTTP</strong>. Use a trusted Wi-Fi or route devices through your own Tailscale network.</li>
+        <li>The Mac must stay awake. The remote can sleep or wake the display, but cannot wake a sleeping Mac or unlock it.</li>
+        <li>Expect the occasional pointer jitter and some provider-side quirks — see <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/KNOWN_ISSUES.md">Known Issues</a>.</li>
+      </ul>
+    </details>
   </div>
 </section>
 
-<hr class="rule" />
-
-<section id="support" class="section" aria-labelledby="support-heading">
-  <div class="wrap narrow">
-    <h2 id="support-heading">Help &amp; source</h2>
-    <ul class="plain links">
-      <li><a class="report" href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml">Report a bug</a></li>
-      <li><a href="https://github.com/allamaprabhuani/sofa-remote">Source on GitHub</a></li>
-      <li><a href="https://github.com/allamaprabhuani/sofa-remote/discussions">Discussions</a></li>
-      <li><a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/PRIVACY.md">Privacy</a></li>
-      <li><a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/LICENSE">MIT License</a></li>
-      <li><a href="https://ko-fi.com/allamaprabhuani" rel="noopener noreferrer">Buy me a coffee</a> <span>— optional support for development</span></li>
-    </ul>
+<section id="faq" class="faq" aria-labelledby="faq-h">
+  <div class="section-head narrow">
+    <p class="eyebrow">Good to know</p>
+    <h2 id="faq-h">A few <em>answers.</em></h2>
   </div>
+  <div class="faq-list">
+    <details>
+      <summary>Does it mirror or record my screen?</summary>
+      <p>No. Sofa Remote only sends input — pointer, keystrokes, media keys. There is no screen capture, no recording, no streaming, and no remote-view window.</p>
+    </details>
+    <details>
+      <summary>Do I need an account or cloud service?</summary>
+      <p>No. There are no accounts, no sign-ups, no analytics, no telemetry. The phone talks to the Mac on your local network (or your own Tailscale network).</p>
+    </details>
+    <details>
+      <summary>Is it secure?</summary>
+      <p>Over direct LAN the transport is plain HTTP — fine on a trusted home Wi-Fi, not safe against a hostile network. For anything else, point both devices at your own Tailscale network for encrypted transport.</p>
+    </details>
+    <details>
+      <summary>Can it wake or unlock my Mac?</summary>
+      <p>No. It can sleep or wake the display, but the Mac itself has to be awake and signed in. There's no unlock bypass.</p>
+    </details>
+    <details>
+      <summary>Any paid tier, upsell or ads?</summary>
+      <p>No. It's MIT-licensed and free. There's a Ko-fi link if you want to <a href="https://ko-fi.com/allamaprabhuani" rel="noopener noreferrer">buy a coffee</a>, but nothing is gated.</p>
+    </details>
+  </div>
+</section>
+
+<section id="support" class="support" aria-labelledby="support-h">
+  <div class="section-head narrow">
+    <p class="eyebrow">Help &amp; source</p>
+    <h2 id="support-h">Get help. <em>Get involved.</em></h2>
+  </div>
+  <ul class="plain links">
+    <li><a class="report" href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml">Report a bug</a></li>
+    <li><a href="https://github.com/allamaprabhuani/sofa-remote">Source on GitHub</a></li>
+    <li><a href="https://github.com/allamaprabhuani/sofa-remote/discussions">Discussions</a></li>
+    <li><a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/docs/PRIVACY.md">Privacy</a></li>
+    <li><a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/LICENSE">MIT License</a></li>
+    <li><a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/NOTICE">Credits &amp; notices</a></li>
+    <li><a href="https://ko-fi.com/allamaprabhuani" rel="noopener noreferrer">Buy me a coffee</a> <span class="muted">— optional, never required</span></li>
+  </ul>
 </section>
 
 </main>
 
 <footer class="site-footer">
-  <div class="wrap row">
-    <p>Built by <a href="https://allamaprabhuani.github.io/">Allamaprabhu Ani</a>. <a href="https://github.com/allamaprabhuani/sofa-remote/blob/main/NOTICE">Credits</a>.</p>
-    <p><a href="https://github.com/allamaprabhuani/sofa-remote">github.com/allamaprabhuani/sofa-remote</a></p>
+  <div class="footer-inner">
+    <p>Built by <a href="https://allamaprabhuani.github.io/">Allamaprabhu Ani</a>.</p>
+    <p><a href="https://github.com/allamaprabhuani/sofa-remote">Source on GitHub</a> · <a href="./assets/fonts/inter-latin.woff2.LICENSE.txt">Inter</a> &amp; <a href="./assets/fonts/instrument-serif-italic-latin.woff2.LICENSE.txt">Instrument Serif</a></p>
   </div>
 </footer>
 

@@ -113,7 +113,7 @@ private typealias ViewState<Value> = SwiftUI.State<Value>
     @objc private func showHelp() {
         if helpWindow == nil {
             let view = AboutHelpView(model: model, showPractice: { [weak self] in self?.showPractice() })
-            let panel = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 580, height: 690),
+            let panel = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 580, height: 480),
                                  styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
             panel.title = "About & Help — Sofa Remote"
             panel.minSize = NSSize(width: 440, height: 440)
@@ -314,6 +314,7 @@ private struct AboutHelpView: View {
     let showPractice: () -> Void
     @ViewState<Bool> private var setupExpanded = false
     @ViewState<Bool> private var appeared = false
+    @ViewState<Bool> private var diagnosticsExpanded = false
     @ViewState<String> private var summary = ""
     @ViewState<Bool> private var copied = false
     var body: some View {
@@ -325,19 +326,15 @@ private struct AboutHelpView: View {
                 DisclosureGroup("Setup and connection help", isExpanded: $setupExpanded) {
                     SetupInstructions(showPractice: showPractice).padding(.top, 8)
                 }
-                GroupBox("Help and feedback") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Link("Report a bug", destination: SupportInfo.bugReport)
-                        Link("Suggest a feature", destination: SupportInfo.featureRequest)
-                        Link("Questions and developer contact", destination: SupportInfo.discussions)
-                        Link("Project website", destination: SupportInfo.website)
-                        Link("Support this project", destination: SupportInfo.supportProject)
-                        Link("Check for updates and release notes", destination: SupportInfo.releases)
-                        Text("Opens a website on request. No background checks or uploads.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
-                }
-                GroupBox("Diagnostic summary") {
+                HStack(spacing: 12) {
+                    helpLink("Report a bug", symbol: "ladybug.fill", destination: SupportInfo.bugReport)
+                    helpLink("Suggest a feature", symbol: "lightbulb.fill", destination: SupportInfo.featureRequest)
+                    helpLink("Questions and developer contact", symbol: "bubble.left.and.bubble.right.fill", destination: SupportInfo.discussions)
+                    helpLink("Project website", symbol: "globe.americas.fill", destination: SupportInfo.website)
+                    helpLink("Support this project", symbol: "heart.fill", destination: SupportInfo.supportProject)
+                    helpLink("Check for updates and release notes", symbol: "arrow.down.circle.fill", destination: SupportInfo.releases)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                DisclosureGroup("Diagnostic summary", isExpanded: $diagnosticsExpanded) {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Versions, architecture and permission/sharing status only. No input, tokens, personal URLs, names or screenshots. Nothing is uploaded.")
                             .font(.callout)
@@ -358,7 +355,7 @@ private struct AboutHelpView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }
-                GroupBox("Privacy, security and credits") {
+                DisclosureGroup("Privacy, security and credits") {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Direct LAN HTTP is unencrypted. Use a trusted network or your own encrypted Tailscale connection. Stop sharing closes the listener; revoke a phone to remove its access.")
                         Link("Privacy", destination: SupportInfo.privacy)
@@ -375,12 +372,27 @@ private struct AboutHelpView: View {
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }
             }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+        }.onChange(of: diagnosticsExpanded) { _, expanded in
+            if expanded { refreshSummary() } else { summary = ""; copied = false }
         }.onAppear {
             if !appeared {
                 setupExpanded = model.devices.isEmpty
                 appeared = true
             }
         }
+    }
+    private func helpLink(_ title: String, symbol: String, destination: URL) -> some View {
+        Link(destination: destination) {
+            Image(systemName: symbol)
+                .font(.system(size: 19, weight: .medium))
+                .frame(width: 44, height: 44)
+                .background(.quaternary, in: RoundedRectangle(cornerRadius: 13))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.blue)
+        .help(title)
+        .accessibilityLabel(title)
+        .accessibilityHint("Opens a website in your browser")
     }
     private func refreshSummary() {
         summary = SupportInfo.diagnosticSummary(accessibilityAllowed: model.accessibilityAllowed,

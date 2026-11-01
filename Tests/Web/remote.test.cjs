@@ -53,26 +53,27 @@ async function main() {
   })()`);
   assert.equal(subtitle.withApp,'Connected · Mock Mac · Brave Browser');
   assert.equal(subtitle.withoutApp,'Connected · Mock Mac');
-  for(const [name,bg] of [['imperial','#003e74'],['light','#f4f7fc'],['ocean','#062d35'],['custom','#757575']]){
+  for(const [name,bg] of [['dark','#1f1f1f'],['black','#000000'],['light','#f8f8f8'],['ivory','#f6f1e7'],['plum','#f8f2ed'],['ocean','#062d35'],['custom','#757575']]){
     await evaluate(`(()=>{const theme=document.querySelector('#theme');theme.value=${JSON.stringify(name)};theme.dispatchEvent(new Event('change'));if(theme.value==='custom'){const colour=document.querySelector('#custom-colour');colour.value=${JSON.stringify(bg)};colour.dispatchEvent(new Event('input'));colour.dispatchEvent(new Event('change'));}})()`);
     await cdp('Page.reload',{ignoreCache:true});await wait(200);
-    const saved=await evaluate(`(()=>{const s=document.documentElement.style,v=k=>s.getPropertyValue('--'+k);return {name:document.querySelector('#theme').value,bg:v('bg'),readable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('ink'),v(k))>=4.5),selection:contrast(v('selection'),v('selection-ink'))>=4.5,links:contrast(v('accent'),v('sheet'))>=4.5,dangerReadable:['card','pressed'].every(k=>contrast(v('danger'),v(k))>=4.5),customEnabled:!document.querySelector('#custom-colour').disabled}})()`);
-    assert.equal(saved.name,name,`${name} survives reload`);assert.equal(saved.bg,bg);assert.equal(saved.readable,true,`${name} text contrast`);assert.equal(saved.selection,true,`${name} selected control contrast`);assert.equal(saved.links,true,`${name} link/focus contrast`);assert.equal(saved.dangerReadable,true,`${name} danger-button contrast including pressed state`);assert.equal(saved.customEnabled,name==='custom');
+    const saved=await evaluate(`(()=>{const s=document.documentElement.style,v=k=>s.getPropertyValue('--'+k);return {name:document.querySelector('#theme').value,bg:v('bg'),readable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('ink'),v(k))>=4.5),selection:contrast(v('selection'),v('selection-ink'))>=4.5,links:contrast(v('accent'),v('sheet'))>=4.5,mutedReadable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('muted'),v(k))>=4.5),boundaries:contrast(v('line'),v('card'))>=3,dangerReadable:['card','pressed'].every(k=>contrast(v('danger'),v(k))>=4.5),customEnabled:!document.querySelector('#custom-colour').disabled}})()`);
+    assert.equal(saved.name,name,`${name} survives reload`);assert.equal(saved.bg,bg);assert.equal(saved.readable,true,`${name} text contrast`);assert.equal(saved.mutedReadable,true,`${name} secondary text contrast`);assert.equal(saved.boundaries,true,`${name} control boundaries`);assert.equal(saved.selection,true,`${name} selected control contrast`);assert.equal(saved.links,true,`${name} link/focus contrast`);assert.equal(saved.dangerReadable,true,`${name} danger-button contrast including pressed state`);assert.equal(saved.customEnabled,name==='custom');
   }
-  assert.equal(await evaluate(`(()=>{applyTheme('oxford','#003e74');return document.querySelector('#theme').value})()`),'imperial','old default theme value falls back to Imperial blue');
+  assert.equal(await evaluate(`(()=>{applyTheme('oxford','#1f1f1f');return document.querySelector('#theme').value})()`),'dark','legacy blue theme migrates to neutral Dark');
   const customBounds=await evaluate(`(()=>{return ['#000000','#ffffff','#777777','#ffff00','#00ff00','#ff0000','#0000ff'].map(c=>{const p=customTheme(c);return ['bg','card','pad','sheet','pressed'].every(k=>contrast(p.ink,p[k])>=4.5)&&contrast(p.selection,p['selection-ink'])>=4.5&&contrast(p.line,p.bg)>=3})})()`);
   assert.ok(customBounds.every(Boolean),'custom extreme and midpoint colours retain readable text, selected states and boundaries');
   await evaluate(`localStorage.setItem('sofaTheme','url(https://invalid.example/poison)');localStorage.setItem('sofaColour','#fff; color:red')`);
   await cdp('Page.reload',{ignoreCache:true});await wait(150);
   const poisoned=await evaluate(`({theme:document.querySelector('#theme').value,colour:document.querySelector('#custom-colour').value,style:document.documentElement.style.cssText})`);
-  assert.equal(poisoned.theme,'imperial');assert.equal(poisoned.colour,'#003e74');assert.doesNotMatch(poisoned.style,/invalid|poison|color:red/);
+  assert.equal(poisoned.theme,'dark');assert.equal(poisoned.colour,'#1f1f1f');assert.doesNotMatch(poisoned.style,/invalid|poison|color:red/);
   await evaluate(`localStorage.setItem('sofaTheme','custom');localStorage.setItem('sofaColour','not-a-colour')`);
   await cdp('Page.reload',{ignoreCache:true});await wait(150);
-  assert.equal(await evaluate(`document.documentElement.style.getPropertyValue('--bg')`),'#003e74','invalid custom colour falls back safely');
-  await evaluate(`applyTheme('imperial','#003e74');saveTheme()`);
+  assert.equal(await evaluate(`document.documentElement.style.getPropertyValue('--bg')`),'#1f1f1f','invalid custom colour falls back safely');
+  await evaluate(`applyTheme('dark','#1f1f1f');saveTheme()`);
+  if(process.env.SOFA_TEST_THEME_DIR){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});for(const name of ['dark','black','light','ivory','plum','ocean','custom']){await evaluate(`applyTheme('${name}',${name==='custom'?"'#405846'":"'#1f1f1f'"})`);const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(process.env.SOFA_TEST_THEME_DIR,name+'.png'),Buffer.from(shot.data,'base64'));}await evaluate(`applyTheme('dark','#1f1f1f')`)}
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
   assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'Shortcuts');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
-  console.log('PASS four persisted lightweight themes, safe custom colours, contrast and accessible local SVG icons');
+  console.log('PASS seven persisted lightweight themes, safe custom colours, contrast and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     const geometry=await evaluate(`(()=>{const r=s=>{const x=document.querySelector(s).getBoundingClientRect();return {w:x.width,h:x.height,b:x.bottom}};return {pad:r('#pad'),keys:[...document.querySelectorAll('main button')].filter(x=>x.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth,height:innerHeight,page:document.documentElement.scrollHeight}})()`);
@@ -120,7 +121,10 @@ async function main() {
     q('#text').value='SECRET_TYPED_TEXT';q('#url').value='https://private.example/SECRET_URL';
     await refresh();q('#settings-open').click();
     q('#settings-sheet [data-help]').click();
-    const initial={open:q('#help-sheet').classList.contains('open'),mainInert:q('main').inert,settingsInert:q('#settings-sheet').inert,summary:q('#diagnostics').value,version:q('#app-version').textContent,focus:q('#help-sheet').contains(document.activeElement)};
+    const initial={open:q('#help-sheet').classList.contains('open'),mainInert:q('main').inert,settingsInert:q('#settings-sheet').inert,diagnosticsCollapsed:!q('#diagnostic-details').open,summary:q('#diagnostics').value,version:q('#app-version').textContent,focus:q('#help-sheet').contains(document.activeElement)};
+    q('#diagnostic-details summary').focus();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
+    initial.collapsedWrap=document.activeElement===q('#help-sheet [data-close]');
+    q('#diagnostic-details summary').click();
     q('#copy-diagnostics').focus();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
     const wrapped=document.activeElement===q('#help-sheet [data-close]');
     const before=calls.length;await q('#copy-diagnostics').onclick();
@@ -137,6 +141,7 @@ async function main() {
     q('#text').value='';q('#url').value='';await refresh();
     return {initial,wrapped,copied,networkAfterCopy,fallback,sanitized,restored,restoredMain};
   })()`);
+  assert.equal(help.initial.diagnosticsCollapsed,true,'diagnostics start collapsed');assert.equal(help.initial.collapsedWrap,true,'Tab skips hidden disclosure contents and wraps');
   assert.equal(help.initial.open,true);assert.equal(help.initial.mainInert,true);assert.equal(help.initial.settingsInert,true);assert.equal(help.initial.focus,true);
   assert.match(help.initial.summary,/App version: 0\.1\.0/);assert.match(help.initial.summary,/Build: 7/);assert.match(help.initial.summary,/macOS: 15\.0\.1/);assert.match(help.initial.summary,/Browser: Chrome 123\.0\.1\.2/);assert.match(help.initial.summary,/Accessibility allowed: Yes/);
   assert.doesNotMatch(help.initial.summary,/SECRET|private\.example|PrivatePhone|secret-ua|a{64}|private-id/,'diagnostics exclude personal fields, full UA and tokens');
@@ -149,6 +154,7 @@ async function main() {
     const layout=await evaluate(`(()=>{document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click();const modal=document.querySelector('#help-sheet .sheet'),r=modal.getBoundingClientRect();const result={width:r.width,height:r.height,viewport:innerWidth,screen:innerHeight,scroll:document.documentElement.scrollWidth,targets:[...modal.querySelectorAll('button,a')].map(x=>x.getBoundingClientRect().height)};closeSheet();closeSheet();return result})()`);
     assert.ok(layout.scroll<=layout.viewport+1,`help ${width}x${height} no overflow`);assert.ok(layout.height<=layout.screen,`help ${width}x${height} scrolls within screen`);assert.ok(layout.targets.every(h=>h>=44),`help ${width}x${height} touch targets`);
   }
+  if(process.env.SOFA_TEST_HELP_SCREENSHOT){await evaluate(`document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click()`);const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_HELP_SCREENSHOT,Buffer.from(shot.data,'base64'));await evaluate(`closeSheet();closeSheet()`)}
   const recovery=await evaluate(`(async()=>{stateFailure=true;await refresh();const disconnected={title:document.querySelector('#connection').textContent,help:!document.querySelector('#connection-help').hidden};stateFailure=false;document.querySelector('#reconnect').click();await new Promise(r=>setTimeout(r,10));return {disconnected,recovered:document.querySelector('#connection-help').hidden}})()`);
   assert.match(recovery.disconnected.title,/Disconnected/);assert.equal(recovery.disconnected.help,true);assert.equal(recovery.recovered,true);
   await cdp('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
