@@ -4,9 +4,11 @@ import CoreFoundation
 /// Bounded, allowlisted input for the ephemeral presenter overlay.
 struct PresenterCommand {
     enum Action: String { case start, move, end, clear, undo, stop, heartbeat }
-    enum Mode: String { case laser, pen }
+    enum Mode: String { case laser, pen, highlight }
+    enum Color: String { case red, blue, green, yellow }
     let action: Action
     let mode: Mode?
+    let color: Color?
     let display: String?
     let x: Double?
     let y: Double?
@@ -21,8 +23,14 @@ struct PresenterCommand {
                   let display = json["display"] as? String, !display.isEmpty, display.utf8.count <= 128 else {
                 throw RemoteError("Choose a connected display and presenter tool.")
             }
-            self.mode = mode; self.display = display
-        } else { mode = nil; display = nil }
+            let colorName: String
+            if let value = json["color"] {
+                guard let name = value as? String else { throw RemoteError("Choose a presenter colour.") }
+                colorName = name
+            } else { colorName = "red" }
+            guard let color = Color(rawValue: colorName) else { throw RemoteError("Choose a presenter colour.") }
+            self.mode = mode; self.display = display; self.color = color
+        } else { mode = nil; display = nil; color = nil }
         if action == .start || action == .move {
             func coordinate(_ key: String) throws -> Double {
                 guard let n = json[key] as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID(),

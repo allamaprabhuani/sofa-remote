@@ -200,8 +200,12 @@ import ServiceManagement
                 }
                 switch command.action {
                 case .start:
-                    let mode: PresenterOverlay.Mode = command.mode == .laser ? .laser : .pen
-                    guard presenter.begin(displayID: command.display!, mode: mode, x: command.x!, y: command.y!) else {
+                    guard let mode = command.mode.flatMap({ PresenterOverlay.Mode(rawValue: $0.rawValue) }),
+                          let color = command.color.flatMap({ PresenterOverlay.Color(rawValue: $0.rawValue) }),
+                          let display = command.display, let x = command.x, let y = command.y else {
+                        throw RemoteError("Choose a presentation tool and display.")
+                    }
+                    guard presenter.begin(displayID: display, mode: mode, color: color, x: x, y: y) else {
                         throw RemoteError("Presenter tool is unavailable. Check the display and finish the previous gesture.")
                     }
                     presenterOwner = device.id; guardPresenter()

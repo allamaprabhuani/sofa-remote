@@ -206,18 +206,25 @@ enum RemotePage {
       .media button {
         font-size: 1.25rem;
       }
-      .present-open { width: 100%; margin-top: 8px; min-height: 48px; font-weight: 650; }
+      .present-open { width: 100%; margin-top: 8px; min-height: 56px; font-weight: 700; }
       .present-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .present-nav button { min-height: 64px; font-size: 1.05rem; font-weight: 700; }
+      .present-nav button { min-height: 78px; font-size: 1.125rem; font-weight: 700; }
       #present-sheet .sheet-status:empty { display: none; }
       #present-sheet .sheet-status:not(:empty) { position: sticky; top: 0; z-index: 2; margin: 0; padding: 10px 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; }
       #present-sheet .sheet-status.error { color: var(--error); }
       .present-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
-      .present-tools button { flex: 1 1 auto; min-height: 48px; }
-      .present-tools button[aria-pressed="true"] { background: var(--selection); color: var(--selection-ink); }
+      .present-tools button { flex: 1 1 auto; min-height: 56px; }
+      .present-mode, .present-colours { display: grid; gap: 7px; }
+      .present-mode { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); }
+      .present-colours { grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.75rem), 1fr)); }
+      .present-mode button, .present-colours button { min-width: 0; min-height: 56px; padding: 5px 3px; font-weight: 650; }
+      .present-mode button[aria-pressed="true"], .present-colours button[aria-pressed="true"] { background: var(--selection); color: var(--selection-ink); }
+      .present-mode button[aria-pressed="true"]::after, .present-colours button[aria-pressed="true"]::after { content: " ✓"; }
+      .present-colours button { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; font-size: 0.8125rem; }
+      .present-chip { width: 16px; height: 16px; border-radius: 50%; background: var(--chip); border: 1px solid #fff; box-shadow: 0 0 0 1px #161616; flex: 0 0 auto; }
       #present-pad { position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 150px; max-height: 300px; border: 2px solid var(--line); border-radius: 15px; background: var(--pad); touch-action: none; user-select: none; display: grid; place-items: center; text-align: center; padding: 16px; }
       #present-pad:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-      #present-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); transform: translate(-50%, -50%); pointer-events: none; }
+      #present-dot { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #fff; background: var(--present-colour, #e21b2d); box-shadow: 0 0 0 2px #161616; transform: translate(-50%, -50%); pointer-events: none; }
       .status {
         font-size: 12px;
         color: var(--muted);
@@ -516,12 +523,19 @@ enum RemotePage {
         <div class="present-tools"><button id="present-exit">End slideshow</button></div>
         <label for="present-display">Presentation display</label><select class="field" id="present-display" aria-label="Presentation display"></select>
         <p>Choose the screen showing your slides. Changing display clears marks.</p>
-        <div class="present-tools" role="group" aria-label="Pointer and annotation tools">
-          <button id="present-laser" aria-pressed="true">Laser</button><button id="present-pen" aria-pressed="false">Pen</button>
-          <button id="present-undo">Undo</button><button id="present-clear">Clear</button>
+        <div class="present-mode" role="group" aria-label="Pointer and annotation tools">
+          <button id="present-laser" aria-pressed="true">Laser</button><button id="present-pen" aria-pressed="false">Pen</button><button id="present-highlight" aria-pressed="false">Highlight</button>
         </div>
-        <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch and move to point or draw. Keyboard: move with arrow keys, hold Space to point or draw."><span>Touch and move to point or draw</span><span id="present-dot" hidden aria-hidden="true"></span></div>
-        <p>This is a control surface, not a slide preview. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
+        <div class="present-colours" role="group" aria-label="Pointer and ink colour">
+          <button data-present-colour="red" aria-pressed="true"><span class="present-chip" aria-hidden="true" style="--chip: #e21b2d"></span>Red</button>
+          <button data-present-colour="blue" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #2476ed"></span>Blue</button>
+          <button data-present-colour="green" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #138748"></span>Green</button>
+          <button data-present-colour="yellow" aria-pressed="false"><span class="present-chip" aria-hidden="true" style="--chip: #f4cd16"></span>Yellow</button>
+        </div>
+        <p>Your touch position maps to the entire selected display. The ring shows your last touch position; look at the screen to aim. This pad does not show the slide.</p>
+        <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch the position matching the selected screen and move to point or draw. The ring shows your last position. Keyboard: move with arrow keys, hold Space to point or draw."><span id="present-dot" aria-hidden="true"></span></div>
+        <div class="present-tools"><button id="present-undo">Undo</button><button id="present-clear">Clear</button></div>
+        <p>Laser appears while touching. Pen marks stay until cleared; highlights fade after about 2.5 seconds. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
       </div>
     </div>
     <div class="scrim" id="keyboard-sheet">
@@ -1386,14 +1400,14 @@ enum RemotePage {
         else if (activeOverlay()) activeOverlay().querySelector("button,input,a")?.focus();
         else $("#settings-open").focus();
       }
-      let presentMode = "laser", presentPointer = null, presentUsed = false, presentKeyboardDown = false, presentHeartbeat = 0;
+      let presentMode = "laser", presentColour = "red", presentPointer = null, presentUsed = false, presentKeyboardDown = false, presentHeartbeat = 0;
       let presentX = 0.5, presentY = 0.5;
       const presentPad = $("#present-pad"), presentDot = $("#present-dot"), presentDisplay = $("#present-display");
       function presenter(action, values = {}, urgent = false) {
         return command({ type: "presenter", action, ...values }, urgent);
       }
       function stopPresenting() {
-        presentPointer = null; presentKeyboardDown = false; presentDot.hidden = true;
+        presentPointer = null; presentKeyboardDown = false;
         clearInterval(presentHeartbeat); presentHeartbeat = 0;
         if (presentUsed) {
           presentUsed = false;
@@ -1405,8 +1419,8 @@ enum RemotePage {
       }
       function markPosition(x, y) {
         presentX = Math.max(0, Math.min(1, x)); presentY = Math.max(0, Math.min(1, y));
-        presentDot.style.left = `${presentX * 100}%`; presentDot.style.top = `${presentY * 100}%`;
-        presentDot.hidden = false;
+        presentDot.style.left = `clamp(15px, ${presentX * 100}%, calc(100% - 15px))`;
+        presentDot.style.top = `clamp(15px, ${presentY * 100}%, calc(100% - 15px))`;
       }
       function pointFromEvent(e) {
         const r = presentPad.getBoundingClientRect();
@@ -1420,7 +1434,7 @@ enum RemotePage {
         if (!presentHeartbeat) presentHeartbeat = setInterval(() => {
           if (presentUsed && !document.hidden && $("#present-sheet").classList.contains("open")) presenter("heartbeat");
         }, 10000);
-        presenter("start", { mode: presentMode, display: presentDisplay.value, x: presentX, y: presentY });
+        presenter("start", { mode: presentMode, color: presentColour, display: presentDisplay.value, x: presentX, y: presentY });
       }
       function endPresentPoint() { if (presentUsed) presenter("end"); }
       presentPad.addEventListener("pointerdown", (e) => {
@@ -1434,7 +1448,6 @@ enum RemotePage {
       function liftPresentPoint(e) {
         if (presentPointer !== e.pointerId) return;
         presentPointer = null; endPresentPoint();
-        if (presentMode === "laser") presentDot.hidden = true;
       }
       presentPad.addEventListener("pointerup", liftPresentPoint);
       presentPad.addEventListener("pointercancel", liftPresentPoint);
@@ -1450,18 +1463,25 @@ enum RemotePage {
         }
       });
       presentPad.addEventListener("keyup", (e) => {
-        if (e.key === " " && presentKeyboardDown) { e.preventDefault(); presentKeyboardDown = false; endPresentPoint(); if (presentMode === "laser") presentDot.hidden = true; }
+        if (e.key === " " && presentKeyboardDown) { e.preventDefault(); presentKeyboardDown = false; endPresentPoint(); }
       });
       presentPad.addEventListener("blur", () => { if (presentKeyboardDown) { presentKeyboardDown = false; endPresentPoint(); } });
-      for (const mode of ["laser", "pen"]) $("#present-" + mode).onclick = () => {
+      for (const mode of ["laser", "pen", "highlight"]) $("#present-" + mode).onclick = () => {
         if (presentPointer !== null || presentKeyboardDown) return;
         presentMode = mode;
-        for (const item of ["laser", "pen"]) $("#present-" + item).setAttribute("aria-pressed", String(item === mode));
+        for (const item of ["laser", "pen", "highlight"]) $("#present-" + item).setAttribute("aria-pressed", String(item === mode));
       };
+      const presentColours = { red: "#e21b2d", blue: "#2476ed", green: "#138748", yellow: "#f4cd16" };
+      $$("[data-present-colour]").forEach((button) => button.onclick = () => {
+        if (presentPointer !== null || presentKeyboardDown) return;
+        presentColour = button.dataset.presentColour;
+        presentPad.style.setProperty("--present-colour", presentColours[presentColour]);
+        $$("[data-present-colour]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      });
       presentDisplay.onchange = () => stopPresenting();
       function presentMarks(action) {
         if (!presentUsed) return;
-        presentPointer = null; presentKeyboardDown = false; presentDot.hidden = true;
+        presentPointer = null; presentKeyboardDown = false;
         dropQueuedMotion();
         presenter(action);
       }

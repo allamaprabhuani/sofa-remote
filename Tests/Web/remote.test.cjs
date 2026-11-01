@@ -57,24 +57,33 @@ async function main() {
   const presenterUI=await evaluate(`(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;
     document.querySelector('#present-open').click();
-    const display=document.querySelector('#present-display').value;
+    const display=document.querySelector('#present-display').value,navHeight=document.querySelector('#present-next').getBoundingClientRect().height;
     document.querySelector('#present-undo').click();document.querySelector('#present-clear').click();
     document.querySelector('#present-next').click();document.querySelector('#present-previous').click();document.querySelector('#present-exit').click();
-    document.querySelector('#present-pen').click();
+    const colours=['red','blue','green','yellow'];
+    const colourStates=colours.map(c=>{const b=document.querySelector('[data-present-colour='+c+']');b.click();return b.getAttribute('aria-pressed')==='true' && document.querySelectorAll('[data-present-colour][aria-pressed=true]').length===1});
+    document.querySelector('[data-present-colour=green]').click();document.querySelector('#present-pen').click();
+    const penSelected=document.querySelector('#present-pen').getAttribute('aria-pressed')==='true' && document.querySelector('#present-laser').getAttribute('aria-pressed')==='false';
     const pad=document.querySelector('#present-pad'),rect=pad.getBoundingClientRect();
+    const initialReticle=(()=>{const d=document.querySelector('#present-dot');return !d.hidden && getComputedStyle(d).display!=='none' && d.getBoundingClientRect().width>=24})() ;
     const emit=(type,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:42,button:0,clientX:rect.left+rect.width*x,clientY:rect.top+rect.height*y,bubbles:true}));
     emit('pointerdown',0.25,0.25);emit('pointermove',0.75,0.75);emit('pointerup',0.75,0.75);
     await sleep(90);const heartbeat=!!presentHeartbeat;
+    const dot=document.querySelector('#present-dot'),reticleAfterLift=!dot.hidden && getComputedStyle(dot).display!=='none' && dot.style.left.includes('75%');
+    document.querySelector('#present-highlight').click();document.querySelector('[data-present-colour=yellow]').click();
+    const highlightSelected=document.querySelector('#present-highlight').getAttribute('aria-pressed')==='true' && document.querySelector('[data-present-colour=yellow]').getAttribute('aria-pressed')==='true';
+    emit('pointerdown',0.2,0.3);emit('pointerup',0.2,0.3);await sleep(80);
     document.querySelector('#present-next').click();await sleep(30);
     document.querySelector('#present-exit').click();await sleep(30);
     document.querySelector('#present-sheet [data-close]').click();await sleep(50);
-    return {display,heartbeat,cleared:!presentHeartbeat, calls:calls.filter(c=>c.path==='/command'||c.path==='/presenter'),closed:!document.querySelector('#present-sheet').classList.contains('open'),modal:document.querySelector('#present-sheet [role=dialog]').getAttribute('aria-label')};
+    return {display,heartbeat,colourStates,penSelected,highlightSelected,initialReticle,reticleAfterLift,navHeight,cleared:!presentHeartbeat, calls:calls.filter(c=>c.path==='/command'||c.path==='/presenter'),closed:!document.querySelector('#present-sheet').classList.contains('open'),modal:document.querySelector('#present-sheet [role=dialog]').getAttribute('aria-label')};
   })()`);
   assert.equal(presenterUI.display,'d1');assert.equal(presenterUI.modal,'Presenter controls');
-  assert.equal(presenterUI.heartbeat,true);assert.equal(presenterUI.cleared,true);assert.equal(presenterUI.closed,true);
+  assert.equal(presenterUI.heartbeat,true);assert.ok(presenterUI.colourStates.every(Boolean));assert.equal(presenterUI.penSelected,true);assert.equal(presenterUI.highlightSelected,true);assert.equal(presenterUI.initialReticle,true);assert.equal(presenterUI.reticleAfterLift,true);assert.ok(presenterUI.navHeight>=72,'large slide navigation targets');assert.equal(presenterUI.cleared,true);assert.equal(presenterUI.closed,true);
   const pc=presenterUI.calls.filter(c=>c.path==='/presenter');
-  assert.deepEqual(pc.map(c=>c.body.action),['start','move','end','clear','stop']);
-  assert.equal(pc[0].body.mode,'pen');assert.equal(pc[0].body.display,'d1');
+  assert.deepEqual(pc.map(c=>c.body.action),['start','move','end','start','end','clear','stop']);
+  assert.equal(pc[0].body.mode,'pen');assert.equal(pc[0].body.color,'green');assert.equal(pc[0].body.display,'d1');
+  assert.equal(pc[3].body.mode,'highlight');assert.equal(pc[3].body.color,'yellow');
   assert.ok(Math.abs(pc[0].body.x-0.25)<0.001 && Math.abs(pc[1].body.x-0.75)<0.001);
   assert.ok(pc.every(c=>c.key==='a'.repeat(64)),'presenter calls are authenticated');
   assert.ok(presenterUI.calls.findIndex(c=>c.body.action==='clear') < presenterUI.calls.findLastIndex(c=>c.body.key==='right'),'clear precedes the next slide');
@@ -82,10 +91,10 @@ async function main() {
   assert.deepEqual(presenterUI.calls.filter(c=>c.path==='/command').map(c=>c.body.key),['right','left','escape','right','escape']);
   assert.ok(presenterUI.calls.filter(c=>c.path==='/command').every(c=>c.body.modifiers.length===0));
   console.log('PASS presenter slides, authenticated ordered pen gestures, display selection and cleanup');
-  await evaluate(`document.querySelector('#present-open').click();document.querySelector('#present-clear').focus();calls.length=0`);
+  await evaluate(`document.querySelector('#present-open').click();document.querySelector('[data-present-colour=yellow]').focus();calls.length=0`);
   await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
   await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
-  assert.equal(await evaluate(`document.activeElement.id`),'present-pad','keyboard can tab from final button to drawing pad');
+  assert.equal(await evaluate(`document.activeElement.id`),'present-pad','keyboard can tab from colour choices to drawing pad');
   await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
   await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
   await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
@@ -139,6 +148,9 @@ async function main() {
     assert.ok(geometry.pad.h>=150,`${width}x${height} usable touchpad`);
     assert.ok(geometry.keys.every(([w,h])=>w>=44&&h>=44),`${width}x${height} 44px controls`);
     assert.ok(geometry.scroll<=geometry.viewport+1,`${width}x${height} no horizontal overflow`);
+    const presentGeometry=await evaluate(`(()=>{document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const sizes=[...sheet.querySelectorAll('button,select')].map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]});const r={sizes,scroll:sheet.scrollWidth,client:sheet.clientWidth};closeSheet();return r})()`);
+    assert.ok(presentGeometry.sizes.every(([w,h])=>w>=44&&h>=44),`${width}x${height} presenter touch targets`);
+    assert.ok(presentGeometry.scroll<=presentGeometry.client+1,`${width}x${height} presenter has no horizontal overflow`);
     if(width===390&&height===844&&process.env.SOFA_TEST_SCREENSHOT){const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
     console.log(`PASS responsive ${width}x${height}`);
   }
@@ -237,6 +249,9 @@ async function main() {
   await cdp('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
   const largeText=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click();const result={scroll:document.documentElement.scrollWidth,viewport:innerWidth,help:document.querySelector('#help-sheet .sheet').getBoundingClientRect().width};closeSheet();closeSheet();document.documentElement.style.fontSize='';return result})()`);
   assert.ok(largeText.scroll<=largeText.viewport+1,'200% text has no horizontal page overflow');assert.ok(largeText.help<=largeText.viewport+1,'200% help remains within viewport');
+  const largePresenter=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const r={scroll:sheet.scrollWidth,client:sheet.clientWidth,controls:[...sheet.querySelectorAll('button,select')].map(b=>{const q=b.getBoundingClientRect();return [q.width,q.height]})};closeSheet();document.documentElement.style.fontSize='';return r})()`);
+  assert.ok(largePresenter.scroll<=largePresenter.client+1,'200% presenter text has no horizontal overflow');
+  assert.ok(largePresenter.controls.every(([w,h])=>w>=44&&h>=44),'200% presenter controls stay usable');
   const keyboardPointer=await evaluate(`(async()=>{
     const pad=document.querySelector('#pad'),send=(target,key,extra={})=>target.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true,...extra}));
     calls.length=0;let bubbled=0;const track=()=>bubbled++;document.addEventListener('keydown',track);pad.focus();
