@@ -125,6 +125,16 @@ enum RemotePage {
         opacity: 0.45;
         cursor: default;
       }
+      /* Optional tactile treatments retain each palette's readable colours. */
+      html[data-theme="pixel"] button, html[data-theme="pixel"] .field { border-radius: 0; border-width: 2px; box-shadow: inset -4px -4px 0 var(--line), inset 3px 3px 0 var(--bg); }
+      html[data-theme="pixel"] #pad { border-radius: 4px; border-width: 2px; }
+      html[data-theme="playroom"] button, html[data-theme="playroom"] .field { border-radius: 999px; border-width: 2px; }
+      html[data-theme="playroom"] #pad { border-radius: 48px; border-width: 2px; }
+      html[data-theme="console"] button, html[data-theme="console"] .field { border-radius: 28px; }
+      html[data-theme="console"] #pad { border-radius: 36px; }
+      html[data-theme="paper"] button, html[data-theme="paper"] .field { border-radius: 3px 14px 3px 14px; border-width: 2px; }
+      html[data-theme="paper"] #pad { border-radius: 3px 26px 3px 26px; border-width: 2px; }
+      html:is([data-theme="pixel"], [data-theme="playroom"], [data-theme="console"], [data-theme="paper"]) button:active:not(:disabled) { box-shadow: inset 0 2px 0 var(--line); }
       .icon {
         width: 44px;
         padding: 0;
@@ -206,7 +216,10 @@ enum RemotePage {
       .media button {
         font-size: 1.25rem;
       }
-      .present-open { width: 100%; margin-top: 8px; min-height: 56px; font-weight: 700; }
+      .quick-actions { grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: 2px; }
+      .quick-actions button { grid-column: span 2; min-height: 56px; }
+      .quick-actions .brightness { grid-column: span 3; }
+      .quick-note { margin: -4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.3; }
       .present-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .present-nav button { min-height: 78px; font-size: 1.125rem; font-weight: 700; }
       #present-sheet .sheet-status:empty { display: none; }
@@ -339,7 +352,7 @@ enum RemotePage {
         gap: 6px;
         align-items: center;
       }
-      .shortcut span {
+      .shortcut .shortcut-label {
         flex: 1;
         min-width: 0;
         overflow: hidden;
@@ -353,7 +366,24 @@ enum RemotePage {
       .shortcut .launch {
         text-align: left;
         flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
       }
+      .shortcut-initial {
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: var(--selection);
+        color: var(--selection-ink);
+        font-weight: 700;
+        line-height: 1;
+      }
+      .shortcut-initial .control-icon { width: 19px; height: 19px; }
       .danger {
         color: var(--danger);
       }
@@ -457,6 +487,8 @@ enum RemotePage {
 </g></symbol>
       <symbol id="icon-screen-off" viewBox="0 0 24 24"><path d="M2 3h20v14H2Zm6 18h8m-4-4v4m-6-9 12-6"/></symbol>
       <symbol id="icon-wake" viewBox="0 0 24 24"><path d="M12 2v8m-5-6a9 9 0 1 0 10 0"/></symbol>
+      <symbol id="icon-brightness-down" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M9 12h6M12 1v2m0 18v2M1 12h2m18 0h2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4m0-15.6-1.4 1.4M5.6 18.4l-1.4 1.4"/></symbol>
+      <symbol id="icon-brightness-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M9 12h6m-3-3v6M12 1v2m0 18v2M1 12h2m18 0h2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4m0-15.6-1.4 1.4M5.6 18.4l-1.4 1.4"/></symbol>
       <symbol id="icon-lock" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
 </g></symbol>
       <symbol id="icon-help" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 0 1-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 0 1-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 0 1-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584ZM12 18a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
@@ -511,7 +543,14 @@ enum RemotePage {
         ><button data-icon="fullscreen" class="icon-caption" data-action="fullscreen" title="Full screen"><span>Full screen</span></button
         ><button data-icon="search" class="icon-caption" data-action="spotlight" title="Spotlight search"><span>Spotlight</span></button>
       </div>
-      <button id="present-open" class="present-open" data-icon="fullscreen" title="Slideshow controls">Present</button>
+      <div class="row quick-actions" aria-label="Presentation and display controls">
+        <button id="present-open" class="icon-caption" data-icon="fullscreen" title="Slideshow controls"><span>Present</span></button>
+        <button id="screen-off-main" class="icon-caption" data-icon="screen-off" data-action="screenOff" aria-label="Turn screens off" title="Turn screens off"><span>Screen off</span></button>
+        <button id="wake-main" class="icon-caption" data-icon="wake" data-action="screenOn" aria-label="Wake screens" title="Wake screens"><span>Wake</span></button>
+        <button id="brightness-down" class="icon-caption brightness" data-icon="brightness-down" data-action="brightnessDown" aria-label="Decrease Mac brightness" title="Decrease Mac brightness"><span>Mac brightness −</span></button>
+        <button id="brightness-up" class="icon-caption brightness" data-icon="brightness-up" data-action="brightnessUp" aria-label="Increase Mac brightness" title="Increase Mac brightness"><span>Mac brightness +</span></button>
+      </div>
+      <p class="quick-note">Brightness uses Mac keys; external display support varies. Screen off may lock your Mac, requiring an unlock on the Mac.</p>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
         <p>Keep your Mac awake and Sofa Remote sharing. Check that both devices are on the same Wi-Fi or Tailscale network. If the Mac's address changed, open Sofa Remote on the Mac and scan its new QR code.</p>
@@ -642,7 +681,7 @@ enum RemotePage {
           <button data-close>Done</button>
         </div>
         <div class="theme-controls">
-          <label for="theme">Appearance<select class="field" id="theme"><option value="dark">Dark</option><option value="black">Black</option><option value="light">Light</option><option value="ivory">Ivory · brown</option><option value="plum">Ivory · plum</option><option value="ocean">Ocean</option><option value="custom">Custom</option></select></label>
+          <label for="theme">Appearance<select class="field" id="theme"><option value="dark">Dark</option><option value="black">Black</option><option value="light">Light</option><option value="ivory">Ivory · brown</option><option value="plum">Ivory · plum</option><option value="ocean">Ocean</option><option value="custom">Custom</option><option value="pixel">Pixel Arcade</option><option value="playroom">Playroom</option><option value="console">Night Console</option><option value="paper">Paper Studio</option></select></label>
           <label for="custom-colour">Custom background colour<input class="field" type="color" id="custom-colour" value="#1f1f1f" disabled /></label>
         </div>
         <p>Appearance is saved only in this phone browser. Custom colours get automatic high-contrast text.</p>
@@ -777,6 +816,10 @@ enum RemotePage {
         plum: { bg: "#f8f2ed", card: "#fff9f5", pad: "#efe4ec", sheet: "#fff9f5", line: "#9b7f99", muted: "#685369", accent: "#704381", ink: "#38233c", pressed: "#e7d9e5", selection: "#704381", "selection-ink": "#fff9f5", danger: "#952d49", error: "#952d49" },
         ocean: { bg: "#062d35", card: "#103c45", pad: "#0b343d", sheet: "#0b343d", line: "#75949a", muted: "#bcd8dd", accent: "#a1e9ee", ink: "#f4ffff", pressed: "#244e57", selection: "#c5f4f5", "selection-ink": "#062d35", danger: "#ffb8b8", error: "#ffb8b8" },
         light: { bg: "#f8f8f8", card: "#ffffff", pad: "#f0f0f0", sheet: "#ffffff", line: "#767676", muted: "#555555", accent: "#005fb8", ink: "#242424", pressed: "#e5e5e5", selection: "#242424", "selection-ink": "#ffffff", danger: "#9d1e2c", error: "#a51627" },
+        pixel: { bg: "#102a36", card: "#173e4b", pad: "#123540", sheet: "#123540", line: "#75949a", muted: "#bcd8dd", accent: "#a1e9ee", ink: "#f4ffff", pressed: "#244e57", selection: "#c5f4f5", "selection-ink": "#102a36", danger: "#ffb8b8", error: "#ffb8b8" },
+        playroom: { bg: "#fff1ed", card: "#fffaf7", pad: "#f4e4eb", sheet: "#fffaf7", line: "#9b7f99", muted: "#685369", accent: "#704381", ink: "#38233c", pressed: "#e7d9e5", selection: "#704381", "selection-ink": "#fffaf7", danger: "#952d49", error: "#952d49" },
+        console: { bg: "#101117", card: "#222329", pad: "#292a30", sheet: "#101117", line: "#888a93", muted: "#c6c7ca", accent: "#d5e4f7", ink: "#f5f5f5", pressed: "#34363e", selection: "#f5f5f5", "selection-ink": "#101117", danger: "#ffb4ab", error: "#ffb4ab" },
+        paper: { bg: "#f5eee0", card: "#fff9eb", pad: "#ebe3d2", sheet: "#fff9eb", line: "#99836c", muted: "#645141", accent: "#754726", ink: "#35261c", pressed: "#e4d8c7", selection: "#754726", "selection-ink": "#fff9eb", danger: "#962e2e", error: "#962e2e" },
       };
       const safeColour = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : "#1f1f1f";
       function luminance(hex) {
@@ -809,10 +852,11 @@ enum RemotePage {
       let themeState = { name: "dark", colour: "#1f1f1f" };
       function applyTheme(name, colour) {
         const requested = ({ oxford: "dark", imperial: "dark" })[name] || name;
-        const known = ["dark", "black", "light", "ivory", "plum", "ocean", "custom"].includes(requested) ? requested : "dark";
+        const known = ["dark", "black", "light", "ivory", "plum", "ocean", "custom", "pixel", "playroom", "console", "paper"].includes(requested) ? requested : "dark";
         themeState = { name: known, colour: safeColour(colour) };
         const palette = known === "custom" ? customTheme(themeState.colour) : themes[known];
         Object.entries(palette).forEach(([key, value]) => document.documentElement.style.setProperty("--" + key, value));
+        document.documentElement.dataset.theme = known;
         document.documentElement.style.colorScheme = contrast(palette.bg, "#000000") > contrast(palette.bg, "#ffffff") ? "light" : "dark";
         $("meta[name=theme-color]").content = palette.bg;
         $("#theme").value = known;
@@ -1612,7 +1656,24 @@ enum RemotePage {
           row.className = "shortcut";
           const launch = document.createElement("button");
           launch.className = "launch";
-          launch.textContent = item.name;
+          const name = typeof item.name === "string" ? item.name : "";
+          const icon = document.createElement("span");
+          icon.className = "shortcut-initial";
+          icon.setAttribute("aria-hidden", "true");
+          if (item.kind === "downloads") {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("class", "control-icon");
+            svg.setAttribute("viewBox", "0 0 24 24");
+            svg.setAttribute("focusable", "false");
+            const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+            use.setAttribute("href", "#icon-folder"); svg.append(use); icon.append(svg);
+          } else {
+            icon.textContent = (Array.from(name.trim())[0] || "•").toUpperCase();
+          }
+          const label = document.createElement("span");
+          label.className = "shortcut-label"; label.textContent = name;
+          launch.setAttribute("aria-label", name || "Open shortcut");
+          launch.append(icon, label);
           launch.onclick = () => mutate("/launch", { id: item.id });
           row.append(launch);
           for (const [label, offset] of [
@@ -1654,9 +1715,11 @@ enum RemotePage {
             const row = document.createElement("div");
             row.className = "shortcut";
             const label = document.createElement("span");
+            label.className = "shortcut-label";
             label.textContent = d.name + (d.current ? " · this phone" : "");
             const remove = document.createElement("button");
             remove.textContent = "Remove";
+            remove.setAttribute("aria-label", `Remove ${d.name}`);
             remove.onclick = async () => {
               if (!confirm(`Remove ${d.name}?`)) return;
               try {

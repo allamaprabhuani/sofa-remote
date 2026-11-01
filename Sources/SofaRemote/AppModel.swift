@@ -20,6 +20,7 @@ import ServiceManagement
     private var presenterLastActivity: TimeInterval = 0
     private var presenterGuard: Timer?
     private let awake = AwakeAssertion()
+    private let displayPower = DisplayPowerCoordinator()
     private var server: RemoteServer?
     private var observers: [NSObjectProtocol] = []
     private var sessionActive = true
@@ -255,10 +256,25 @@ import ServiceManagement
                         if motionDurations.count > 40 { motionDurations.removeFirst() }
                     }
                 }
-                if screenSleeping, command != .action(.screenOff) { try wake() }
+                if (screenSleeping || displayPower.sleepPending), command != .action(.screenOff), command != .action(.screenOn) {
+                    try await wake()
+                    // The Mac may lock, sharing may stop, or pairing may be
+                    // revoked while waiting for a pending display sleep.
+                    guard sharing, !Task.isCancelled, !inputPaused,
+                          store.authenticate(request.headers["x-sofa-key"]) != nil else {
+                        throw RemoteError("Input paused or connection ended. Reconnect after unlocking the Mac.")
+                    }
+                }
                 switch command {
-                case .action(.screenOn): try wake()
-                case .action(.screenOff): invalidateInput(); try DisplayPower.sleepDisplays()
+                case .action(.screenOn): try await wake()
+                case .action(.screenOff):
+                    invalidateInput(); lastWake = -.infinity
+                    let credential = request.headers["x-sofa-key"]
+                    let generation = controlGeneration
+                    try await displayPower.sleepDisplays { [weak self] in
+                        guard let self else { return false }
+                        return self.sharing && !self.inputPaused && self.controlGeneration == generation && self.store.authenticate(credential) != nil
+                    }
                 case .action(.downloads): try openDownloads()
                 case .action(.moveWindow):
                     guard accessibilityAllowed else { throw RemoteError("Allow Sofa Remote in Accessibility on the Mac.") }
@@ -342,11 +358,11 @@ import ServiceManagement
             return .json(["error": "The operation failed. Check Sofa Remote on the Mac."], status: "500 Internal Server Error")
         }
     }
-    private func wake() throws {
+    private func wake() async throws {
         let now = ProcessInfo.processInfo.systemUptime
-        guard now - lastWake >= 0.5 else { return }
-        guard DisplayPower.wake() else { throw RemoteError("macOS did not accept the display wake request.") }
-        lastWake = now
+        guard displayPower.sleepPending || now - lastWake >= 0.5 else { return }
+        try await displayPower.wake()
+        lastWake = ProcessInfo.processInfo.systemUptime
     }
     private func openDownloads() throws {
         guard let folder = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first,

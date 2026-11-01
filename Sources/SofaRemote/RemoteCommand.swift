@@ -6,6 +6,7 @@ enum RemoteCommand: Equatable {
     enum Phase: String { case start, move, end }
     enum Action: String {
         case playPause, previous, next, volumeUp, volumeDown, mute, fullscreen
+        case brightnessUp, brightnessDown
         case appSwitcher, spotlight, showDesktop, downloads, lock, screenOff, screenOn, moveWindow
     }
     case move(Double, Double), scroll(Double, Double), click(Button, Int)

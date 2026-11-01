@@ -36,7 +36,7 @@ async function main() {
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`
     localStorage.setItem('sofaKey','a'.repeat(64)); Element.prototype.setPointerCapture=function(){};
     window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';window.presenterFailure=false;window.stateFailure=false;window.commandLatency=3;window.illegalMotion=[];
-    window.testState={name:'Mock Mac',frontApp:'Brave Browser',appVersion:'0.1.0',appBuild:'7',macOSVersion:'15.0.1',signingStatus:'ad-hoc',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
+    window.testDevices=[];window.testState={name:'Mock Mac',frontApp:'Brave Browser',appVersion:'0.1.0',appBuild:'7',macOSVersion:'15.0.1',signingStatus:'ad-hoc',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
     const realTimeout=window.setTimeout;window.setTimeout=(fn,ms,...args)=>realTimeout(fn,ms===9000&&window.hang?30:ms,...args);
     const motionBody=b=>b&&(b.type==='move'||b.type==='scroll'||(b.type==='drag'&&b.phase==='move'));
     const badDelta=(v,limit)=>!Number.isFinite(v)||Math.abs(v)>limit;
@@ -46,7 +46,7 @@ async function main() {
       if(path==='/presenter'&&presenterFailure)return {status:500,ok:false,json:async()=>({error:'Presenter unavailable'})};
       if(path==='/command'&&commandFailure)return {status:commandFailure==='unauthorized'?401:500,ok:false,json:async()=>({error:'Send failed'})};
       if(path==='/state'&&stateFailure)throw Error('Connection unavailable');
-      return {status:200,ok:true,json:async()=>path==='/state'?testState:path==='/devices'?[]:{ok:true,token:'b'.repeat(64)}}};
+      return {status:200,ok:true,json:async()=>path==='/state'?testState:path==='/devices'?testDevices:{ok:true,token:'b'.repeat(64)}}};
   `});
   await cdp('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/`});await wait(300);
   const subtitle=await evaluate(`(async()=>{
@@ -56,6 +56,45 @@ async function main() {
   })()`);
   assert.equal(subtitle.withApp,'Connected · Mock Mac · Brave Browser');
   assert.equal(subtitle.withoutApp,'Connected · Mock Mac');
+  const mainDisplayControls=await evaluate(`(async()=>{
+    calls.length=0;
+    const ids=['screen-off-main','wake-main','brightness-down','brightness-up'];
+    const controls=ids.map(id=>{const b=document.getElementById(id);return {id,label:b.getAttribute('aria-label'),title:b.title,icon:b.querySelector('svg use')?.getAttribute('href'),main:!!b.closest('main')}});
+    for(const id of ids)await document.getElementById(id).onclick();
+    return {controls,commands:calls.filter(c=>c.path==='/command').map(c=>c.body)};
+  })()`);
+  assert.ok(mainDisplayControls.controls.every(c=>c.main && c.label && c.title && c.icon?.startsWith('#icon-')),'display controls are visible, named and use local icons');
+  assert.deepEqual(mainDisplayControls.commands.map(c=>c.action),['screenOff','screenOn','brightnessDown','brightnessUp']);
+  assert.ok(mainDisplayControls.commands.every(c=>c.type==='action'));
+  const localShortcutIcons=await evaluate(`(async()=>{
+    calls.length=0;
+    testState.shortcuts=[{id:'yt',name:'YouTube',kind:'website',url:'https://private.example/watch'},{id:'app',name:'IINA',kind:'app',bundleID:'private.app'},{id:'downloads',name:'Downloads',kind:'downloads'},{id:'unsafe',name:'<img src=x onerror=alert(1)>',kind:'website'}];
+    await refresh();document.querySelector('#shortcuts-open').click();
+    const rows=[...document.querySelectorAll('#shortcut-list .shortcut')];
+    const icons=rows.map(row=>{const b=row.querySelector('.launch'),icon=b.querySelector('.shortcut-initial');return {label:b.getAttribute('aria-label'),text:b.querySelector('.shortcut-label').textContent,initial:icon.textContent,hidden:icon.getAttribute('aria-hidden'),symbol:icon.querySelector('use')?.getAttribute('href')||null,images:row.querySelectorAll('img').length}});
+    await rows[0].querySelector('.launch').onclick();
+    const requests=calls.filter(c=>c.path!=='/state').map(c=>({path:c.path,body:c.body}));
+    closeSheet();testState.shortcuts=[];await refresh();
+    return {icons,requests};
+  })()`);
+  assert.deepEqual(localShortcutIcons.icons.map(x=>x.label),['YouTube','IINA','Downloads','<img src=x onerror=alert(1)>']);
+  assert.deepEqual(localShortcutIcons.icons.map(x=>x.text),['YouTube','IINA','Downloads','<img src=x onerror=alert(1)>']);
+  assert.deepEqual(localShortcutIcons.icons.map(x=>x.initial),['Y','I','','<']);
+  assert.equal(localShortcutIcons.icons[2].symbol,'#icon-folder');
+  assert.ok(localShortcutIcons.icons.every(x=>x.hidden==='true' && x.images===0),'icons are decorative local DOM with no favicon fetch');
+  assert.deepEqual(localShortcutIcons.requests,[{path:'/launch',body:{id:'yt'}}],'launch sends only the selected shortcut ID');
+  console.log('PASS main display controls and private local shortcut icons');
+  const deviceRow=await evaluate(`(async()=>{
+    testDevices=[{id:'long-device',name:'Paired phone '+ 'x'.repeat(180),current:false}];
+    document.querySelector('#settings-open').click();await loadDevices();
+    const row=document.querySelector('#devices .shortcut'),label=row.querySelector('span'),style=getComputedStyle(label);
+    const result={label:label.className,flex:style.flexGrow,minWidth:style.minWidth,overflow:style.overflow,textOverflow:style.textOverflow,rowWidth:row.clientWidth,rowScroll:row.scrollWidth,remove:row.querySelector('button').getAttribute('aria-label')};
+    closeSheet();testDevices=[];return result;
+  })()`);
+  assert.equal(deviceRow.label,'shortcut-label');assert.equal(deviceRow.flex,'1');assert.equal(deviceRow.minWidth,'0px');
+  assert.equal(deviceRow.overflow,'hidden');assert.equal(deviceRow.textOverflow,'ellipsis');
+  assert.ok(deviceRow.rowScroll<=deviceRow.rowWidth+1,'long paired-device names cannot widen the dialog');
+  assert.match(deviceRow.remove,/^Remove Paired phone /);
   const presenterUI=await evaluate(`(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     const idle=async()=>{const until=Date.now()+4000;while(active || queue.length || gestureTimer){if(Date.now()>until)throw Error('Timed out draining presenter input');await sleep(20)}};
@@ -131,7 +170,7 @@ async function main() {
   assert.equal(presenterErrors.afterHeartbeat,presenterErrors.failure,'heartbeat preserves presenter error');
   assert.equal(presenterErrors.afterGesture,'','a successful deliberate gesture clears presenter error');
   await evaluate(`document.querySelector('#present-sheet [data-close]').click()`);await waitForInputIdle();
-  for(const [name,bg] of [['dark','#1f1f1f'],['black','#000000'],['light','#f8f8f8'],['ivory','#f6f1e7'],['plum','#f8f2ed'],['ocean','#062d35'],['custom','#757575']]){
+  for(const [name,bg] of [['dark','#1f1f1f'],['black','#000000'],['light','#f8f8f8'],['ivory','#f6f1e7'],['plum','#f8f2ed'],['ocean','#062d35'],['custom','#757575'],['pixel','#102a36'],['playroom','#fff1ed'],['console','#101117'],['paper','#f5eee0']]){
     await evaluate(`(()=>{const theme=document.querySelector('#theme');theme.value=${JSON.stringify(name)};theme.dispatchEvent(new Event('change'));if(theme.value==='custom'){const colour=document.querySelector('#custom-colour');colour.value=${JSON.stringify(bg)};colour.dispatchEvent(new Event('input'));colour.dispatchEvent(new Event('change'));}})()`);
     await cdp('Page.reload',{ignoreCache:true});await wait(200);
     const saved=await evaluate(`(()=>{const s=document.documentElement.style,v=k=>s.getPropertyValue('--'+k);return {name:document.querySelector('#theme').value,bg:v('bg'),readable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('ink'),v(k))>=4.5),selection:contrast(v('selection'),v('selection-ink'))>=4.5,links:contrast(v('accent'),v('sheet'))>=4.5,mutedReadable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('muted'),v(k))>=4.5),boundaries:contrast(v('line'),v('card'))>=3,dangerReadable:['card','pressed'].every(k=>contrast(v('danger'),v(k))>=4.5),customEnabled:!document.querySelector('#custom-colour').disabled}})()`);
@@ -148,10 +187,22 @@ async function main() {
   await cdp('Page.reload',{ignoreCache:true});await wait(150);
   assert.equal(await evaluate(`document.documentElement.style.getPropertyValue('--bg')`),'#1f1f1f','invalid custom colour falls back safely');
   await evaluate(`applyTheme('dark','#1f1f1f');saveTheme()`);
-  if(process.env.SOFA_TEST_THEME_DIR){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});for(const name of ['dark','black','light','ivory','plum','ocean','custom']){await evaluate(`applyTheme('${name}',${name==='custom'?"'#405846'":"'#1f1f1f'"})`);const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(process.env.SOFA_TEST_THEME_DIR,name+'.png'),Buffer.from(shot.data,'base64'));}await evaluate(`applyTheme('dark','#1f1f1f')`)}
+  if(process.env.SOFA_TEST_THEME_DIR){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});for(const name of ['dark','black','light','ivory','plum','ocean','custom','pixel','playroom','console','paper']){await evaluate(`applyTheme('${name}',${name==='custom'?"'#405846'":"'#1f1f1f'"})`);const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(process.env.SOFA_TEST_THEME_DIR,name+'.png'),Buffer.from(shot.data,'base64'));}await evaluate(`applyTheme('dark','#1f1f1f')`)}
+  const shapes=await evaluate(`(()=>['pixel','playroom','console','paper'].map(name=>{applyTheme(name,'#1f1f1f');const b=document.querySelector('#right');return {name,radius:getComputedStyle(b).borderRadius,pad:getComputedStyle(document.querySelector('#pad')).borderRadius}}))()`);
+  assert.equal(new Set(shapes.map(x=>x.radius)).size,4,'each new theme has its own control shape');
+  await cdp('DOM.enable');await cdp('CSS.enable');const documentNode=await cdp('DOM.getDocument');const buttonNode=await cdp('DOM.querySelector',{nodeId:documentNode.root.nodeId,selector:'#right'});
+  await cdp('CSS.forcePseudoState',{nodeId:buttonNode.nodeId,forcedPseudoClasses:['focus-visible']});
+  for(const {name} of shapes){await evaluate(`applyTheme('${name}','#1f1f1f')`);assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('#right')).outlineStyle`),'none',`${name} shows keyboard focus`)}
+  await cdp('CSS.forcePseudoState',{nodeId:buttonNode.nodeId,forcedPseudoClasses:['active']});
+  for(const {name} of shapes){await evaluate(`applyTheme('${name}','#1f1f1f')`);const state=await evaluate(`(()=>{const b=document.querySelector('#right'),s=getComputedStyle(b);return {bg:s.backgroundColor,pressed:s.getPropertyValue('--pressed'),shadow:s.boxShadow}})()`);assert.notEqual(state.shadow,'none',`${name} gives tactile pressed feedback`)}
+  await cdp('CSS.forcePseudoState',{nodeId:buttonNode.nodeId,forcedPseudoClasses:[]});
+  await cdp('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  for(const [width,height] of [[320,568],[390,844]]){await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});for(const {name} of shapes){const state=await evaluate(`(()=>{applyTheme('${name}','#1f1f1f');const b=document.querySelector('#right');b.disabled=true;const disabled=getComputedStyle(b).opacity;b.disabled=false;return {disabled,animation:getComputedStyle(b).animationName,keys:[...document.querySelectorAll('main button')].filter(x=>x.getClientRects().length).map(x=>{const r=x.getBoundingClientRect();return [r.width,r.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth}})()`);assert.ok(Number(state.disabled)<1,`${name} has a disabled state`);assert.equal(state.animation,'none',`${name} has no reduced-motion animation`);assert.ok(state.keys.every(([w,h])=>w>=44&&h>=44),`${name} keeps touch targets at ${width}px`);assert.ok(state.scroll<=state.viewport+1,`${name} fits at ${width}px`)}}
+  await cdp('Emulation.setEmulatedMedia',{features:[]});
+  await evaluate(`applyTheme('dark','#1f1f1f')`);
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
   assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'Shortcuts');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
-  console.log('PASS seven persisted lightweight themes, safe custom colours, contrast and accessible local SVG icons');
+  console.log('PASS eleven persisted lightweight themes, safe custom colours, contrast and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     const geometry=await evaluate(`(()=>{const r=s=>{const x=document.querySelector(s).getBoundingClientRect();return {w:x.width,h:x.height,b:x.bottom}};return {pad:r('#pad'),keys:[...document.querySelectorAll('main button')].filter(x=>x.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth,height:innerHeight,page:document.documentElement.scrollHeight}})()`);

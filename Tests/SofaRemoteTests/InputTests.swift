@@ -1,9 +1,94 @@
+import AppKit
+import IOKit.hidsystem
 import CoreGraphics
 import Foundation
 import Testing
 @testable import SofaRemote
 
 @Suite @MainActor struct InputTests {
+    @Test func queuedSleepRechecksAuthorizationAndCancellation() async throws {
+        for cancel in [false, true] {
+            var finishFirst: CheckedContinuation<Void, Error>?
+            var sleepCount = 0
+            var authorized = true
+            let power = DisplayPowerCoordinator(sleep: {
+                sleepCount += 1
+                if sleepCount == 1 { try await withCheckedThrowingContinuation { finishFirst = $0 } }
+            }, wake: { true })
+            let first = Task { try await power.sleepDisplays() }
+            while finishFirst == nil { await Task.yield() }
+            let queued = Task { try await power.sleepDisplays(isAllowed: { authorized }) }
+            await Task.yield()
+            if cancel { queued.cancel() } else { authorized = false }
+            finishFirst?.resume()
+            try await first.value
+            do { try await queued.value; Issue.record("Stale sleep must fail") } catch {}
+            #expect(sleepCount == 1)
+            #expect(!power.sleepPending)
+        }
+    }
+
+    @Test func newestDisplayIntentWinsWhileSleepIsRunning() async throws {
+        var events: [String] = []
+        var finishFirst: CheckedContinuation<Void, Error>?
+        var sleepCount = 0
+        let power = DisplayPowerCoordinator(sleep: {
+            sleepCount += 1
+            events.append("sleep \(sleepCount) started")
+            if sleepCount == 1 { try await withCheckedThrowingContinuation { finishFirst = $0 } }
+            events.append("sleep \(sleepCount) finished")
+        }, wake: { events.append("wake"); return true })
+        let first = Task { try await power.sleepDisplays() }
+        while finishFirst == nil { await Task.yield() }
+        let wake = Task { try await power.wake() }
+        await Task.yield()
+        let last = Task { try await power.sleepDisplays() }
+        await Task.yield()
+        finishFirst?.resume()
+        try await first.value
+        do { try await wake.value; Issue.record("Superseded wake should fail") } catch {}
+        try await last.value
+        #expect(events == ["sleep 1 started", "sleep 1 finished", "sleep 2 started", "sleep 2 finished"])
+        #expect(!power.sleepPending)
+    }
+
+    @Test func wakeWaitsForPendingDisplaySleepEvenIfRequestIsCancelled() async throws {
+        var events: [String] = []
+        var finishSleep: CheckedContinuation<Void, Error>?
+        let power = DisplayPowerCoordinator(sleep: {
+            events.append("sleep started")
+            try await withCheckedThrowingContinuation { finishSleep = $0 }
+            events.append("sleep finished")
+        }, wake: { events.append("wake"); return true })
+        let request = Task { try await power.sleepDisplays() }
+        while finishSleep == nil { await Task.yield() }
+        request.cancel()
+        let wake = Task { try await power.wake() }
+        await Task.yield()
+        #expect(events == ["sleep started"])
+        #expect(power.sleepPending)
+        finishSleep?.resume()
+        try await wake.value
+        _ = try? await request.value
+        #expect(events == ["sleep started", "sleep finished", "wake"])
+        #expect(!power.sleepPending)
+    }
+
+    @Test func failedDisplaySleepDoesNotBlockWake() async throws {
+        var finishSleep: CheckedContinuation<Void, Error>?
+        var wakes = 0
+        let power = DisplayPowerCoordinator(sleep: {
+            try await withCheckedThrowingContinuation { finishSleep = $0 }
+        }, wake: { wakes += 1; return true })
+        let request = Task { try await power.sleepDisplays() }
+        while finishSleep == nil { await Task.yield() }
+        let wake = Task { try await power.wake() }
+        finishSleep?.resume(throwing: RemoteError("sleep failed"))
+        try await wake.value
+        do { try await request.value; Issue.record("Sleep failure must be reported") } catch {}
+        #expect(wakes == 1)
+        #expect(!power.sleepPending)
+    }
     @Test func successiveMovesKeepFractionalTravelWhenSystemPositionLags() throws {
         var events: [CGEvent] = []
         let input = InputController(displays: DisplayController(), emit: { events.append($0) },
@@ -124,4 +209,22 @@ import Testing
         #expect(!input.isDragging)
         #expect(events == [.leftMouseDown, .leftMouseUp])
     }
+    @Test func brightnessKeysEmitBalancedSystemEventsAndRespectInputGates() throws {
+        var events: [CGEvent] = []
+        let input = InputController(displays: DisplayController(), emit: { events.append($0) }, trusted: { true }, secure: { false })
+        try input.handle(.action(.brightnessUp))
+        try input.handle(.action(.brightnessDown))
+        #expect(events.count == 4)
+        let decoded = try events.map { try #require(NSEvent(cgEvent: $0)) }
+        #expect(decoded.allSatisfy { $0.type == .systemDefined && $0.subtype.rawValue == 8 })
+        #expect(decoded.map { ($0.data1 >> 16) & 0xffff } == [Int(NX_KEYTYPE_BRIGHTNESS_UP), Int(NX_KEYTYPE_BRIGHTNESS_UP), Int(NX_KEYTYPE_BRIGHTNESS_DOWN), Int(NX_KEYTYPE_BRIGHTNESS_DOWN)])
+        #expect(decoded.map { ($0.data1 >> 8) & 0xff } == [0xa, 0xb, 0xa, 0xb])
+        events.removeAll()
+        let denied = InputController(displays: DisplayController(), emit: { events.append($0) }, trusted: { false }, secure: { false })
+        #expect(throws: RemoteError.self) { try denied.handle(.action(.brightnessUp)) }
+        let secure = InputController(displays: DisplayController(), emit: { events.append($0) }, trusted: { true }, secure: { true })
+        #expect(throws: RemoteError.self) { try secure.handle(.action(.brightnessDown)) }
+        #expect(events.isEmpty)
+    }
+
 }

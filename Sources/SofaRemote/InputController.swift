@@ -2,6 +2,7 @@ import AppKit
 import ApplicationServices
 import Carbon
 import IOKit.pwr_mgt
+import IOKit.hidsystem
 
 /// Sends input like a physical mouse/keyboard. Never observes or records the user's input.
 @MainActor final class InputController {
@@ -76,6 +77,10 @@ import IOKit.pwr_mgt
             case .volumeUp: try mediaKey(0)
             case .volumeDown: try mediaKey(1)
             case .mute: try mediaKey(7)
+            // Simulate the Mac's brightness keys; display support and targeting are
+            // determined by macOS and the connected hardware, not this app.
+            case .brightnessUp: try mediaKey(Int(NX_KEYTYPE_BRIGHTNESS_UP))
+            case .brightnessDown: try mediaKey(Int(NX_KEYTYPE_BRIGHTNESS_DOWN))
             case .fullscreen: try keyPress("f", modifiers: ["control", "command"])
             case .appSwitcher: try keyPress("tab", modifiers: ["command"])
             case .spotlight: try keyPress("space", modifiers: ["command"])
@@ -185,11 +190,75 @@ enum DisplayPower {
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { IOPMAssertionRelease(acquired) }
         return true
     }
-    static func sleepDisplays() throws {
+    static func sleepDisplays() async throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
         process.arguments = ["displaysleepnow"]
         // Fixed executable/argument; no shell and no system-sleep command.
         try process.run()
+        // Do not block the main actor. Bound a stuck pmset before allowing a
+        // queued wake through, so it cannot sleep the displays afterwards.
+        let timeout = DispatchWorkItem {
+            if process.isRunning { Darwin.kill(process.processIdentifier, SIGKILL) }
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3, execute: timeout)
+        await Task.detached { process.waitUntilExit() }.value
+        timeout.cancel()
+        guard process.terminationStatus == 0 else {
+            throw RemoteError("macOS could not turn the displays off.")
+        }
+    }
+}
+
+/// Serializes display intent even when an HTTP request is cancelled.
+private final class DisplayRequestCancellation: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+    func cancel() { lock.lock(); cancelled = true; lock.unlock() }
+    var isCancelled: Bool { lock.lock(); defer { lock.unlock() }; return cancelled }
+}
+
+@MainActor final class DisplayPowerCoordinator {
+    private let sleep: () async throws -> Void
+    private let wakeDisplay: () -> Bool
+    private var pending: Task<Void, Error>?
+    private var generation = 0
+    var sleepPending: Bool { pending != nil }
+
+    init(sleep: @escaping () async throws -> Void = { try await DisplayPower.sleepDisplays() },
+         wake: @escaping () -> Bool = { DisplayPower.wake() }) {
+        self.sleep = sleep; self.wakeDisplay = wake
+    }
+    func sleepDisplays(isAllowed: @escaping @MainActor () -> Bool = { true }) async throws {
+        let cancellation = DisplayRequestCancellation()
+        try await withTaskCancellationHandler {
+            try await enqueue {
+                guard !cancellation.isCancelled, isAllowed() else {
+                    throw RemoteError("Display request ended before it could run.")
+                }
+                try await self.sleep()
+            }
+        } onCancel: {
+            cancellation.cancel()
+        }
+    }
+    func wake() async throws {
+        try await enqueue {
+            guard self.wakeDisplay() else { throw RemoteError("macOS did not accept the display wake request.") }
+        }
+    }
+    private func enqueue(_ action: @escaping @MainActor () async throws -> Void) async throws {
+        let previous = pending
+        generation += 1
+        let started = generation
+        let operation = Task {
+            // A failed sleep must not prevent a later wake.
+            if let previous { _ = try? await previous.value }
+            guard self.generation == started else { throw RemoteError("Display request was superseded by a newer action.") }
+            try await action()
+        }
+        pending = operation
+        defer { if generation == started { pending = nil } }
+        try await operation.value
     }
 }

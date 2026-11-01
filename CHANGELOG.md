@@ -1,11 +1,13 @@
 # Changelog
 
-## Unreleased — build 14
+## Unreleased — build 15
 
 - Add presenter controls with previous/next, end slideshow, a laser, coloured pen and automatically disappearing highlighter on a chosen display.
 - Add optional smoothing and correction for simple hand-drawn shapes.
+- Make Screen off and Wake easier to find, add Mac brightness-key controls, and show local initials beside saved shortcuts.
+- Add four optional remote appearances: Pixel Arcade, Playroom, Night Console and Paper Studio.
 - Keep presenter traffic authenticated, bounded and rate limited; temporary marks clear on exit, slide navigation and connection loss.
-- Presenter controls, colours and highlighter were tested with an iPhone and Keynote; additional app and display combinations need physical testing.
+- Presenter controls were tested from an iPhone with Keynote, PowerPoint and Google Slides; other display and sharing configurations need physical testing.
 
 ## Certificate preview beta 6 — build 12
 
