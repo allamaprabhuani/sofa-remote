@@ -651,3 +651,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
 .live-bottom .live-btn { width:44px; min-width:44px; height:44px; padding:8px; border:0; border-radius:12px; background:transparent; }
 .live-bottom .live-btn svg { width:23px; height:23px; }
 .live-bottom .live-btn:active { background:#454750; }
+
+.live-row.volume::before { display:none; }
+.live-title { font-weight:700; font-size:1.25rem; letter-spacing:-.055em; }

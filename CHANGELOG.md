@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased — build 19
+## Unreleased — build 20
+
+- Allow a swipe to begin over any main remote control or empty space without triggering the underlying button.
+- Remove decorative lines and refine the title.
+
+## Certificate preview beta 8 — build 19
 
 - Add Velvet Cinema, Paper & Ink and Soft Machine appearances with borderless icon controls and accessible names.
 

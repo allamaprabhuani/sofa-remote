@@ -192,8 +192,8 @@ async function main() {
   assert.deepEqual(sharedPanel,{count:7,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
   const touchSurface=await evaluate(`(()=>{const pad=getComputedStyle(document.querySelector('#pad')),panel=getComputedStyle(document.querySelector('.remote-panel'));return {padBorder:pad.borderTopWidth,padBackground:pad.backgroundColor,padShadow:pad.boxShadow,panelBorder:panel.borderTopWidth,panelBackground:panel.backgroundColor}})()`);
   assert.deepEqual(touchSurface,{padBorder:'0px',padBackground:'rgba(0, 0, 0, 0)',padShadow:'none',panelBorder:'0px',panelBackground:'rgba(0, 0, 0, 0)'},'idle touch area and shared panel have no boundary or second background');
-  const visual=await evaluate(`(()=>{const volume=document.querySelector('.volume'),track=getComputedStyle(volume,'::before'),drag=document.querySelector('#drag'),right=document.querySelector('#right');return {track:track.pointerEvents,trackRole:volume.getAttribute('role'),drag:drag.getAttribute('aria-pressed'),right:right.getAttribute('aria-pressed'),play:parseFloat(getComputedStyle(document.querySelector('[data-action="playPause"] svg')).width),prev:parseFloat(getComputedStyle(document.querySelector('[data-action="previous"] svg')).width)}})()`);
-  assert.deepEqual({track:visual.track,role:visual.trackRole,drag:visual.drag,right:visual.right},{track:'none',role:null,drag:'false',right:null},'volume decoration cannot imply a slider, and right click remains separate from the drag toggle');assert.ok(visual.play>visual.prev,'play is the visual anchor');
+  const visual=await evaluate(`(()=>{const volume=document.querySelector('.volume'),track=getComputedStyle(volume,'::before'),drag=document.querySelector('#drag'),right=document.querySelector('#right');return {track:track.content,trackRole:volume.getAttribute('role'),drag:drag.getAttribute('aria-pressed'),right:right.getAttribute('aria-pressed'),play:parseFloat(getComputedStyle(document.querySelector('[data-action="playPause"] svg')).width),prev:parseFloat(getComputedStyle(document.querySelector('[data-action="previous"] svg')).width)}})()`);
+  assert.deepEqual({track:visual.track,role:visual.trackRole,drag:visual.drag,right:visual.right},{track:'none',role:null,drag:'false',right:null},'no volume line is shown, and right click remains separate from the drag toggle');assert.ok(visual.play>visual.prev,'play is the visual anchor');
   const navigation=await evaluate(`(()=>{const bar=document.querySelector('.bottom-tools');return {help:bar.contains(document.querySelector('.remote-guide')),shortcuts:bar.contains(document.querySelector('#shortcuts-open')),settings:bar.contains(document.querySelector('#settings-open'))}})()`);
   assert.deepEqual(navigation,{help:true,shortcuts:true,settings:true},'help, shortcuts and settings share the bottom navigation');
   const remoteGuide=await evaluate(`(()=>{calls.length=0;const details=document.querySelector('.remote-guide'),summary=details.querySelector('summary');const named=summary.getAttribute('aria-label');summary.click();const open=details.open;summary.click();return {named,open,commands:calls.filter(c=>c.path==='/command').length}})()`);
@@ -256,6 +256,20 @@ async function main() {
   assert.deepEqual(rightTaps.commands,[{type:'click',button:'right',count:1},{type:'click',button:'right',count:1}],'repeated control taps are not lost or duplicated');assert.equal(rightTaps.scale,1,'double control tap does not zoom');assert.ok(rightTaps.defaults.every(x=>!x.prevented),'controls rely on CSS rather than global touch cancellation');
   await evaluate(`calls.length=0`);const playPoint=await point('[data-action="playPause"]');await tap(playPoint);await wait(200);
   assert.deepEqual(await evaluate(`calls.filter(x=>x.path==='/command').map(x=>x.body)`),[{type:'action',action:'playPause'}],'a real panel button touch sends only its action, never pad input');
+  for (const selector of ['#right', '[data-action="playPause"]', '#shortcuts-open', '#settings-open', '.remote-guide summary']) {
+    await evaluate(`calls.length=0`);
+    const origin=await point(selector);
+    await touch('touchStart',[origin]);
+    await touch('touchMove',[{x:origin.x-24,y:origin.y-34}]);
+    await touch('touchEnd',[]);await wait(100);
+    const swiped=await evaluate(`({commands:calls.filter(x=>x.path==='/command').map(x=>x.body),overlay:!!document.querySelector('.scrim.open'),guide:document.querySelector('.remote-guide').open})`);
+    assert.ok(swiped.commands.some(x=>x.type==='move'),`${selector} swipe sends pointer movement`);
+    assert.ok(swiped.commands.every(x=>x.type==='move')&&!swiped.overlay&&!swiped.guide,`${selector} swipe does not activate a control`);
+  }
+  await evaluate(`calls.length=0`);
+  const emptyPoint=await evaluate(`(()=>{const r=document.querySelector('.bottom-tools').getBoundingClientRect();return {x:20,y:r.top+r.height/2}})()`);
+  await touch('touchStart',[emptyPoint]);await touch('touchMove',[{x:emptyPoint.x+25,y:emptyPoint.y-30}]);await touch('touchEnd',[]);await wait(100);
+  assert.ok(await evaluate(`calls.some(x=>x.path==='/command'&&x.body.type==='move')`),'swiping empty space starts pointer movement');
   await evaluate(`calls.length=0;touchDefaults.length=0`);
   await touch('touchStart',[{x:padPoint.x-20,y:padPoint.y},{x:padPoint.x+20,y:padPoint.y}]);
   await touch('touchMove',[{x:padPoint.x-20,y:padPoint.y+24},{x:padPoint.x+20,y:padPoint.y+24}]);

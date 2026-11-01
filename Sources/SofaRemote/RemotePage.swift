@@ -91,6 +91,7 @@ enum RemotePage {
         display: flex;
         flex-direction: column;
         gap: 10px;
+        touch-action: none;
       }
       header {
         display: flex;
@@ -101,9 +102,9 @@ enum RemotePage {
       header button:active { background: var(--pressed); }
       header h1 {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        font-weight: 650;
-        font-size: 0.98rem;
-        letter-spacing: -0.01em;
+        font-weight: 700;
+        font-size: 1.25rem;
+        letter-spacing: -0.055em;
         margin: 0;
         flex: 1;
         min-width: 0;
@@ -216,8 +217,6 @@ enum RemotePage {
         font-size: 1.25rem;
       }
       .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); position:relative; }
-      .volume::before { content:""; position:absolute; width:18%; height:2px; left:41%; top:50%; background:var(--line); opacity:.45; pointer-events:none; }
-      .panel-divider { width: 42px; height: 1px; align-self: center; flex: 0 0 auto; background: var(--line); opacity: 0.5; }
       .bottom-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
       .bottom-tools button { background: transparent; border-radius: 12px; }
       .bottom-tools button:active { background: var(--pressed); }
@@ -236,11 +235,11 @@ enum RemotePage {
       main .remote-panel .row button { border: 0; background: transparent; }
       main .remote-panel .row button:active { background: var(--pressed); }
       main .remote-panel .row button.on { background: var(--selection); color: var(--selection-ink); }
-      main.is-pointing header, main.is-pointing .row, main.is-pointing .panel-divider,
+      main.is-pointing header, main.is-pointing .row,
       main.is-pointing .bottom-tools, main.is-pointing #pad .hint { opacity: 0; }
       main.is-pointing .bottom-tools, main.is-pointing .row button { pointer-events: none; }
       @media (prefers-reduced-motion: no-preference) {
-        main header, main .row, main .panel-divider, main .bottom-tools, main #pad .hint { transition: opacity 160ms ease; }
+        main header, main .row, main .bottom-tools, main #pad .hint { transition: opacity 160ms ease; }
         main .remote-panel .row button { transition: transform 100ms ease-out; }
         main .remote-panel .row button:active:not(:disabled) { transform:scale(.96); }
       }
@@ -600,7 +599,6 @@ enum RemotePage {
       >
         <span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
-      <div class="panel-divider" aria-hidden="true"></div>
       <div class="row clicks">
         <button id="right" data-icon="right-click" aria-label="Right click" title="Right click"></button>
         <button id="drag" data-icon="drag" aria-label="Drag" aria-pressed="false" title="Drag: toggle to hold or release"></button>
@@ -1284,6 +1282,7 @@ enum RemotePage {
         command({ type: "drag", phase: "end" });
       }
       const pad = $("#pad"),
+        touchSurface = $("main"),
         fingers = new Map();
       pad.addEventListener("keydown", (e) => {
         if (e.target !== pad || document.activeElement !== pad || locked || !key || document.hidden || activeOverlay()
@@ -1300,7 +1299,9 @@ enum RemotePage {
       });
       let travel = 0,
         down = 0,
-        multi = false;
+        multi = false,
+        beganOnPad = false,
+        swipeClickGuard = null;
       const pointerFraction = { dx: 0, dy: 0 };
       // CSS touch-action handles modern browsers. This local fallback suppresses only
       // the default browser action of a short one-finger pad tap on older Safari.
@@ -1327,18 +1328,19 @@ enum RemotePage {
             && Date.now() - tap.started < 300 && e.cancelable) e.preventDefault();
       }, { passive: false });
       pad.addEventListener("touchcancel", () => { padTouchSequence = null; }, { passive: true });
-      pad.addEventListener("pointerdown", (e) => {
-        if (locked) return;
-        pad.setPointerCapture(e.pointerId);
+      touchSurface.addEventListener("pointerdown", (e) => {
+        if (locked || activeOverlay() || e.target.closest('.guide-content, #connection-help') || (e.pointerType === "mouse" && !pad.contains(e.target))) return;
+        if (pad.contains(e.target)) pad.setPointerCapture(e.pointerId);
         if (!fingers.size) {
           travel = 0;
           down = Date.now();
           multi = false;
+          beganOnPad = pad.contains(e.target);
         }
-        fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        fingers.set(e.pointerId, { x: e.clientX, y: e.clientY, origin: e.target.closest('button, summary, a') });
         if (fingers.size > 1) multi = true;
       });
-      pad.addEventListener("pointermove", (e) => {
+      touchSurface.addEventListener("pointermove", (e) => {
         const f = fingers.get(e.pointerId);
         if (!f || locked) return;
         let dx = e.clientX - f.x,
@@ -1346,7 +1348,11 @@ enum RemotePage {
         f.x = e.clientX;
         f.y = e.clientY;
         travel += Math.abs(dx) + Math.abs(dy);
-        if (travel >= 8) $("main").classList.add("is-pointing");
+        if (travel >= 8) {
+          touchSurface.classList.add("is-pointing");
+          if (f.origin) swipeClickGuard = { target: f.origin, until: Date.now() + 500 };
+          if (!beganOnPad && !touchSurface.hasPointerCapture(e.pointerId)) touchSurface.setPointerCapture(e.pointerId);
+        }
         dx = Math.max(-300, Math.min(300, dx));
         dy = Math.max(-300, Math.min(300, dy));
         if (fingers.size > 1) {
@@ -1383,12 +1389,18 @@ enum RemotePage {
           return;
         }
         // Ordinary lift flushes: queued motion stays queued, click is appended after it.
-        if (!fingers.size && !multi && !drag && travel < 8 && Date.now() - down < 300)
+        if (!fingers.size && beganOnPad && !multi && !drag && travel < 8 && Date.now() - down < 300)
           command({ type: "tap" });
       }
-      pad.addEventListener("pointerup", lift);
-      pad.addEventListener("pointercancel", lift);
-      pad.addEventListener("lostpointercapture", (e) => {
+      touchSurface.addEventListener("pointerup", lift);
+      touchSurface.addEventListener("pointercancel", lift);
+      touchSurface.addEventListener("click", (e) => {
+        if (e.detail && swipeClickGuard && Date.now() < swipeClickGuard.until && swipeClickGuard.target.contains(e.target)) {
+          e.preventDefault(); e.stopImmediatePropagation();
+        }
+        swipeClickGuard = null;
+      }, true);
+      touchSurface.addEventListener("lostpointercapture", (e) => {
         if (fingers.has(e.pointerId)) {
           fingers.clear();
           $("main").classList.remove("is-pointing");
