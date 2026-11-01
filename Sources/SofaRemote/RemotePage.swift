@@ -832,6 +832,7 @@ enum RemotePage {
       let travel = 0,
         down = 0,
         multi = false;
+      const pointerFraction = { dx: 0, dy: 0 };
       pad.addEventListener("pointerdown", (e) => {
         if (locked) return;
         pad.setPointerCapture(e.pointerId);
@@ -856,9 +857,20 @@ enum RemotePage {
         if (fingers.size > 1) {
           if (drag) endDrag();
           command({ type: "scroll", dx: -dx / fingers.size, dy: -dy / fingers.size });
-        } else command(drag ? { type: "drag", phase: "move", dx, dy } : { type: "move", dx, dy });
+        } else {
+          // Match Mac TV's touchpad feel and preserve small movements across samples.
+          const gain = 1.6 + Math.min(Math.hypot(dx, dy) / 6, 3);
+          pointerFraction.dx += dx * gain;
+          pointerFraction.dy += dy * gain;
+          const moveX = Math.round(pointerFraction.dx), moveY = Math.round(pointerFraction.dy);
+          pointerFraction.dx -= moveX;
+          pointerFraction.dy -= moveY;
+          if (moveX || moveY)
+            command(drag ? { type: "drag", phase: "move", dx: moveX, dy: moveY } : { type: "move", dx: moveX, dy: moveY });
+        }
       });
       function dropQueuedMotion() {
+        pointerFraction.dx = pointerFraction.dy = 0;
         // Discard still-queued motion for explicit cancel/hidden/disconnect only; a normal
         // pointerup must leave queued motion in place so the full travel is still delivered.
         for (let i = queue.length - 1; i >= 0; i--) {

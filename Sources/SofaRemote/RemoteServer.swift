@@ -61,11 +61,14 @@ final class RemoteServer {
     func start(ports: [UInt16] = Array(8740...8749), onReady: @escaping @MainActor (UInt16) -> Void) {
         guard !stopped, listener == nil, let first = ports.first else { return }
         do {
+            let tcp = NWProtocolTCP.Options()
+            tcp.noDelay = true
+            let parameters = NWParameters(tls: nil, tcp: tcp)
             let listener: NWListener
-            if first == 0 { listener = try NWListener(using: .tcp) }
+            if first == 0 { listener = try NWListener(using: parameters) }
             else {
                 guard let endpoint = NWEndpoint.Port(rawValue: first) else { return }
-                listener = try NWListener(using: .tcp, on: endpoint)
+                listener = try NWListener(using: parameters, on: endpoint)
             }
             listener.newConnectionHandler = { [weak self] connection in
                 MainActor.assumeIsolated {

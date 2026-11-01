@@ -106,8 +106,8 @@ async function main() {
     const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
     calls.length=0; window.illegalMotion.length=0; window.maxActive=0; window.commandLatency=10;
     gesture('pointerdown',30,0,0);
-    for(let i=1;i<=6;i++) gesture('pointermove',30,i*500,i*500);
-    gesture('pointerup',30,3000,3000);
+    for(let i=1;i<=6;i++) gesture('pointermove',30,i*50,i*50);
+    gesture('pointerup',30,300,300);
     await command({type:'click',button:'left',count:1});
     while(queue.length||active) await sleep(10);
     window.commandLatency=3;
@@ -116,9 +116,9 @@ async function main() {
     return {commands:commands.map(c=>c.type),motions:motions.length,totalX:motions.reduce((s,c)=>s+c.dx,0),totalY:motions.reduce((s,c)=>s+c.dy,0),illegal:window.illegalMotion.length,maxActive:window.maxActive};
   })()`);
   assert.equal(burst.illegal,0,'every posted motion delta is within ±300');
-  assert.ok(burst.motions>=6,`burst produced multiple motion posts (got ${burst.motions})`);
-  assert.equal(burst.totalX,1800,'motion travel accumulated and preserved on ordinary lift');
-  assert.equal(burst.totalY,1800,'motion travel accumulated and preserved on ordinary lift');
+  assert.ok(burst.motions>=5,`burst produced multiple motion posts (got ${burst.motions})`);
+  assert.equal(burst.totalX,1380,'motion travel accumulated and preserved on ordinary lift');
+  assert.equal(burst.totalY,1380,'motion travel accumulated and preserved on ordinary lift');
   assert.equal(burst.maxActive,1,'commands remain single-flight across the burst');
   assert.equal(burst.commands.at(-1),'click','click posts after the motion queue drains');
   const cancel=await evaluate(`(async()=>{
@@ -126,10 +126,10 @@ async function main() {
     const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
     calls.length=0; window.illegalMotion.length=0; hang=true;
     gesture('pointerdown',40,0,0);
-    for(let i=1;i<=6;i++) gesture('pointermove',40,i*500,0);
+    for(let i=1;i<=6;i++) gesture('pointermove',40,i*50,0);
     await sleep(5);
     const queuedBefore=queue.length;
-    gesture('pointercancel',40,3000,0);
+    gesture('pointercancel',40,300,0);
     const queuedAfter=queue.filter(x=>x.body.type==='move'||x.body.type==='scroll'||(x.body.type==='drag'&&x.body.phase==='move')).length;
     hang=false; await sleep(50);
     return {queuedBefore,queuedAfter,illegal:window.illegalMotion.length,inflight:calls.filter(c=>c.path==='/command'&&c.body.type==='move').length};
@@ -143,8 +143,8 @@ async function main() {
     calls.length=0; window.illegalMotion.length=0; window.commandLatency=10;
     document.querySelector('#drag').click();
     gesture('pointerdown',50,0,0);
-    for(let i=1;i<=4;i++) gesture('pointermove',50,i*400,0);
-    gesture('pointerup',50,1600,0);
+    for(let i=1;i<=4;i++) gesture('pointermove',50,i*40,0);
+    gesture('pointerup',50,160,0);
     document.querySelector('#drag').click();
     while(queue.length||active) await sleep(10);
     window.commandLatency=3;
@@ -154,6 +154,15 @@ async function main() {
   const dragPhases=dragOrder.types.filter(t=>t.startsWith('drag:')).map(t=>t.slice(5));
   assert.equal(dragPhases[0],'start','drag start posts first');
   assert.equal(dragPhases.at(-1),'end','drag end posts after every queued move');
+  const fineMovement=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms)),pad=document.querySelector('#pad');
+    const g=(type,x)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:70,clientX:x,clientY:0,bubbles:true}));
+    g('pointerdown',0);g('pointercancel',0);calls.length=0;
+    g('pointerdown',0);for(let i=1;i<=12;i++)g('pointermove',i/10);g('pointerup',1.2);
+    while(queue.length||active)await sleep(10);
+    return calls.filter(x=>x.path==='/command'&&x.body.type==='move').reduce((sum,x)=>sum+x.body.dx,0);
+  })()`);
+  assert.equal(fineMovement,2,'fractional finger movements accumulate instead of disappearing');
   const failedMotion=await evaluate(`(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms));await sleep(25);
     calls.length=0;hang=true;
