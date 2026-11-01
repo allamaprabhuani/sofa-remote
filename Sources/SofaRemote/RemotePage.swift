@@ -527,6 +527,9 @@ enum RemotePage {
       #shortcut-list.editing .launch { flex:1; justify-content:flex-start; }
       #shortcut-list.editing .shortcut-label { position:static; width:auto; height:auto; clip-path:none; }
       #shortcut-list.editing .shortcut > button:not(.launch) { display:inline-flex; }
+      #keyboard-sheet .typing-row { display:flex; align-items:center; gap:8px; }
+      #keyboard-sheet .typing-row input { flex:1; min-width:0; }
+      #keyboard-sheet .typing-row button { flex:0 0 48px; width:48px; padding:0; }
       #shortcuts-sheet #open-form { flex-direction:row; align-items:center; width:100%; }
       #open-form button { flex:0 0 48px; width:48px; padding:0; }
 
@@ -607,6 +610,7 @@ enum RemotePage {
       <symbol id="icon-chat" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 0 0-1.032-.211 50.89 50.89 0 0 0-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 0 0 2.433 3.984L7.28 21.53A.75.75 0 0 1 6 21v-4.03a48.527 48.527 0 0 1-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979Z" />
   <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 0 0 1.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0 0 15.75 7.5Z" />
 </g></symbol>
+      <symbol id="icon-brave" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M15.68 0l2.096 2.38s1.84-.512 2.709.358c.868.87 1.584 1.638 1.584 1.638l-.562 1.381.715 2.047s-2.104 7.98-2.35 8.955c-.486 1.919-.818 2.66-2.198 3.633-1.38.972-3.884 2.66-4.293 2.916-.409.256-.92.692-1.38.692-.46 0-.97-.436-1.38-.692a185.796 185.796 0 01-4.293-2.916c-1.38-.973-1.712-1.714-2.197-3.633-.247-.975-2.351-8.955-2.351-8.955l.715-2.047-.562-1.381s.716-.768 1.585-1.638c.868-.87 2.708-.358 2.708-.358L8.321 0h7.36zm-3.679 14.936c-.14 0-1.038.317-1.758.69-.72.373-1.242.637-1.409.742-.167.104-.065.301.087.409.152.107 2.194 1.69 2.393 1.866.198.175.489.464.687.464.198 0 .49-.29.688-.464.198-.175 2.24-1.759 2.392-1.866.152-.108.254-.305.087-.41-.167-.104-.689-.368-1.41-.741-.72-.373-1.617-.69-1.757-.69zm0-11.278s-.409.001-1.022.206-1.278.46-1.584.46c-.307 0-2.581-.434-2.581-.434S4.119 7.152 4.119 7.849c0 .697.339.881.68 1.243l2.02 2.149c.192.203.59.511.356 1.066-.235.555-.58 1.26-.196 1.977.384.716 1.042 1.194 1.464 1.115.421-.08 1.412-.598 1.776-.834.364-.237 1.518-1.19 1.518-1.554 0-.365-1.193-1.02-1.413-1.168-.22-.15-1.226-.725-1.247-.95-.02-.227-.012-.293.284-.851.297-.559.831-1.304.742-1.8-.089-.495-.95-.753-1.565-.986-.615-.232-1.799-.671-1.947-.74-.148-.068-.11-.133.339-.175.448-.043 1.719-.212 2.292-.052.573.16 1.552.403 1.632.532.079.13.149.134.067.579-.081.445-.5 2.581-.541 2.96-.04.38-.12.63.288.724.409.094 1.097.256 1.333.256s.924-.162 1.333-.256c.408-.093.329-.344.288-.723-.04-.38-.46-2.516-.541-2.961-.082-.445-.012-.45.067-.579.08-.129 1.059-.372 1.632-.532.573-.16 1.845.009 2.292.052.449.042.487.107.339.175-.148.069-1.332.508-1.947.74-.615.233-1.476.49-1.565.986-.09.496.445 1.241.742 1.8.297.558.304.624.284.85-.02.226-1.026.802-1.247.95-.22.15-1.413.804-1.413 1.169 0 .364 1.154 1.317 1.518 1.554.364.236 1.355.755 1.776.834.422.079 1.08-.4 1.464-1.115.384-.716.039-1.422-.195-1.977-.235-.555.163-.863.355-1.066l2.02-2.149c.341-.362.68-.546.68-1.243 0-.697-2.695-3.96-2.695-3.96s-2.274.436-2.58.436c-.307 0-.972-.256-1.585-.461-.613-.205-1.022-.206-1.022-.206z" /></symbol>
       <symbol id="icon-globe" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M21.721 12.752a9.711 9.711 0 0 0-.945-5.003 12.754 12.754 0 0 1-4.339 2.708 18.991 18.991 0 0 1-.214 4.772 17.165 17.165 0 0 0 5.498-2.477ZM14.634 15.55a17.324 17.324 0 0 0 .332-4.647c-.952.227-1.945.347-2.966.347-1.021 0-2.014-.12-2.966-.347a17.515 17.515 0 0 0 .332 4.647 17.385 17.385 0 0 0 5.268 0ZM9.772 17.119a18.963 18.963 0 0 0 4.456 0A17.182 17.182 0 0 1 12 21.724a17.18 17.18 0 0 1-2.228-4.605ZM7.777 15.23a18.87 18.87 0 0 1-.214-4.774 12.753 12.753 0 0 1-4.34-2.708 9.711 9.711 0 0 0-.944 5.004 17.165 17.165 0 0 0 5.498 2.477ZM21.356 14.752a9.765 9.765 0 0 1-7.478 6.817 18.64 18.64 0 0 0 1.988-4.718 18.627 18.627 0 0 0 5.49-2.098ZM2.644 14.752c1.682.971 3.53 1.688 5.49 2.099a18.64 18.64 0 0 0 1.988 4.718 9.765 9.765 0 0 1-7.478-6.816ZM13.878 2.43a9.755 9.755 0 0 1 6.116 3.986 11.267 11.267 0 0 1-3.746 2.504 18.63 18.63 0 0 0-2.37-6.49ZM12 2.276a17.152 17.152 0 0 1 2.805 7.121c-.897.23-1.837.353-2.805.353-.968 0-1.908-.122-2.805-.353A17.151 17.151 0 0 1 12 2.276ZM10.122 2.43a18.629 18.629 0 0 0-2.37 6.49 11.266 11.266 0 0 1-3.746-2.504 9.754 9.754 0 0 1 6.116-3.985Z" />
 </g></symbol>
       <symbol id="icon-heart" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
@@ -709,14 +713,14 @@ enum RemotePage {
           ><button data-key="space">Space</button>
         </div>
         <form id="text-form">
-          <label for="text">Type on your Mac</label
-          ><input
+          <label for="text">Type on your Mac</label>
+          <div class="typing-row"><input
             class="field"
             id="text"
             maxlength="1000"
             autocomplete="off"
             aria-label="Text to send"
-          /><button data-icon="send" aria-label="Send text" title="Send text"></button>
+          /><button data-icon="send" aria-label="Send text" title="Send text"></button></div>
         </form>
       </div>
     </div>
@@ -752,14 +756,14 @@ enum RemotePage {
           ><button data-icon="add" aria-label="Add shortcut" title="Add shortcut"></button>
         </form>
         </details>
-        <label for="url">Open a website on your Mac</label>
+        <label for="url">Open a website or search Google</label>
       <form class="address" id="open-form">
         <input
           class="field"
           id="url"
           inputmode="url"
-          aria-label="Website address"
-          placeholder="Website address"
+          aria-label="Website address or Google search"
+          placeholder="Website address or Google search"
           autocapitalize="off"
           autocorrect="off"
           spellcheck="false"
@@ -1669,8 +1673,11 @@ enum RemotePage {
       }
       $("#open-form").onsubmit = async (e) => {
         e.preventDefault();
-        const url = $("#url").value.trim();
-        if (!url || locked) return;
+        const input = $("#url").value.trim();
+        if (!input || locked) return;
+        // Explicit schemes are sent to the Mac's strict URL validator, not treated as search.
+        const address = /^(?:[a-z][a-z0-9+.-]*:\/\/|(?:https?|javascript|data|file|ftp|about):)/i.test(input) || /^(?:localhost|[^\s/:]+\.[^\s/:]+)(?::\d+)?(?:[/?#]|$)/i.test(input);
+        const url = address ? input : "https://www.google.com/search?q=" + encodeURIComponent(input);
         const button = e.currentTarget.querySelector("button");
         if (button.disabled) return;
         button.disabled = true;
@@ -1712,7 +1719,7 @@ enum RemotePage {
           const icon = document.createElement("span");
           icon.className = "shortcut-initial";
           icon.setAttribute("aria-hidden", "true");
-          const knownIcon = item.kind === "downloads" ? "folder" : ({ brave: "globe", iina: "play-pause" })[name.trim().toLowerCase()];
+          const knownIcon = item.kind === "downloads" ? "folder" : ({ brave: "brave", "brave browser": "brave", iina: "play-pause" })[name.trim().toLowerCase()];
           if (knownIcon) {
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("class", "control-icon");

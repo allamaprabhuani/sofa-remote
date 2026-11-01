@@ -87,7 +87,7 @@ async function main() {
   assert.ok(localShortcutIcons.icons.every(x=>x.hidden==='true' && x.images===0),'icons are decorative local DOM with no favicon fetch');
   assert.deepEqual(localShortcutIcons.requests,[{path:'/launch',body:{id:'yt'}}],'launch sends only the selected shortcut ID');
   const shortcutLayout=await evaluate(`(()=>{testState.shortcuts=[{id:'brave',name:'Brave',kind:'app'},{id:'iina',name:'IINA',kind:'app'},{id:'dl',name:'Downloads',kind:'downloads'}];shortcuts=testState.shortcuts;renderShortcuts();document.querySelector('#shortcuts-open').click();const list=document.querySelector('#shortcut-list'),rows=[...list.querySelectorAll('.shortcut')],edit=document.querySelector('#shortcut-edit'),form=document.querySelector('#open-form');const before={icons:rows.map(r=>r.querySelector('.shortcut-initial use')?.getAttribute('href')),arrows:rows.flatMap(r=>[...r.querySelectorAll('button:not(.launch)')]).every(b=>getComputedStyle(b).display==='none'),formRow:getComputedStyle(form).flexDirection,present:document.querySelector('#present-open use')?.getAttribute('href')};edit.click();const editing=rows[0].querySelector('button:not(.launch)').getClientRects().length>0;edit.click();closeSheet();testState.shortcuts=[];shortcuts=[];renderShortcuts();return {before,editing}})()`);
-  assert.deepEqual(shortcutLayout.before.icons,['#icon-globe','#icon-play-pause','#icon-folder']);
+  assert.deepEqual(shortcutLayout.before.icons,['#icon-brave','#icon-play-pause','#icon-folder']);
   assert.equal(shortcutLayout.before.arrows,true,'shortcut edit arrows are hidden until requested');assert.equal(shortcutLayout.editing,true,'editing retains reordering controls');
   assert.equal(shortcutLayout.before.formRow,'row','address and send arrow share a row');assert.equal(shortcutLayout.before.present,'#icon-present','present and fullscreen have distinct icons');
   console.log('PASS main display controls and private local shortcut icons');
@@ -402,6 +402,11 @@ async function main() {
   assert.equal(heartbeat.at(-1).phase,'end','hidden page ends held drag');
   const websiteEntry=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();return {visible:document.querySelector('#open-form').getClientRects().length>0,insideShortcuts:!!document.querySelector('#open-form').closest('#shortcuts-sheet'),onMain:!!document.querySelector('#open-form').closest('main')}})()`);
   assert.deepEqual(websiteEntry,{visible:true,insideShortcuts:true,onMain:false},'website entry is available in Shortcuts without crowding the touchpad');
+  const searchInput=await evaluate(`(async()=>{calls.length=0;const form=document.querySelector('#open-form'),input=document.querySelector('#url');input.value='quiet cats & dogs';form.requestSubmit();await new Promise(r=>setTimeout(r,30));input.value='example.org';form.requestSubmit();await new Promise(r=>setTimeout(r,30));input.value='javascript:alert(1)';form.requestSubmit();await new Promise(r=>setTimeout(r,30));return calls.filter(c=>c.path==='/open').map(c=>c.body.url)})()`);
+  assert.deepEqual(searchInput,['https://www.google.com/search?q=quiet%20cats%20%26%20dogs','example.org','javascript:alert(1)'],'searches are encoded for Google while addresses and unsafe schemes go to the Mac URL validator');
+  const typingRow=await evaluate(`(()=>{closeSheet();document.querySelector('#keyboard-open').click();const row=document.querySelector('#text-form .typing-row'),input=row.querySelector('#text').getBoundingClientRect(),button=row.querySelector('button').getBoundingClientRect();const result={layout:getComputedStyle(row).display,beside:input.width>0&&button.width>=44&&button.left>=input.right&&Math.abs(button.top-input.top)<8};closeSheet();document.querySelector('#shortcuts-open').click();return result})()`);
+  assert.deepEqual(typingRow,{layout:'flex',beside:true},'typing send arrow is beside the field');
+
   const features=await evaluate(`(async()=>{
     calls.length=0;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     document.querySelector('#url').value='https://example.org';document.querySelector('#open-form').requestSubmit();await sleep(10);

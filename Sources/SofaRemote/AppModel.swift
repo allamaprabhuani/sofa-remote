@@ -319,10 +319,16 @@ import ServiceManagement
                 case .app:
                     guard let bundleID = item.bundleID,
                           let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { throw RemoteError("This app is not installed on the Mac.") }
-                    guard !openingApp else { throw RemoteError("Wait for the current app to open.") }
-                    openingApp = true
-                    defer { openingApp = false }
-                    _ = try await NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+                    if bundleID == "com.brave.Browser" {
+                        // Opening the app alone can activate Brave without showing any window.
+                        // A local blank tab creates a visible browser window without a network request.
+                        try await openWebsite(URL(string: "about:blank")!)
+                    } else {
+                        guard !openingApp else { throw RemoteError("Wait for the current app to open.") }
+                        openingApp = true
+                        defer { openingApp = false }
+                        _ = try await NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+                    }
                 }
             case "/shortcuts/add":
                 guard let name = body["name"] as? String, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -381,6 +387,7 @@ import ServiceManagement
         defer { openingApp = false }
         if let brave = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.brave.Browser") {
             let config = NSWorkspace.OpenConfiguration()
+            config.activates = true
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 NSWorkspace.shared.open([url], withApplicationAt: brave, configuration: config) { _, error in
                     if let error { continuation.resume(throwing: error) } else { continuation.resume() }
