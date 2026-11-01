@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased — build 25
+## Unreleased — build 26
 
-- Show the Brave icon and open a blank Brave tab for its app shortcut.
+- Show the Brave icon and request a new window when its app is already running.
 - Search Google from the address field and place the typing send button beside the field.
 - Simplify saved shortcut icons and move reordering to edit mode; group website entry below.
 - Remove the duplicate keyboard key field and move typing to the bottom while retaining modifier shortcuts.

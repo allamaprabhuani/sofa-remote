@@ -320,9 +320,24 @@ import ServiceManagement
                     guard let bundleID = item.bundleID,
                           let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { throw RemoteError("This app is not installed on the Mac.") }
                     if bundleID == "com.brave.Browser" {
-                        // Opening the app alone can activate Brave without showing any window.
-                        // A local blank tab creates a visible browser window without a network request.
-                        try await openWebsite(URL(string: "about:blank")!)
+                        guard !openingApp else { throw RemoteError("Wait for the current app to open.") }
+                        openingApp = true
+                        defer { openingApp = false }
+                        let credential = request.headers["x-sofa-key"]
+                        let generation = controlGeneration
+                        let wasRunning = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).contains { !$0.isTerminated }
+                        try await BraveWindowCoordinator.open(
+                            launch: {
+                                let config = NSWorkspace.OpenConfiguration()
+                                config.activates = true
+                                let running = try await NSWorkspace.shared.openApplication(at: app, configuration: config)
+                                return (running.processIdentifier, wasRunning)
+                            },
+                            frontmostPID: { NSWorkspace.shared.frontmostApplication?.processIdentifier },
+                            allowed: { self.sharing && !Task.isCancelled && !self.inputPaused && self.accessibilityAllowed
+                                && self.controlGeneration == generation && self.store.authenticate(credential) != nil },
+                            sendNewWindow: { try self.input.handle(.key("n", ["command"])) }
+                        )
                     } else {
                         guard !openingApp else { throw RemoteError("Wait for the current app to open.") }
                         openingApp = true
