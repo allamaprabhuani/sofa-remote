@@ -197,6 +197,8 @@ async function main() {
   assert.deepEqual({track:visual.track,role:visual.trackRole,drag:visual.drag,right:visual.right},{track:'none',role:null,drag:'false',right:null},'no volume line is shown, and right click remains separate from the drag toggle');assert.ok(visual.play>visual.prev,'play is the visual anchor');
   const navigation=await evaluate(`(()=>{const bar=document.querySelector('.bottom-tools');return {help:bar.contains(document.querySelector('.remote-guide')),keyboard:bar.contains(document.querySelector('#keyboard-open')),shortcuts:bar.contains(document.querySelector('#shortcuts-open')),settings:bar.contains(document.querySelector('#settings-open'))}})()`);
   assert.deepEqual(navigation,{help:true,keyboard:true,shortcuts:true,settings:true},'help, shortcuts and settings share the bottom navigation');
+  const keyboardLayout=await evaluate(`(()=>{const sheet=document.querySelector('#keyboard-sheet'),form=sheet.querySelector('#text-form'),grid=sheet.querySelector('.keygrid');return {old:!!sheet.querySelector('#key-form'),textAfter:!!(grid.compareDocumentPosition(form)&Node.DOCUMENT_POSITION_FOLLOWING),last:grid.lastElementChild.dataset.key}})()`);
+  assert.deepEqual(keyboardLayout,{old:false,textAfter:true,last:'space'},'typing area and Space are at the bottom without a duplicate key field');
   const keyboardNav=await evaluate(`(()=>{const button=document.querySelector('#keyboard-open');button.click();const open=!!document.querySelector('#keyboard-sheet.open');closeSheet();return {open,focus:document.activeElement===button}})()`);
   assert.deepEqual(keyboardNav,{open:true,focus:true},'bottom keyboard opens and restores focus');
   const remoteGuide=await evaluate(`(()=>{calls.length=0;const details=document.querySelector('.remote-guide'),summary=details.querySelector('summary');const named=summary.getAttribute('aria-label');summary.click();const open=details.open;summary.click();return {named,open,commands:calls.filter(c=>c.path==='/command').length}})()`);
@@ -400,7 +402,7 @@ async function main() {
     document.querySelector('#url').value='https://example.org';document.querySelector('#open-form').requestSubmit();await sleep(10);
     document.querySelector('#shortcut-name').value='Example';document.querySelector('#shortcut-value').value='https://example.org';document.querySelector('#shortcut-form').requestSubmit();await sleep(20);
     closeSheet();document.querySelector('#display').dispatchEvent(new Event('change',{bubbles:true}));await sleep(20);
-    document.querySelector('[data-mod="command"]').click();document.querySelector('#key-character').value='a';document.querySelector('#key-form').requestSubmit();await sleep(10);
+    document.querySelector('[data-mod="command"]').click();document.querySelector('#text').value='a';document.querySelector('#text-form').requestSubmit();await sleep(10);
     document.querySelector('#lock').click();await sleep(10);
     return calls.filter(x=>x.path!=='/state').map(x=>({path:x.path,body:x.body}));
   })()`);

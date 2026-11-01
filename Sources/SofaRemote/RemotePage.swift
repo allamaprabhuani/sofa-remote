@@ -678,6 +678,20 @@ enum RemotePage {
           <h2>Keyboard</h2>
           <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
+        <p>Modifiers apply to the next key or single typed letter or number.</p>
+        <div class="modifiers">
+          <button data-mod="command" aria-pressed="false">⌘ Command</button
+          ><button data-mod="control" aria-pressed="false">⌃ Control</button
+          ><button data-mod="option" aria-pressed="false">⌥ Option</button
+          ><button data-mod="shift" aria-pressed="false">⇧ Shift</button>
+        </div>
+        <div class="keygrid">
+          <button data-key="escape">Esc</button><button data-key="tab">Tab</button
+          ><button data-key="backspace" aria-label="Backspace">⌫</button><button data-key="delete">Delete</button
+          ><button data-key="left" aria-label="Left arrow">←</button><button data-key="up" aria-label="Up arrow">↑</button><button data-key="down" aria-label="Down arrow">↓</button
+          ><button data-key="right" aria-label="Right arrow">→</button><button data-key="enter">Return</button
+          ><button data-key="space">Space</button>
+        </div>
         <form id="text-form">
           <label for="text">Type on your Mac</label
           ><input
@@ -688,33 +702,6 @@ enum RemotePage {
             aria-label="Text to send"
           /><button data-icon="send" aria-label="Send text" title="Send text"></button>
         </form>
-        <p>Modifiers apply to the next key.</p>
-        <div class="modifiers">
-          <button data-mod="command" aria-pressed="false">⌘ Command</button
-          ><button data-mod="control" aria-pressed="false">⌃ Control</button
-          ><button data-mod="option" aria-pressed="false">⌥ Option</button
-          ><button data-mod="shift" aria-pressed="false">⇧ Shift</button>
-        </div>
-        <form id="key-form">
-          <label for="key-character">Letter or number key</label>
-          <div class="sheet-row">
-            <input
-              class="field"
-              id="key-character"
-              maxlength="1"
-              aria-label="Letter or number key"
-              autocapitalize="off"
-              autocomplete="off"
-            /><button data-icon="send" aria-label="Send key" title="Send key"></button>
-          </div>
-        </form>
-        <div class="keygrid">
-          <button data-key="escape">Esc</button><button data-key="tab">Tab</button
-          ><button data-key="backspace" aria-label="Backspace">⌫</button><button data-key="delete">Delete</button
-          ><button data-key="left" aria-label="Left arrow">←</button><button data-key="up" aria-label="Up arrow">↑</button><button data-key="down" aria-label="Down arrow">↓</button
-          ><button data-key="right" aria-label="Right arrow">→</button><button data-key="space">Space</button
-          ><button data-key="enter">Return</button>
-        </div>
       </div>
     </div>
     <div class="scrim" id="shortcuts-sheet">
@@ -1443,34 +1430,28 @@ enum RemotePage {
           }),
       );
       function sendKey(key) {
-        command({ type: "key", key, modifiers: [...modifiers] });
+        const pending = command({ type: "key", key, modifiers: [...modifiers] });
         modifiers.clear();
         $$("[data-mod]").forEach((x) => {
           x.classList.remove("on");
           x.setAttribute("aria-pressed", "false");
         });
+        return pending;
       }
       $$("[data-key]").forEach((b) => (b.onclick = () => sendKey(b.dataset.key)));
-      $("#key-form").onsubmit = (e) => {
-        e.preventDefault();
-        const input = $("#key-character"),
-          value = input.value.toLowerCase();
-        if (!/^[a-z0-9]$/.test(value)) {
-          status("Enter one letter or number.", true);
-          return;
-        }
-        sendKey(value);
-        input.value = "";
-      };
       $("#text-form").onsubmit = async (e) => {
         e.preventDefault();
         const input = $("#text"),
           value = input.value,
           button = e.currentTarget.querySelector("button");
         if (!value || locked || button.disabled) return;
+        if (modifiers.size && !/^[a-z0-9]$/i.test(value)) {
+          status("With a modifier, enter one letter or number, or use a key below.", true);
+          return;
+        }
         button.disabled = true;
         try {
-          const sent = await command({ type: "text", value: value.slice(0, 1000) });
+          const sent = modifiers.size ? await sendKey(value.toLowerCase()) : await command({ type: "text", value: value.slice(0, 1000) });
           if (sent && input.value === value) input.value = "";
           else if (!sent && !key) status("Pair with your Mac, then send the text again.", true, "runtime");
           else if (!sent && statusKind !== "runtime" && statusKind !== "permission")

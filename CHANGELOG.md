@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased — build 22
+## Unreleased — build 23
 
+- Remove the duplicate keyboard key field and move typing to the bottom while retaining modifier shortcuts.
 - Simplify the Shortcuts and Settings panels while keeping safety guidance available.
 - Put Keyboard in the bottom navigation and use the system font across phone appearances.
 - Allow a swipe to begin over any main remote control or empty space without triggering the underlying button.
