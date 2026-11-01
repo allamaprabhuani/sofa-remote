@@ -30,11 +30,11 @@ jobs:
           for size in 180 192 512; do
             test -s "build/Sofa Remote.app/Contents/Resources/icon-$size.png"
           done
-          ditto -c -k --sequesterRsrc --keepParent 'build/Sofa Remote.app' build/Sofa-Remote.zip
-          shasum -a 256 build/Sofa-Remote.zip > build/Sofa-Remote.zip.sha256
+          ./scripts/package-release.sh
       - uses: actions/upload-artifact@v4
         with:
           name: Sofa-Remote
           path: |
             build/Sofa-Remote.zip
-            build/Sofa-Remote.zip.sha256
+            build/Sofa-Remote.dmg
+            build/SHA256SUMS

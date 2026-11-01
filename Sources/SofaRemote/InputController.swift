@@ -11,10 +11,19 @@ import IOKit.pwr_mgt
     private let emit: (CGEvent) -> Void
     private let trusted: () -> Bool
     private let secure: () -> Bool
+    private let readPosition: () -> CGPoint
+    private let clock: () -> TimeInterval
+    private var pointerAnchor: CGPoint?
+    private var lastObserved: CGPoint?
+    private var recentTargets: [CGPoint] = []
+    private var lastMoveTime = -TimeInterval.infinity
     init(displays: DisplayController, emit: @escaping (CGEvent) -> Void = { $0.post(tap: .cghidEventTap) },
          trusted: @escaping () -> Bool = { AXIsProcessTrusted() },
-         secure: @escaping () -> Bool = { IsSecureEventInputEnabled() }) {
+         secure: @escaping () -> Bool = { IsSecureEventInputEnabled() },
+         readPosition: @escaping () -> CGPoint = { CGEvent(source: nil)?.location ?? .zero },
+         clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
         self.displays = displays; self.emit = emit; self.trusted = trusted; self.secure = secure
+        self.readPosition = readPosition; self.clock = clock
     }
     var accessibilityAllowed: Bool { trusted() }
     var isDragging: Bool { dragging }
@@ -31,7 +40,7 @@ import IOKit.pwr_mgt
                                       wheel1: Int32(-dy), wheel2: Int32(-dx), wheel3: 0) else { throw eventError }
             event.location = position; emit(event)
         case .click(let button, let count):
-            reset()
+            reset(clearPointer: false)
             for index in 1...count {
                 try mouse(button == .left ? .leftMouseDown : .rightMouseDown, button: button == .left ? .left : .right, count: index)
                 try mouse(button == .left ? .leftMouseUp : .rightMouseUp, button: button == .left ? .left : .right, count: index)
@@ -39,11 +48,11 @@ import IOKit.pwr_mgt
         case .drag(let phase, let dx, let dy):
             switch phase {
             case .start:
-                reset(); try mouse(.leftMouseDown); dragging = true; armDragDeadline()
+                reset(clearPointer: false); try mouse(.leftMouseDown); dragging = true; armDragDeadline()
             case .move:
                 guard dragging else { throw RemoteError("Drag ended. Hold Drag again to start a new drag.") }
                 try move(dx: dx, dy: dy, drag: true); armDragDeadline()
-            case .end: reset()
+            case .end: reset(clearPointer: false)
             }
         case .text(let text):
             let target = NSWorkspace.shared.frontmostApplication?.processIdentifier
@@ -78,17 +87,37 @@ import IOKit.pwr_mgt
             }
         }
     }
-    func reset() {
+    func reset(clearPointer: Bool = true) {
         dragDeadline?.cancel(); dragDeadline = nil
         if dragging { try? mouse(.leftMouseUp); dragging = false }
+        if clearPointer { clearPointerAnchor() }
     }
-    private var position: CGPoint { CGEvent(source: nil)?.location ?? .zero }
+    private func clearPointerAnchor() {
+        pointerAnchor = nil; lastObserved = nil; recentTargets.removeAll(keepingCapacity: true)
+    }
+    private var position: CGPoint {
+        let observed = readPosition()
+        defer { lastObserved = observed }
+        guard let anchor = pointerAnchor, clock() - lastMoveTime <= 0.15 else {
+            clearPointerAnchor(); return observed
+        }
+        func near(_ a: CGPoint, _ b: CGPoint) -> Bool { hypot(a.x - b.x, a.y - b.y) <= 1 }
+        // Accept delayed observations of our own events, but immediately yield to a
+        // physical mouse move that leaves the recent synthetic path.
+        if let previous = lastObserved, !near(observed, previous), !recentTargets.contains(where: { near(observed, $0) }) {
+            clearPointerAnchor(); return observed
+        }
+        return anchor
+    }
     private var eventError: RemoteError { RemoteError("macOS could not create the input event.") }
     private func move(dx: Double, dy: Double, drag: Bool) throws {
         let current = position
         let next = displays.clampQuartz(CGPoint(x: current.x + dx, y: current.y + dy))
         guard let event = CGEvent(mouseEventSource: nil, mouseType: drag ? .leftMouseDragged : .mouseMoved,
                                   mouseCursorPosition: next, mouseButton: .left) else { throw eventError }
+        pointerAnchor = next; lastMoveTime = clock()
+        recentTargets.append(next)
+        if recentTargets.count > 8 { recentTargets.removeFirst() }
         emit(event)
     }
     private func mouse(_ type: CGEventType, button: CGMouseButton = .left, count: Int = 1) throws {

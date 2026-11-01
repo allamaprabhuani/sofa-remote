@@ -24,6 +24,20 @@ import ServiceManagement
     private var movingWindow = false
     private var openingApp = false
     private var pairTimer: Timer?
+    private var motionTimes: [TimeInterval] = []
+    private var motionDurations: [TimeInterval] = []
+    private let inputDiagnosticsEnabled = CommandLine.arguments.contains("--input-fixture")
+    var inputTimingText: String {
+        guard let first = motionTimes.first, let last = motionTimes.last, motionTimes.count > 1, last > first else {
+            return "Move the pointer continuously, then refresh timing."
+        }
+        let gaps = zip(motionTimes.dropFirst(), motionTimes).map { $0 - $1 }
+        let sorted = gaps.sorted()
+        let processing = motionDurations.reduce(0, +) / Double(max(1, motionDurations.count))
+        return String(format: "Input %.0f/s · median gap %.0f ms · max %.0f ms · Mac %.1f ms",
+                      Double(gaps.count) / (last - first), sorted[sorted.count / 2] * 1000,
+                      (gaps.max() ?? 0) * 1000, processing * 1000)
+    }
 
     init(folder: URL = AppData.folder) {
         var failure: String?
@@ -49,6 +63,7 @@ import ServiceManagement
     }
     var accessibilityAllowed: Bool { input.accessibilityAllowed }
     var keepAwake: Bool { preferences?.saved.keepAwake ?? false }
+    var showMenuBarIcon: Bool { preferences?.saved.showMenuBarIcon ?? true }
     var inputPaused: Bool {
         locallyPaused || !sessionActive || input.secureInput || NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.loginwindow"
     }
@@ -119,8 +134,15 @@ import ServiceManagement
         try preferences.update { $0.keepAwake = value }
         awake.set(sharing && value); objectWillChange.send()
     }
+    func setShowMenuBarIcon(_ value: Bool) throws {
+        guard let preferences else { throw RemoteError("Settings are unavailable.") }
+        try preferences.update { $0.showMenuBarIcon = value }
+        objectWillChange.send()
+    }
     func state() -> [String: Any] {
         ["name": Host.current().localizedName ?? "Mac", "sharing": sharing,
+         "appVersion": SupportInfo.version, "appBuild": SupportInfo.build,
+         "macOSVersion": SupportInfo.macOSVersion,
          "accessibility": accessibilityAllowed, "sessionLocked": inputPaused, "screenSleeping": screenSleeping,
          "frontApp": inputPaused ? "" : (NSWorkspace.shared.frontmostApplication?.localizedName ?? ""),
          "displayID": displays.selectedID ?? "", "displays": displays.options,
@@ -141,6 +163,28 @@ import ServiceManagement
             switch request.path {
             case "/command":
                 let command = try RemoteCommand(json: body)
+                var measuredMotionStart: TimeInterval?
+                if inputDiagnosticsEnabled {
+                    switch command {
+                    case .move(let dx, let dy), .drag(.move, let dx, let dy):
+                        if dx == 0 && dy == 0 { break }
+                        let now = ProcessInfo.processInfo.systemUptime
+                        if let last = motionTimes.last, now - last > 2 {
+                            motionTimes.removeAll(keepingCapacity: true)
+                            motionDurations.removeAll(keepingCapacity: true)
+                        }
+                        measuredMotionStart = now
+                        motionTimes.append(now)
+                        if motionTimes.count > 40 { motionTimes.removeFirst() }
+                    default: break
+                    }
+                }
+                defer {
+                    if let start = measuredMotionStart {
+                        motionDurations.append(ProcessInfo.processInfo.systemUptime - start)
+                        if motionDurations.count > 40 { motionDurations.removeFirst() }
+                    }
+                }
                 if screenSleeping, command != .action(.screenOff) { try wake() }
                 switch command {
                 case .action(.screenOn): try wake()
@@ -214,7 +258,9 @@ import ServiceManagement
             default: return nil
             }
             try Task.checkCancellation()
-            objectWillChange.send()
+            // Pointer/key commands change the desktop, not this native setup view.
+            // Avoid scheduling a SwiftUI redraw for every high-frequency input packet.
+            if request.path != "/command" { objectWillChange.send() }
             return .json(["ok": true])
         } catch is CancellationError {
             input.reset()

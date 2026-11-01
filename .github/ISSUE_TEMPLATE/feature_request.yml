@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a focused improvement to the input-only remote.
+title: "[Idea]: "
+body:
+  - type: markdown
+    attributes:
+      value: Keep personal data out of public reports. For general questions, use Discussions.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the user situation and current workaround.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: tradeoffs
+    attributes:
+      label: Alternatives or trade-offs
+      description: Consider setup effort, privacy, resource use and accessibility.

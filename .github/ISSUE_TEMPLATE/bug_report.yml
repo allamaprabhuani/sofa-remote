@@ -1,0 +1,57 @@
+name: Bug report
+description: Report reproducible unexpected behaviour in Sofa Remote.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use disposable windows to reproduce. Never attach pairing links/codes, tokens, typed/private text, network addresses, personal URLs, app data or desktop screenshots.
+        Report security vulnerabilities privately at https://github.com/allamaprabhuani/sofa-remote/security/advisories/new.
+  - type: input
+    id: version
+    attributes:
+      label: App version and build
+      description: Find this in About & Help on the Mac or phone.
+      placeholder: "0.1.0 (7)"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: macOS and phone/browser versions
+      placeholder: "macOS version; iOS version; Safari version"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include whether this follows sleep, a network/display change, an upgrade or a permission change.
+      placeholder: "1. Open an empty test window…"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Optional reviewed diagnostic summary
+      description: Use About & Help → review summary → Copy. Add only the allowlisted summary; do not paste logs or browser storage.
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, pairing details, network addresses and personal content from this report.
+          required: true

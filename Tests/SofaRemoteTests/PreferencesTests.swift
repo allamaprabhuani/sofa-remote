@@ -15,14 +15,29 @@ import Testing
         try store.update { state in
             state.shortcuts.swapAt(0, 1)
             state.keepAwake = true
+            state.showMenuBarIcon = false
             state.preferredDisplay = "saved-display-uuid"
         }
         let reloaded = try Preferences(folder: folder)
         #expect(reloaded.saved.shortcuts.first?.id == "iina")
         #expect(reloaded.saved.keepAwake)
+        #expect(!reloaded.saved.showMenuBarIcon)
         #expect(reloaded.saved.preferredDisplay == "saved-display-uuid")
         let mode = try FileManager.default.attributesOfItem(atPath: folder.appendingPathComponent("settings.json").path)[.posixPermissions] as? NSNumber
         #expect(mode?.intValue == 0o600)
+    }
+    @Test func previousSettingsDefaultToAVisibleMenuBarIcon() throws {
+        let folder = try folder(); defer { try? FileManager.default.removeItem(at: folder) }
+        let original = Data(#"{"shortcuts":[],"keepAwake":true,"preferredDisplay":"old-display"}"#.utf8)
+        try original.write(to: folder.appendingPathComponent("settings.json"))
+        let store = try Preferences(folder: folder)
+        #expect(store.saved.showMenuBarIcon)
+        #expect(store.saved.keepAwake)
+        #expect(store.saved.preferredDisplay == "old-display")
+        #expect(store.saved.shortcuts.isEmpty)
+        #expect(try Data(contentsOf: folder.appendingPathComponent("settings.json")) == original)
+        try store.update { $0.showMenuBarIcon = false }
+        #expect(!(try Preferences(folder: folder)).saved.showMenuBarIcon)
     }
     @Test func failedWriteKeepsPriorStateAndCorruptionIsPreserved() throws {
         let folder = try folder(); defer { try? FileManager.default.removeItem(at: folder) }
@@ -45,6 +60,17 @@ import Testing
 }
 
 @Suite struct CommandValidationTests {
+    @Test func acceleratedMovesStayBoundedWithoutRelaxingScrollLimits() throws {
+        #expect(try RemoteCommand(json: ["type":"move", "dx":1000, "dy":-1000]) == .move(1000, -1000))
+        #expect(try RemoteCommand(json: ["type":"drag", "phase":"move", "dx":-1000, "dy":1000]) == .drag(.move, -1000, 1000))
+        #expect(try RemoteCommand(json: ["type":"scroll", "dx":300, "dy":-300]) == .scroll(300, -300))
+        for json: [String: Any] in [
+            ["type":"move", "dx":1001, "dy":0], ["type":"move", "dx":Double.infinity, "dy":0],
+            ["type":"drag", "phase":"move", "dx":0, "dy":-1001],
+            ["type":"scroll", "dx":301, "dy":0]
+        ] { #expect(throws: RemoteError.self) { _ = try RemoteCommand(json: json) } }
+    }
+
     @Test func rejectsMalformedInputAndPreservesUnicodeText() throws {
         #expect(try RemoteCommand(json: ["type": "text", "value": "Hello 👋 ಕನ್ನಡ"]) == .text("Hello 👋 ಕನ್ನಡ"))
         let invalid: [[String: Any]] = [

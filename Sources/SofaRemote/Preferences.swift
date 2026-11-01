@@ -29,6 +29,17 @@ struct SavedPreferences: Codable {
     ]
     var preferredDisplay: String?
     var keepAwake = false
+    var showMenuBarIcon = true
+
+    init() {}
+    private enum CodingKeys: String, CodingKey { case shortcuts, preferredDisplay, keepAwake, showMenuBarIcon }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        shortcuts = try values.decodeIfPresent([Shortcut].self, forKey: .shortcuts) ?? shortcuts
+        preferredDisplay = try values.decodeIfPresent(String.self, forKey: .preferredDisplay)
+        keepAwake = try values.decodeIfPresent(Bool.self, forKey: .keepAwake) ?? false
+        showMenuBarIcon = try values.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
+    }
 }
 
 /// Saves a complete replacement before exposing it in memory; failed writes never look successful.

@@ -5,6 +5,9 @@ import AppKit
     private var window: NSWindow?
     private let counter = NSTextField(labelWithString: "Clicks: 0")
     private var clicks = 0
+    private let timing: () -> String
+    private let timingLabel = NSTextField(labelWithString: "Move the pointer, then refresh timing.")
+    init(timing: @escaping () -> String = { "Timing is unavailable." }) { self.timing = timing; super.init() }
     func show(on screen: NSScreen?) {
         if let window { window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return }
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 360),
@@ -22,8 +25,14 @@ import AppKit
         let button = NSButton(title: "Test click", target: self, action: #selector(clicked))
         button.bezelStyle = .rounded
         button.frame = NSRect(x: 20, y: 30, width: 160, height: 36)
-        counter.frame = NSRect(x: 200, y: 36, width: 240, height: 24)
+        counter.frame = NSRect(x: 200, y: 36, width: 95, height: 24)
+        let refresh = NSButton(title: "Refresh link timing", target: self, action: #selector(refreshTiming))
+        refresh.bezelStyle = .rounded
+        refresh.frame = NSRect(x: 320, y: 30, width: 210, height: 36)
+        timingLabel.frame = NSRect(x: 20, y: 5, width: 520, height: 20)
+        timingLabel.font = .systemFont(ofSize: 12)
         container.addSubview(label); container.addSubview(text); container.addSubview(button); container.addSubview(counter)
+        container.addSubview(refresh); container.addSubview(timingLabel)
         window.contentView = container
         if let screen {
             let frame = screen.visibleFrame
@@ -35,4 +44,5 @@ import AppKit
         NSApp.activate(ignoringOtherApps: true)
     }
     @objc private func clicked() { clicks += 1; counter.stringValue = "Clicks: \(clicks)" }
+    @objc private func refreshTiming() { timingLabel.stringValue = timing() }
 }

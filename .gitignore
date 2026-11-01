@@ -4,3 +4,4 @@ build-staging.*/
 work/
 .DS_Store
 .swiftpm/
+.cleanup/

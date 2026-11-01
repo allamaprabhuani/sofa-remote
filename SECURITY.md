@@ -24,6 +24,10 @@ Remote Lock uses the ordinary macOS lock shortcut and pauses input locally. Unlo
 
 ## Reporting
 
-Use GitHub's private vulnerability reporting for this repository when available. Otherwise open a public issue requesting a private contact **without exploit details, secrets or logs**. Please report the revision, macOS/browser versions and a minimal reproduction using disposable data.
+Use [GitHub private vulnerability reporting](https://github.com/allamaprabhuani/sofa-remote/security/advisories/new), which is enabled for this repository. Please report the revision, macOS/browser versions and a minimal reproduction using disposable data. Do not include pairing codes, tokens, private text, network addresses, app-data files or personal screenshots. If the reporting link is unavailable, open a public issue asking for a private contact **without exploit details or secrets**.
 
 No independent security audit, penetration test or Developer ID notarization is claimed.
+
+## Privacy and public-beta support
+
+See the [privacy page](docs/PRIVACY.md) for local storage and the diagnostic allowlist. Diagnostic summaries are previewed and copied only by an explicit action; they are never uploaded automatically. Public bug reports and questions follow [SUPPORT.md](SUPPORT.md). Manual update checks open GitHub; no updater runs in the background. Only the current beta testing line is supported.

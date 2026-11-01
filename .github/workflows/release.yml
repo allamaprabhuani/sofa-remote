@@ -1,0 +1,32 @@
+name: Publish preview or release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test and build
+        run: |
+          ./scripts/test.sh
+          ./build.sh
+          ./scripts/package-release.sh
+          lipo -archs 'build/Sofa Remote.app/Contents/MacOS/SofaRemote'
+      - name: Publish GitHub assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          flags=()
+          if [[ "$RELEASE_TAG" == *-* ]]; then flags+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" build/Sofa-Remote.dmg build/Sofa-Remote.zip build/SHA256SUMS \
+            --verify-tag --title "Sofa Remote $RELEASE_TAG" --notes-file docs/RELEASE_NOTES.md "${flags[@]}"

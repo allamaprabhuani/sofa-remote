@@ -12,16 +12,16 @@ enum RemoteCommand: Equatable {
     case drag(Phase, Double, Double), text(String), key(String, Set<String>), action(Action)
 
     init(json: [String: Any]) throws {
-        func number(_ key: String, optional: Bool = false) throws -> Double {
+        func number(_ key: String, optional: Bool = false, limit: Double = 300) throws -> Double {
             if json[key] == nil, optional { return 0 }
             guard let value = json[key] as? NSNumber, CFGetTypeID(value) != CFBooleanGetTypeID(),
-                  value.doubleValue.isFinite, abs(value.doubleValue) <= 300 else {
-                throw RemoteError("Motion must be a finite value between −300 and 300.")
+                  value.doubleValue.isFinite, abs(value.doubleValue) <= limit else {
+                throw RemoteError("Motion must be finite and within ±\(Int(limit)).")
             }
             return value.doubleValue
         }
         switch json["type"] as? String {
-        case "move": self = .move(try number("dx"), try number("dy"))
+        case "move": self = .move(try number("dx", limit: 1000), try number("dy", limit: 1000))
         case "scroll": self = .scroll(try number("dx"), try number("dy"))
         case "click":
             guard let button = (json["button"] as? String).flatMap(Button.init(rawValue:)),
@@ -30,7 +30,7 @@ enum RemoteCommand: Equatable {
             self = .click(button, count.intValue)
         case "drag":
             guard let phase = (json["phase"] as? String).flatMap(Phase.init(rawValue:)) else { throw RemoteError("Unknown drag phase.") }
-            self = .drag(phase, try number("dx", optional: phase != .move), try number("dy", optional: phase != .move))
+            self = .drag(phase, try number("dx", optional: phase != .move, limit: 1000), try number("dy", optional: phase != .move, limit: 1000))
         case "text":
             guard let value = json["value"] as? String, !value.isEmpty, value.utf16.count <= 2000,
                   value.count <= 1000 else { throw RemoteError("Send between 1 and 1,000 characters at a time.") }
