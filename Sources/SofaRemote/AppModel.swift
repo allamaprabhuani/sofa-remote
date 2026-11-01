@@ -62,7 +62,10 @@ import ServiceManagement
         guard !sharing, preferences != nil else { return }
         let server = RemoteServer(store: store, html: { RemotePage.html }, state: { [weak self] in self?.state() ?? [:] },
                                   route: { [weak self] in await self?.route($0) },
-                                  onRevoke: { [weak self] in self?.invalidateInput() })
+                                  onRevoke: { [weak self] in
+                                      self?.invalidateInput()
+                                      self?.objectWillChange.send()
+                                  })
         self.server = server
         sharing = true
         server.start(ports: Array(8740...8749)) { [weak self] port in

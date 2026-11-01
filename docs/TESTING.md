@@ -14,3 +14,7 @@ Use disposable windows and isolated app data. Automated tests use mocked input; 
 - Resources: measure process CPU/memory at idle with native settings closed, then while receiving input. List listener count. Keep test-browser and Brave/IINA costs separate. No streaming encoder/capture should run.
 
 The first public version is experimental. Record tested OS/browser/hardware and failures before treating a scenario as supported. Never attach real credentials, personal window content or local settings to a public issue.
+
+## Local checks on 1 November 2026
+
+A paired local client sent Unicode text (including an emoji) and Enter through the authenticated HTTP route into the app's disposable native text window. The foreground app was checked before sending input and the resulting text was read back from that window. Revoking that test client made its next authenticated request return HTTP 401. Native Stop sharing closed the listener, and the helper was then quit. These checks verify the keyboard/event path and revocation on this Mac; they do not verify physical iPhone touch gestures, live pointer movement, external-display movement, provider playback or lock/power behaviour.
