@@ -53,6 +53,26 @@ async function main() {
   })()`);
   assert.equal(subtitle.withApp,'Connected · Mock Mac · Brave Browser');
   assert.equal(subtitle.withoutApp,'Connected · Mock Mac');
+  for(const [name,bg] of [['imperial','#003e74'],['light','#f4f7fc'],['ocean','#062d35'],['custom','#757575']]){
+    await evaluate(`(()=>{const theme=document.querySelector('#theme');theme.value=${JSON.stringify(name)};theme.dispatchEvent(new Event('change'));if(theme.value==='custom'){const colour=document.querySelector('#custom-colour');colour.value=${JSON.stringify(bg)};colour.dispatchEvent(new Event('input'));colour.dispatchEvent(new Event('change'));}})()`);
+    await cdp('Page.reload',{ignoreCache:true});await wait(200);
+    const saved=await evaluate(`(()=>{const s=document.documentElement.style,v=k=>s.getPropertyValue('--'+k);return {name:document.querySelector('#theme').value,bg:v('bg'),readable:['bg','card','pad','sheet','pressed'].every(k=>contrast(v('ink'),v(k))>=4.5),selection:contrast(v('selection'),v('selection-ink'))>=4.5,links:contrast(v('accent'),v('sheet'))>=4.5,dangerReadable:['card','pressed'].every(k=>contrast(v('danger'),v(k))>=4.5),customEnabled:!document.querySelector('#custom-colour').disabled}})()`);
+    assert.equal(saved.name,name,`${name} survives reload`);assert.equal(saved.bg,bg);assert.equal(saved.readable,true,`${name} text contrast`);assert.equal(saved.selection,true,`${name} selected control contrast`);assert.equal(saved.links,true,`${name} link/focus contrast`);assert.equal(saved.dangerReadable,true,`${name} danger-button contrast including pressed state`);assert.equal(saved.customEnabled,name==='custom');
+  }
+  assert.equal(await evaluate(`(()=>{applyTheme('oxford','#003e74');return document.querySelector('#theme').value})()`),'imperial','old default theme value falls back to Imperial blue');
+  const customBounds=await evaluate(`(()=>{return ['#000000','#ffffff','#777777','#ffff00','#00ff00','#ff0000','#0000ff'].map(c=>{const p=customTheme(c);return ['bg','card','pad','sheet','pressed'].every(k=>contrast(p.ink,p[k])>=4.5)&&contrast(p.selection,p['selection-ink'])>=4.5&&contrast(p.line,p.bg)>=3})})()`);
+  assert.ok(customBounds.every(Boolean),'custom extreme and midpoint colours retain readable text, selected states and boundaries');
+  await evaluate(`localStorage.setItem('sofaTheme','url(https://invalid.example/poison)');localStorage.setItem('sofaColour','#fff; color:red')`);
+  await cdp('Page.reload',{ignoreCache:true});await wait(150);
+  const poisoned=await evaluate(`({theme:document.querySelector('#theme').value,colour:document.querySelector('#custom-colour').value,style:document.documentElement.style.cssText})`);
+  assert.equal(poisoned.theme,'imperial');assert.equal(poisoned.colour,'#003e74');assert.doesNotMatch(poisoned.style,/invalid|poison|color:red/);
+  await evaluate(`localStorage.setItem('sofaTheme','custom');localStorage.setItem('sofaColour','not-a-colour')`);
+  await cdp('Page.reload',{ignoreCache:true});await wait(150);
+  assert.equal(await evaluate(`document.documentElement.style.getPropertyValue('--bg')`),'#003e74','invalid custom colour falls back safely');
+  await evaluate(`applyTheme('imperial','#003e74');saveTheme()`);
+  const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
+  assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'Shortcuts');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
+  console.log('PASS four persisted lightweight themes, safe custom colours, contrast and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     const geometry=await evaluate(`(()=>{const r=s=>{const x=document.querySelector(s).getBoundingClientRect();return {w:x.width,h:x.height,b:x.bottom}};return {pad:r('#pad'),keys:[...document.querySelectorAll('main button')].filter(x=>x.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth,height:innerHeight,page:document.documentElement.scrollHeight}})()`);
@@ -62,6 +82,34 @@ async function main() {
     if(width===390&&height===844&&process.env.SOFA_TEST_SCREENSHOT){const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
     console.log(`PASS responsive ${width}x${height}`);
   }
+  await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+  await cdp('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:2});
+  await evaluate(`window.touchDefaults=[];document.addEventListener('touchend',e=>touchDefaults.push({area:e.target.closest('#pad')?'pad':e.target.closest('button')?'control':'outside',prevented:e.defaultPrevented}),{passive:true});calls.length=0;window.scrollTo(0,0)`);
+  const point=async selector=>evaluate(`(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
+  const touch=(type,points)=>cdp('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({...p,id:i+1,radiusX:2,radiusY:2,force:1}))});
+  const tap=async p=>{await touch('touchStart',[p]);await wait(25);await touch('touchEnd',[])};
+  const padPoint=await point('#pad');await tap(padPoint);await wait(70);await tap(padPoint);await wait(400);
+  const padTaps=await evaluate(`({commands:calls.filter(x=>x.path==='/command').map(x=>x.body),defaults:touchDefaults.slice(),scale:visualViewport.scale})`);
+  assert.deepEqual(padTaps.commands,[{type:'click',button:'left',count:1},{type:'click',button:'left',count:1}],'two actual touch taps send exactly two clicks, with no fallback duplicates');
+  assert.ok(padTaps.defaults.length===2&&padTaps.defaults.every(x=>x.area==='pad'&&x.prevented),'short pad taps suppress only their browser default');assert.equal(padTaps.scale,1,'double pad tap does not zoom');
+  await evaluate(`calls.length=0;touchDefaults.length=0`);
+  const rightPoint=await point('#right');await tap(rightPoint);await wait(70);await tap(rightPoint);await wait(400);
+  const rightTaps=await evaluate(`({commands:calls.filter(x=>x.path==='/command').map(x=>x.body),defaults:touchDefaults.slice(),scale:visualViewport.scale})`);
+  assert.deepEqual(rightTaps.commands,[{type:'click',button:'right',count:1},{type:'click',button:'right',count:1}],'repeated control taps are not lost or duplicated');assert.equal(rightTaps.scale,1,'double control tap does not zoom');assert.ok(rightTaps.defaults.every(x=>!x.prevented),'controls rely on CSS rather than global touch cancellation');
+  await evaluate(`calls.length=0;touchDefaults.length=0`);
+  await touch('touchStart',[{x:padPoint.x-20,y:padPoint.y},{x:padPoint.x+20,y:padPoint.y}]);
+  await touch('touchMove',[{x:padPoint.x-20,y:padPoint.y+24},{x:padPoint.x+20,y:padPoint.y+24}]);
+  await touch('touchEnd',[]);await wait(80);
+  const scrollTouch=await evaluate(`({commands:calls.filter(x=>x.path==='/command').map(x=>x.body),defaults:touchDefaults.slice()})`);
+  assert.ok(scrollTouch.commands.some(x=>x.type==='scroll'),'real two-finger input still scrolls the Mac');assert.ok(scrollTouch.commands.every(x=>x.type!=='click'),'two-finger lift never clicks');assert.ok(scrollTouch.defaults.every(x=>!x.prevented),'two-finger touch defaults are not cancelled by tap fallback');
+  await evaluate(`calls.length=0;touchDefaults.length=0;document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click()`);
+  const textPoint=await point('#help-sheet p');
+  await cdp('Input.synthesizePinchGesture',{x:textPoint.x,y:textPoint.y,scaleFactor:1.4,relativeSpeed:400,gestureSourceType:'touch'});await wait(200);
+  const pinch=await evaluate(`({scale:visualViewport.scale,commands:calls.filter(x=>x.path==='/command').length,defaults:touchDefaults.slice()})`);
+  assert.ok(pinch.scale>1,'pinch zoom remains available outside the touchpad');assert.equal(pinch.commands,0);assert.ok(pinch.defaults.every(x=>!x.prevented),'help text touch gestures are not globally cancelled');
+  await cdp('Emulation.setPageScaleFactor',{pageScaleFactor:1});
+  await evaluate(`closeSheet();closeSheet();window.scrollTo(0,0)`);
+  console.log('PASS trusted double taps send exactly two clicks without page zoom; two-finger scroll and outside-pad pinch remain available');
   const help=await evaluate(`(async()=>{
     const q=s=>document.querySelector(s);
     Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.copiedDiagnostic=value}}});

@@ -4,7 +4,7 @@ Sofa Remote sends mouse, keyboard and control requests from your phone to your M
 
 ## Data kept on your devices
 
-The Mac stores settings, saved shortcut names/addresses, optional display preference and paired-device records in `~/Library/Application Support/Sofa Remote`. Phone names are local pairing labels. Each phone receives a random secret; only its SHA-256 digest is kept on the Mac. The phone browser keeps the secret in that origin's local storage. Anyone able to copy that browser storage may obtain access until you revoke it.
+The Mac stores settings, saved shortcut names/addresses, optional display preference and paired-device records in `~/Library/Application Support/Sofa Remote`. Phone names are local pairing labels. Each phone receives a random secret; only its SHA-256 digest is kept on the Mac. The phone browser keeps the secret and its theme/custom-colour preferences in that origin's local storage. Theme choices are not sent to the Mac or included in diagnostic summaries. Anyone able to copy that browser storage may obtain access until you revoke it.
 
 Requests necessarily carry the input/website address you ask the Mac to use. Direct LAN HTTP is **unencrypted**: a hostile network participant may observe or alter traffic. Authentication does not encrypt it. Use a trusted network or your own Tailscale encrypted transport; see [Security](../SECURITY.md).
 
@@ -12,7 +12,7 @@ Requests necessarily carry the input/website address you ask the Mac to use. Dir
 
 About & Help provides a preview and explicit Copy action. The allowlist contains app version/build, macOS version, CPU architecture on the Mac, browser family/version on the phone, Accessibility permission and sharing/input-paused status. It excludes typed text, pairing codes/secrets, network addresses, device/computer names, personal URLs, app names, screenshots and raw browser user-agent strings. Nothing is uploaded automatically. Review the summary and any description before posting; GitHub issues and discussions are public and use GitHub's own service policies.
 
-Manual Check for updates, guide, licence, source and support links open GitHub in your browser. GitHub receives an ordinary web request when you choose those links. The app has no periodic update service. Existing browsers/players and optional Tailscale operate under their own privacy policies.
+Manual update, guide, licence, source and support links open GitHub or the project/developer website in your browser. Those sites receive an ordinary web request when you choose a link. Optional payment links on the project website use their provider’s checkout; no payment widget loads in the remote. The app has no periodic update service. Existing browsers/players and optional Tailscale operate under their own privacy policies.
 
 ## Stop and delete
 

@@ -321,7 +321,7 @@ private struct AboutHelpView: View {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Sofa Remote").font(.largeTitle.bold())
                 Text(SupportInfo.versionLabel).textSelection(.enabled)
-                Text("By \(SupportInfo.developer) · Free and open source")
+                Link("By \(SupportInfo.developer)", destination: SupportInfo.developerWebsite)
                 DisclosureGroup("Setup and connection help", isExpanded: $setupExpanded) {
                     SetupInstructions(showPractice: showPractice).padding(.top, 8)
                 }
@@ -330,8 +330,10 @@ private struct AboutHelpView: View {
                         Link("Report a bug", destination: SupportInfo.bugReport)
                         Link("Suggest a feature", destination: SupportInfo.featureRequest)
                         Link("Questions and developer contact", destination: SupportInfo.discussions)
+                        Link("Project website", destination: SupportInfo.website)
+                        Link("Support this project", destination: SupportInfo.supportProject)
                         Link("Check for updates and release notes", destination: SupportInfo.releases)
-                        Text("Opens GitHub on request. No update checks or reports run in the background.")
+                        Text("Opens a website on request. No background checks or uploads.")
                             .font(.caption).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                 }

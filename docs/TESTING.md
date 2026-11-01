@@ -12,6 +12,10 @@ Before the public-beta UI work, local/CI Swift and browser checks passed for the
 
 Short normal-background samples on the tested Mac showed 0.0% sampled idle CPU, approximately 60–63 MiB RSS, one TCP listener and an approximately 3.8 MiB app bundle. These are short observations of the earlier build, not an energy benchmark or a promise for every Mac. Brave/IINA and test-browser resource use is separate. Keep Mac awake intentionally prevents idle system sleep.
 
+## Beta 2 automated touch and theme checks
+
+On 1 November 2026, the beta 2 source passed all 33 Swift tests and browser/transport checks. Trusted touch input in an isolated Chromium mobile emulator verified that a double tap on the pad and a repeated right-click control generated exactly two commands at visualViewport scale 1; two-finger scrolling still worked, and pinch zoom outside the pad increased scale. This is browser-emulation evidence, not a physical iPhone Safari acceptance result. All four themes, saved reload/legacy fallbacks, custom-colour validation/contrast, accessible SVG controls, six viewport sizes and 200% text checks passed. No input transport/gain/authentication changes or new runtime dependencies were introduced.
+
 ## Release-candidate checklist
 
 Record app/build, macOS, phone/browser, network type, result and a reproduction without identifiers or private content. A prior-build observation does not automatically accept a new build. CI results and physical results should be reported separately in release notes.
