@@ -340,6 +340,7 @@ private struct AboutHelpView: View {
                             Text(summary).font(.system(.callout, design: .monospaced))
                                 .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                                 .accessibilityLabel("Diagnostic summary preview")
+                                .accessibilityValue(summary)
                         }
                         HStack {
                             Button(summary.isEmpty ? "Preview diagnostic summary" : "Refresh summary") { refreshSummary() }
