@@ -177,10 +177,16 @@ async function main() {
   assert.deepEqual(migrated,{theme:null,colour:null,background:'rgb(16, 17, 23)',hasTheme:false},'old colour preferences migrate to the one dark appearance');
   const access=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();const keys=['keyboard-open','present-open'].map(id=>{const el=document.getElementById(id);return !!el.getClientRects().length&&!!el.closest('#shortcuts-sheet.open')});document.querySelector('#present-open').click();const present=!!document.querySelector('#present-sheet.open');closeSheet();const back=!!document.querySelector('#shortcuts-sheet.open');closeSheet();return {keys,present,back}})()`);
   assert.deepEqual(access,{keys:[true,true],present:true,back:true},'keyboard and presenter are discoverable in Shortcuts and retain navigation');
+  const sharedPanel=await evaluate(`(()=>{const panel=document.querySelector('.remote-panel'),pad=document.querySelector('#pad');const keys=[...panel.querySelectorAll('button')];return {count:keys.length,separate:keys.every(b=>!pad.contains(b)),borderless:keys.every(b=>getComputedStyle(b).borderTopWidth==='0px'),inside:panel.contains(pad)&&keys.every(b=>panel.contains(b))}})()`);
+  assert.deepEqual(sharedPanel,{count:7,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
   await cdp('DOM.enable');await cdp('CSS.enable');const rootNode=await cdp('DOM.getDocument');const focusNode=await cdp('DOM.querySelector',{nodeId:rootNode.root.nodeId,selector:'#right'});
   await cdp('CSS.forcePseudoState',{nodeId:focusNode.nodeId,forcedPseudoClasses:['focus-visible']});
   assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('#right')).outlineStyle`),'none','keyboard focus is visible');
   await cdp('CSS.forcePseudoState',{nodeId:focusNode.nodeId,forcedPseudoClasses:[]});
+  const padNode=await cdp('DOM.querySelector',{nodeId:rootNode.root.nodeId,selector:'#pad'});
+  await cdp('CSS.forcePseudoState',{nodeId:padNode.nodeId,forcedPseudoClasses:['focus-visible']});
+  assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('#pad')).outlineStyle`),'none','keyboard-focused touchpad has a visible outline');
+  await cdp('CSS.forcePseudoState',{nodeId:padNode.nodeId,forcedPseudoClasses:[]});
   if(process.env.SOFA_TEST_SCREENSHOT){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
   assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'Shortcuts');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
@@ -211,6 +217,8 @@ async function main() {
   const rightPoint=await point('#right');await tap(rightPoint);await wait(70);await tap(rightPoint);await wait(400);
   const rightTaps=await evaluate(`({commands:calls.filter(x=>x.path==='/command').map(x=>x.body),defaults:touchDefaults.slice(),scale:visualViewport.scale})`);
   assert.deepEqual(rightTaps.commands,[{type:'click',button:'right',count:1},{type:'click',button:'right',count:1}],'repeated control taps are not lost or duplicated');assert.equal(rightTaps.scale,1,'double control tap does not zoom');assert.ok(rightTaps.defaults.every(x=>!x.prevented),'controls rely on CSS rather than global touch cancellation');
+  await evaluate(`calls.length=0`);const playPoint=await point('[data-action="playPause"]');await tap(playPoint);await wait(200);
+  assert.deepEqual(await evaluate(`calls.filter(x=>x.path==='/command').map(x=>x.body)`),[{type:'action',action:'playPause'}],'a real panel button touch sends only its action, never pad input');
   await evaluate(`calls.length=0;touchDefaults.length=0`);
   await touch('touchStart',[{x:padPoint.x-20,y:padPoint.y},{x:padPoint.x+20,y:padPoint.y}]);
   await touch('touchMove',[{x:padPoint.x-20,y:padPoint.y+24},{x:padPoint.x+20,y:padPoint.y+24}]);

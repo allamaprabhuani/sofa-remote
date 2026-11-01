@@ -32,6 +32,7 @@ import IOKit.hidsystem
     }
     var accessibilityAllowed: Bool { trusted() }
     var isDragging: Bool { dragging }
+    func cancelTapSequence() { lastTap = nil }
     /// Secure input is deliberately treated as unavailable, including secure password fields.
     var secureInput: Bool { secure() }
 

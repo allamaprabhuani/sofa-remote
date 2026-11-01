@@ -96,7 +96,10 @@
         case 'shortcuts': setStatus('Shortcuts are available in the connected remote.'); break;
         case 'settings': setStatus('Settings are available in the connected remote.'); break;
         case 'right':   setStatus('Right click'); markMoved(); break;
-        case 'drag':    setStatus('Drag toggle'); markMoved(); break;
+        case 'drag':
+          var enabled = ev.currentTarget.getAttribute('aria-pressed') !== 'true';
+          ev.currentTarget.setAttribute('aria-pressed', String(enabled));
+          setStatus(enabled ? 'Drag on' : 'Drag off'); markMoved(); break;
         case 'prev':    setStatus('Previous track'); break;
         case 'next':    setStatus('Next track'); break;
         case 'voldown': setStatus('Volume down'); break;

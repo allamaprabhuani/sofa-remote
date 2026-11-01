@@ -175,6 +175,9 @@ import ServiceManagement
         let body = (try? JSONSerialization.jsonObject(with: request.body)) as? [String: Any] ?? [:]
         guard request.method == "POST" else { return nil }
         guard sharing, !Task.isCancelled else { return .json(["error": "Sharing stopped or request cancelled."], status: "409 Conflict") }
+        // Actions outside the input controller can change the focused window or
+        // display. They must not leave a previous tap eligible for double-click.
+        if request.path != "/command" { input.cancelTapSequence() }
         if inputPaused {
             input.reset(); stopPresenter()
             guard request.path == "/command", body["type"] as? String == "action", body["action"] as? String == "screenOn" else {
@@ -234,6 +237,7 @@ import ServiceManagement
                 presenterLastActivity = now
             case "/command":
                 let command = try RemoteCommand(json: body)
+                if case .action = command { input.cancelTapSequence() }
                 var measuredMotionStart: TimeInterval?
                 if inputDiagnosticsEnabled {
                     switch command {

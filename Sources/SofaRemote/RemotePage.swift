@@ -148,17 +148,26 @@ enum RemotePage {
       .address button {
         font-weight: 700;
       }
+      .remote-panel {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 0 10px 12px;
+        background: var(--pad);
+        border: 1px solid var(--line);
+        border-radius: 36px;
+      }
       #pad {
         flex: 1 1 auto;
         min-height: 180px;
-        max-height: 420px;
-        border-radius: 36px;
-        border: 1px solid var(--line);
-        background: var(--pad);
+        border-radius: 28px;
+        background: transparent;
         touch-action: none;
         position: relative;
         user-select: none;
       }
+      #pad:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
       #pad .hint {
         position: absolute;
         bottom: 15px;
@@ -173,9 +182,7 @@ enum RemotePage {
         position: absolute;
         top: 15px;
         left: 18px;
-        font-size: 11px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
+        font-size: 12px;
         color: var(--muted);
         font-weight: 700;
         pointer-events: none;
@@ -205,8 +212,13 @@ enum RemotePage {
         font-size: 1.25rem;
       }
       .volume { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panel-divider { width: 42px; height: 1px; align-self: center; flex: 0 0 auto; background: var(--line); opacity: 0.5; }
+      .media .control-icon, .volume .control-icon { width: 25px; height: 25px; }
       main .row button { min-height: 52px; border-radius: 28px; }
       main .row { gap: 10px; }
+      main .remote-panel .row button { border: 0; background: transparent; }
+      main .remote-panel .row button:active { background: var(--pressed); }
+      main .remote-panel .row button.on { background: var(--selection); color: var(--selection-ink); }
       .present-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .present-nav button { min-height: 78px; font-size: 1.125rem; font-weight: 700; }
       #present-sheet .sheet-status:empty { display: none; }
@@ -502,6 +514,7 @@ enum RemotePage {
         <button class="icon icon-caption toolbar-caption" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"><span>Shortcuts</span></button
         ><button class="icon" data-icon="settings" id="settings-open" aria-label="Settings" title="Settings"></button>
       </header>
+      <div class="remote-panel">
       <div
         id="pad"
         role="group"
@@ -511,6 +524,7 @@ enum RemotePage {
         <span class="pad-title">Touchpad</span
         ><span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
+      <div class="panel-divider" aria-hidden="true"></div>
       <div class="row clicks">
         <button id="right" data-icon="right-click" class="icon-caption" title="Right click"><span>Right click</span></button>
         <button id="drag" data-icon="drag" class="icon-caption" aria-pressed="false" title="Drag: toggle to hold or release"><span>Drag</span></button>
@@ -523,6 +537,7 @@ enum RemotePage {
       <div class="row volume">
         <button data-icon="volume-down" data-action="volumeDown" aria-label="Volume down" title="Volume down"></button>
         <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
+      </div>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
@@ -610,7 +625,7 @@ enum RemotePage {
           <h2>Shortcuts</h2>
           <button data-close>Done</button>
         </div>
-        <div class="sheet-row"><button id="keyboard-open" data-icon="keyboard" title="Keyboard">Keyboard</button><button id="present-open" data-icon="fullscreen" title="Slideshow controls">Present</button></div>
+        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" title="Slideshow controls">Present</button><button id="keyboard-open" data-icon="keyboard" title="Keyboard">Keyboard</button></div>
         <div class="sheet-row"><button data-icon="apps" data-action="appSwitcher" title="App switcher">Apps</button><button data-icon="fullscreen" data-action="fullscreen" title="Full screen">Full screen</button><button data-icon="search" data-action="spotlight" title="Spotlight search">Spotlight</button></div>
         <label for="url">Open a website on your Mac</label>
       <form class="address" id="open-form">

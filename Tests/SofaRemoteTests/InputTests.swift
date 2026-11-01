@@ -40,6 +40,11 @@ import Testing
         #expect(states() == [1, 1])
         events.removeAll(); input.reset(); now += 1
         try input.handle(.tap, tapSource: "phone-a")
+        input.cancelTapSequence() // A managed action may change the focused app.
+        now += 0.1; try input.handle(.tap, tapSource: "phone-a")
+        #expect(states() == [1, 1, 1, 1])
+        events.removeAll(); input.reset(); now += 1
+        try input.handle(.tap, tapSource: "phone-a")
         try input.handle(.move(2, 0)); now += 0.1
         try input.handle(.tap, tapSource: "phone-a")
         #expect(events.filter { $0.type != .mouseMoved }.map { $0.getIntegerValueField(.mouseEventClickState) } == [1, 1, 2, 2])
