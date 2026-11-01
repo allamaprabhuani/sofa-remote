@@ -298,6 +298,6 @@ struct HTTPResponse {
         HTTPResponse(status: status, body: (try? JSONSerialization.data(withJSONObject: value)) ?? Data())
     }
     func serialized(keepAlive: Bool = false) -> Data {
-        Data("HTTP/1.1 \(status)\r\nContent-Type: \(contentType)\r\nContent-Length: \(body.count)\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nConnection: \(keepAlive ? "keep-alive" : "close")\r\n\r\n".utf8) + body
+        Data("HTTP/1.1 \(status)\r\nContent-Type: \(contentType)\r\nContent-Length: \(body.count)\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nX-Frame-Options: DENY\r\nContent-Security-Policy: frame-ancestors 'none'; base-uri 'none'; object-src 'none'\r\nReferrer-Policy: no-referrer\r\nConnection: \(keepAlive ? "keep-alive" : "close")\r\n\r\n".utf8) + body
     }
 }

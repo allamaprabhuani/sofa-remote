@@ -378,7 +378,7 @@ enum RemotePage {
         aria-label="Touchpad. Drag to move, tap to click, use two fingers to scroll."
       >
         <span class="pad-title">Touchpad</span
-        ><span class="hint">Move · tap to click · two fingers to scroll</span>
+        ><span class="hint">Move · tap · two fingers scroll · spans all displays</span>
       </div>
       <div class="row clicks">
         <button id="right">Right click</button><button id="double">Double click</button
@@ -479,10 +479,10 @@ enum RemotePage {
           <h2>Settings</h2>
           <button data-close>Done</button>
         </div>
-        <label for="display">Preferred display</label
+        <label for="display">Jump pointer to display</label
         ><select class="field" id="display"></select>
-        <p>Selecting a display moves the pointer there. Move the front window separately.</p>
-        <button data-action="moveWindow">Move front window to display</button>
+        <p>Choosing a display jumps the pointer there once. The touchpad still moves the pointer freely across every connected display, like a Mac trackpad.</p>
+        <button data-action="moveWindow">Move front window to this display</button>
         <div class="sheet-row">
           <button data-action="showDesktop">Show desktop</button
           ><button data-action="downloads">Downloads</button>
@@ -491,6 +491,7 @@ enum RemotePage {
           <button data-action="screenOff">Screen off</button
           ><button data-action="screenOn">Wake screen</button>
         </div>
+        <p>Screen off turns every connected display dark; macOS may lock while the display is off.</p>
         <label class="sheet-row"
           ><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake"
         /></label>
@@ -677,12 +678,32 @@ enum RemotePage {
       let active = null,
         gestureTimer = 0,
         lastGesture = 0;
+      function isMotion(body) {
+        return (
+          body.type === "move" ||
+          body.type === "scroll" ||
+          (body.type === "drag" && body.phase === "move")
+        );
+      }
+      function discardQueuedInput() {
+        const release = drag || queue.some((item) => item.body.type === "drag");
+        while (queue.length) queue.shift().done(false);
+        clearTimeout(gestureTimer);
+        gestureTimer = 0;
+        if (drag) endDrag();
+        else if (release) command({ type: "drag", phase: "end" });
+      }
       function pump() {
         if (active || gestureTimer || !queue.length) return;
-        const next = queue[0].body,
-          motion =
-            next.type === "move" || next.type === "scroll" || (next.type === "drag" && next.phase === "move");
-        const delay = motion ? Math.max(0, 33 - (Date.now() - lastGesture)) : 0;
+        const head = queue[0],
+          body = head.body,
+          motion = isMotion(body);
+        if (motion && Date.now() - head.queuedAt > 250) {
+          discardQueuedInput();
+          status("Connection is slow; old movement was stopped. Try again.", true, "runtime");
+          return;
+        }
+        const delay = motion ? Math.max(0, 16 - (Date.now() - lastGesture)) : 0;
         if (delay) {
           gestureTimer = setTimeout(() => {
             gestureTimer = 0;
@@ -690,16 +711,33 @@ enum RemotePage {
           }, delay);
           return;
         }
-        const item = queue.shift();
-        if (motion) lastGesture = Date.now();
-        if (!key || (locked && item.body.action !== "screenOn")) {
-          item.done(false);
+        if (!key || (locked && body.action !== "screenOn")) {
+          queue.shift();
+          head.done(false);
           pump();
           return;
         }
+        let outbound;
+        if (motion) {
+          // Split the accumulated travel into bounded ±300 packets so the server never sees
+          // out-of-range deltas. The head keeps the remainder in correct order so trailing
+          // clicks/drag-end stay queued behind the full gesture.
+          const dx = Math.max(-300, Math.min(300, body.dx || 0));
+          const dy = Math.max(-300, Math.min(300, body.dy || 0));
+          body.dx = (body.dx || 0) - dx;
+          body.dy = (body.dy || 0) - dy;
+          outbound = Object.assign({}, body, { dx, dy });
+          lastGesture = Date.now();
+          if ((body.dx || 0) === 0 && (body.dy || 0) === 0) {
+            queue.shift();
+          }
+        } else {
+          queue.shift();
+          outbound = body;
+        }
         const controller = new AbortController();
         active = controller;
-        request("/command", item.body, true, controller.signal)
+        request("/command", outbound, true, controller.signal)
           .then(
             () => {
               clearRuntimeError();
@@ -712,7 +750,10 @@ enum RemotePage {
           )
           .then((ok) => {
             active = null;
-            item.done(ok);
+            if (!motion) head.done(ok);
+            // A failed/ambiguous send invalidates queued input rather than replaying it later.
+            // An urgent wake already cleared the old queue before aborting its request.
+            if (!ok && !controller.signal.aborted) discardQueuedInput();
             pump();
           });
       }
@@ -728,18 +769,28 @@ enum RemotePage {
             gestureTimer = 0;
             active?.abort();
           }
+          const motion = isMotion(body);
           const last = queue[queue.length - 1];
           if (
             !urgent &&
+            motion &&
             last &&
-            (body.type === "move" ||
-              body.type === "scroll" ||
-              (body.type === "drag" && body.phase === "move")) &&
+            isMotion(last.body) &&
             last.body.type === body.type &&
             last.body.phase === body.phase
           ) {
-            last.body.dx = Math.max(-300, Math.min(300, (last.body.dx || 0) + (body.dx || 0)));
-            last.body.dy = Math.max(-300, Math.min(300, (last.body.dy || 0) + (body.dy || 0)));
+            // Keep exact accumulated proportional travel; splitting at pump time bounds the
+            // per-packet delta sent to the server.
+            const dx = (last.body.dx || 0) + (body.dx || 0),
+              dy = (last.body.dy || 0) + (body.dy || 0);
+            if (Math.abs(dx) > 3600 || Math.abs(dy) > 3600) {
+              discardQueuedInput();
+              status("Connection is slow; old movement was stopped. Try again.", true, "runtime");
+              resolve(false);
+              return;
+            }
+            last.body.dx = dx;
+            last.body.dy = dy;
             resolve(true);
             return;
           }
@@ -754,7 +805,13 @@ enum RemotePage {
             resolve(false);
             return;
           }
-          queue.push({ body, done: resolve });
+          if (motion) {
+            // Motion is best-effort; the caller does not need to block on a specific packet.
+            queue.push({ body, done: () => {}, queuedAt: Date.now() });
+            resolve(true);
+          } else {
+            queue.push({ body, done: resolve });
+          }
           pump();
         });
       }
@@ -801,13 +858,22 @@ enum RemotePage {
           command({ type: "scroll", dx: -dx / fingers.size, dy: -dy / fingers.size });
         } else command(drag ? { type: "drag", phase: "move", dx, dy } : { type: "move", dx, dy });
       });
+      function dropQueuedMotion() {
+        // Discard still-queued motion for explicit cancel/hidden/disconnect only; a normal
+        // pointerup must leave queued motion in place so the full travel is still delivered.
+        for (let i = queue.length - 1; i >= 0; i--) {
+          if (isMotion(queue[i].body)) queue.splice(i, 1)[0].done(false);
+        }
+      }
       function lift(e) {
         if (!fingers.delete(e.pointerId)) return;
         if (e.type !== "pointerup") {
           fingers.clear();
+          dropQueuedMotion();
           endDrag();
           return;
         }
+        // Ordinary lift flushes: queued motion stays queued, click is appended after it.
         if (!fingers.size && !multi && !drag && travel < 8 && Date.now() - down < 300)
           command({ type: "click", button: "left", count: 1 });
       }
@@ -816,6 +882,7 @@ enum RemotePage {
       pad.addEventListener("lostpointercapture", (e) => {
         if (fingers.has(e.pointerId)) {
           fingers.clear();
+          dropQueuedMotion();
           endDrag();
         }
       });
@@ -1094,11 +1161,13 @@ enum RemotePage {
         if (document.visibilityState === "visible") refresh();
         else {
           fingers.clear();
+          dropQueuedMotion();
           endDrag();
         }
       });
       window.addEventListener("pagehide", () => {
         fingers.clear();
+        dropQueuedMotion();
         endDrag();
       });
       if (/^\d{6}$/.test(pairCode)) pair(pairCode);

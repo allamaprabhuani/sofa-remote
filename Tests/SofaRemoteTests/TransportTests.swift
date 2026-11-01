@@ -131,6 +131,10 @@ import Testing
         let (data, response) = try await URLSession.shared.data(from: url)
         #expect(String(data: data, encoding: .utf8) == "sofa-test")
         #expect((response as? HTTPURLResponse)?.statusCode == 200)
+        let headers = try #require(response as? HTTPURLResponse)
+        #expect(headers.value(forHTTPHeaderField: "X-Frame-Options") == "DENY")
+        #expect(headers.value(forHTTPHeaderField: "Content-Security-Policy")?.contains("frame-ancestors 'none'") == true)
+        #expect(headers.value(forHTTPHeaderField: "Referrer-Policy") == "no-referrer")
         server.stop()
         #expect(server.activeConnectionCount == 0)
     }

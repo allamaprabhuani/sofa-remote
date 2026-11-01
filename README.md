@@ -1,3 +1,5 @@
+<img src="Assets/AppIcon.png" width="96" alt="Sofa Remote icon">
+
 # Sofa Remote
 
 Your iPhone is the mouse and keyboard. Your Mac does the playing.
@@ -12,7 +14,7 @@ A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen str
 - Unicode text, modifier keys and keyboard shortcuts; app switcher, Spotlight, media keys, volume and mute.
 - Open a website in installed Brave, falling back to your default browser; launch saved app/website shortcuts and reorder them.
 - Open Downloads in Finder. Browse files and use IINA's own playback/subtitle tools with normal mouse and keyboard input.
-- Select any connected display by its real name. Selection moves the pointer there; **Move front window to display** is a separate explicit action, with bounded fullscreen handling.
+- Move the pointer freely across all connected displays. Choose a display by its real name to jump the pointer there once; **Move front window to this display** is a separate explicit action, with bounded fullscreen handling.
 - Request display off/wake while the Mac remains awake; optional idle-system-sleep prevention while sharing.
 - Lock the Mac deliberately. After using Lock, unlock on the Mac and choose **Resume input on this Mac** in Sofa Remote.
 - Pair individual phones, revoke them, and stop sharing from the Mac. Stop sharing and Quit close the listener and release held remote drag input.
@@ -63,7 +65,7 @@ Swift tests cover pairing and revocation, real loopback HTTP, parser/origin limi
 
 For manual input testing, launch a locally built app with `--input-fixture`; it creates a disposable text/click window. Use `SOFA_REMOTE_DATA_DIR=/absolute/test/folder` to isolate settings and pairing. Close other copies before testing. This flag is optional, writes no document and does not grant permissions.
 
-Physical iPhone Safari gestures, provider playback, display reconnection and manually locked-screen behaviour need real-device testing. macOS secure input and session signals pause control, but they are not a proven universal lock-state detector. This release does not offer lock-screen typing or automatic unlock. See [the manual checklist](docs/TESTING.md).
+Initial iPhone checks confirmed pairing, clicks, window moves and display off/wake. Smoothness changes, broader Safari gestures, provider playback, display reconnection and manually locked-screen behaviour need further real-device testing. See [recorded checks](docs/REVIEW.md). macOS secure input and session signals pause control, but they are not a proven universal lock-state detector. This release does not offer lock-screen typing or automatic unlock. See [the manual checklist](docs/TESTING.md).
 
 ## Contribute
 
