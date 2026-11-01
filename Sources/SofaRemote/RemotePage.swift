@@ -515,6 +515,14 @@ enum RemotePage {
       #help-sheet .support-icons a:active { background: var(--pressed); }
       #shortcuts-sheet .shortcut-initial { background: transparent; color: var(--ink); }
       #shortcuts-sheet .shortcut { min-height: 52px; }
+      :is(#settings-sheet, #shortcuts-sheet) .field { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding-inline: 4px; }
+      #shortcuts-sheet .shortcut-actions { display: grid; grid-template-columns: repeat(4, minmax(44px, 1fr)); gap: 8px; }
+      #shortcuts-sheet .shortcut-actions button { min-height: 52px; border-radius: 12px; }
+      #settings-sheet .settings-actions { justify-content: space-between; gap: 4px; }
+      #settings-sheet .settings-actions button { border-radius: 12px; }
+      #settings-sheet .sheet p, #shortcuts-sheet .sheet p { line-height: 1.45; }
+      #awake { flex: 0 0 auto; width: 24px; height: 24px; margin: 0; accent-color: var(--accent); }
+
       #settings-sheet h3 { margin-top: 14px; }
       #help-sheet .support-icons { gap: 4px; margin: 14px 0; }
       #help-sheet .support-icons a { border: 0; background: transparent; border-radius: 50%; }
@@ -622,6 +630,7 @@ enum RemotePage {
           <p>The mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
           <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
           <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
+          <p>Appearance is saved on this phone. The touchpad moves across connected displays. Brightness uses Mac keys and external display support varies. Keeping the Mac awake prevents idle system sleep, but displays can still sleep. Wake does not unlock the Mac; unlock on the Mac, or use Apple Watch unlock if configured.</p>
         </div></details>
         <button class="icon" data-icon="keyboard" id="keyboard-open" aria-label="Keyboard" title="Keyboard"></button>
         <button class="icon" data-icon="shortcuts" id="shortcuts-open" aria-label="Shortcuts" title="Shortcuts"></button>
@@ -715,8 +724,7 @@ enum RemotePage {
           <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
           <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <div class="sheet-row"><button id="present-open" data-icon="fullscreen" aria-label="Present" title="Present"></button></div>
-        <div class="sheet-row"><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
+        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="fullscreen" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
         <label for="url">Open a website on your Mac</label>
       <form class="address" id="open-form">
         <input
@@ -730,7 +738,7 @@ enum RemotePage {
           spellcheck="false"
         /><button data-icon="send" aria-label="Open website" title="Open website"></button>
       </form>
-        <p>Open a saved website or app. Changes are saved on your Mac.</p>
+        <p>Saved on your Mac</p>
         <div id="shortcut-list"></div>
         <details class="shortcut-add"><summary aria-label="Add shortcut" title="Add shortcut">+</summary>
         <form id="shortcut-form">
@@ -760,10 +768,8 @@ enum RemotePage {
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="sheet-head"><h2>Settings</h2><button class="settings-close" data-help data-icon="help" aria-label="About and Help" title="About and Help"></button><button class="settings-close" data-close data-icon="close" aria-label="Close settings" title="Close settings"></button></div>
         <label for="appearance">Appearance</label><select id="appearance" class="field"><option value="soft">Soft</option><option value="velvet">Velvet</option><option value="paper">Paper</option></select>
-        <p>Saved on this phone.</p>
         <h3>Display</h3>
         <label for="display">Jump pointer to display</label><select class="field" id="display"></select>
-        <p>The touchpad can move across all connected displays.</p>
         <div class="settings-actions" role="group" aria-label="Display controls">
           <button data-icon="move-display" data-action="moveWindow" aria-label="Move front window to selected display" title="Move front window to selected display"></button>
           <button id="brightness-down" data-icon="brightness-down" data-action="brightnessDown" aria-label="Decrease Mac brightness" title="Decrease Mac brightness"></button>
@@ -771,7 +777,7 @@ enum RemotePage {
           <button id="screen-off-main" data-icon="screen-off" data-action="screenOff" aria-label="Turn screens off" title="Turn screens off"></button>
           <button id="wake-main" data-icon="wake" data-action="screenOn" aria-label="Wake screens" title="Wake screens"></button>
         </div>
-        <p>Brightness uses Mac keys; external display support varies. Screen off may lock the Mac.</p>
+        <p>Screen off may lock your Mac. Wake does not unlock it.</p>
         <h3>Mac controls</h3>
         <div class="settings-actions" role="group" aria-label="Mac controls">
           <button data-icon="desktop" data-action="showDesktop" aria-label="Show desktop" title="Show desktop"></button>
@@ -779,10 +785,8 @@ enum RemotePage {
           <button data-icon="mute" data-action="mute" aria-label="Mute" title="Mute"></button>
           <button class="danger" data-icon="lock" id="lock" aria-label="Lock Mac" title="Lock Mac"></button>
         </div>
-        <p>Waking does not unlock your Mac. Unlock on the Mac; Apple Watch unlock is a separate macOS setting.</p>
         <h3>Sharing</h3>
         <label class="sheet-row"><span>Keep Mac awake while sharing</span><input type="checkbox" id="awake" /></label>
-        <p>Prevents idle system sleep; the display can still sleep.</p>
         <h3>Paired phones</h3><div id="devices"></div>
       </div>
     </div>
@@ -803,6 +807,7 @@ enum RemotePage {
           <p>The mouse icon is right click and the hand toggles drag. Playback and volume follow below. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
           <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
           <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
+          <p>Appearance is saved on this phone. The touchpad moves across connected displays. Brightness uses Mac keys and external display support varies. Keeping the Mac awake prevents idle system sleep, but displays can still sleep. Wake does not unlock the Mac; unlock on the Mac, or use Apple Watch unlock if configured.</p>
         </details>
         <details class="help-disclosure"><summary>Setup and connection help</summary>
         <p id="signing-help">Signing: Unknown. Signing type alone does not verify Developer ID or notarisation.</p>
