@@ -6,6 +6,6 @@ The Mac advertises a BLE service with encryption-required writes and notificatio
 
 ## Next steps for a physical test
 
-Full Xcode and an iOS SDK are required. Build a Mac app containing MacProbe.swift with `NSBluetoothAlwaysUsageDescription` in its Info.plist. Build an iOS SwiftUI app containing PhoneProbe.swift with the same Bluetooth usage description and a unique bundle identifier. Sign using an Xcode Personal Team, enable Developer Mode on the iPhone, and run both in the foreground. Both devices may prompt for Bluetooth permissions and pairing. Do not use a command-line executable without a usage description. Stop the Mac probe after testing.
+Full Xcode and an iOS SDK are required. Open `SofaProbe.xcodeproj`; its Mac and iPhone targets include the Bluetooth usage descriptions. Select a signing team and a unique iPhone bundle identifier in Xcode. Sign using an Xcode Personal Team, enable Developer Mode on the iPhone, and run both in the foreground. Both devices may prompt for Bluetooth permissions and pairing. Do not use a command-line executable without a usage description. Stop the Mac probe after testing.
 
 A round-trip sample includes both directions and application processing. It does not measure pointer smoothness, one-way latency, loss, connection stability or security. To compare pointer quality, a separate authenticated input prototype and physical iPhone tests are necessary. Measure repeated samples and reconnect behavior; do not infer a winner from a single ping.

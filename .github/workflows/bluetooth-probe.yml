@@ -1,0 +1,16 @@
+name: Bluetooth probe build
+on:
+  push:
+    branches: [experiment/bluetooth-probe]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Mac measurement app without signing
+        run: xcodebuild -project experiments/bluetooth-probe/SofaProbe.xcodeproj -target SofaProbeMac -configuration Debug CODE_SIGNING_ALLOWED=NO build
+      - name: Build iPhone measurement app without signing
+        run: xcodebuild -project experiments/bluetooth-probe/SofaProbe.xcodeproj -target SofaProbePhone -configuration Debug -sdk iphoneos CODE_SIGNING_ALLOWED=NO build
