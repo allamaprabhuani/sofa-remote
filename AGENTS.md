@@ -5,4 +5,4 @@ Product: free MIT-licensed Mac menu-bar helper plus phone-browser touchpad/keybo
 Use documented public macOS APIs. All remote inputs need authentication, bounded parsing/queues/timeouts, and explicit Accessibility permission. Do not grant that permission automatically.
 Direct local HTTP is unencrypted: disclose it clearly, restrict private peers, and document Tailscale as an encrypted-transport option. Do not describe it as secure against a hostile LAN.
 Live input tests must use disposable app windows. Never lock/sleep the user's Mac, close their windows, or overwrite a running application bundle during tests.
-Keep personal shortcuts in local configuration; public defaults must be generic. Preserve Mac TV attribution and MIT notices for reused code.
+Keep personal shortcuts in local configuration; public defaults must be generic. Preserve third-party copyright and MIT notices for reused code.

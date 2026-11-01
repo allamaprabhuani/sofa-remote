@@ -1,6 +1,5 @@
 Sofa Remote is free software under the MIT licence.
-Selected networking, pairing, display-wake and touchpad motion code is adapted from Mac TV:
-https://github.com/Arunprakaash/mac-tv
+Selected networking, pairing, display-wake and touchpad motion code includes third-party contributions.
 Copyright (c) 2026 Arunprakaash. MIT licence retained in LICENSE.
 No streaming-service assets, browser profiles, user configuration, or analytics are included.
 
