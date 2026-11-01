@@ -277,6 +277,9 @@ async function main() {
     const result={pressed:b.getAttribute('aria-pressed'),commands:calls.filter(x=>x.path==='/command').map(x=>x.body)};closeSheet();return result;
   })()`);
   assert.equal(holdCancel.pressed,'false');assert.deepEqual(holdCancel.commands,[{type:'rightOption',phase:'start'},{type:'rightOption',phase:'end'}],'touch cancellation releases the key');
+  const dictationLayout=await evaluate(`(()=>{document.querySelector('#keyboard-open').click();const sheet=document.querySelector('#keyboard-sheet .sheet'),button=document.querySelector('#right-option-hold'),form=document.querySelector('#text-form');const b=button.getBoundingClientRect(), f=form.getBoundingClientRect(), panel=sheet.getBoundingClientRect();const result={label:button.textContent.trim(),accessible:button.getAttribute('aria-label'),width:b.width,height:b.height,right:b.right>=f.right && b.right<=panel.right,after:!!(form.compareDocumentPosition(button)&Node.DOCUMENT_POSITION_FOLLOWING),fits:sheet.scrollWidth<=sheet.clientWidth+1};closeSheet();return result})()`);
+  assert.equal(dictationLayout.label,'Hold to speak');assert.equal(dictationLayout.accessible,'Hold to speak');
+  assert.ok(dictationLayout.width>=88&&dictationLayout.width===dictationLayout.height&&dictationLayout.right&&dictationLayout.after&&dictationLayout.fits,'large square dictation control sits at the lower right');
   console.log('PASS Right Option press and release');
   console.log('PASS appearance migration and accessible local SVG icons');
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){

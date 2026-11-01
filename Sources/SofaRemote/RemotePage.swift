@@ -528,7 +528,9 @@ enum RemotePage {
       #shortcut-list.editing .launch { flex:1; justify-content:flex-start; }
       #shortcut-list.editing .shortcut-label { position:static; width:auto; height:auto; clip-path:none; }
       #shortcut-list.editing .shortcut > button:not(.launch) { display:inline-flex; }
-      #right-option-hold { min-height: 52px; touch-action: none; user-select: none; -webkit-user-select: none; }
+      .keyboard-bottom { display: flex; align-items: flex-end; gap: 12px; }
+      .keyboard-bottom #text-form { flex: 1 1 auto; min-width: 0; }
+      #right-option-hold { flex: 0 0 88px; width: 88px; height: 88px; padding: 8px; line-height: 1.2; touch-action: none; user-select: none; -webkit-user-select: none; }
       #right-option-hold.on { background: var(--selection); color: var(--selection-ink); }
       #keyboard-sheet .typing-row { display:flex; align-items:center; gap:8px; }
       #keyboard-sheet .typing-row input { flex:1; min-width:0; }
@@ -710,7 +712,6 @@ enum RemotePage {
           ><button data-mod="option" aria-pressed="false">⌥ Option</button
           ><button data-mod="shift" aria-pressed="false">⇧ Shift</button>
         </div>
-        <button id="right-option-hold" type="button" aria-label="Hold Right Option to dictate with FluidVoice" title="Hold Right Option to dictate" aria-pressed="false">⌥ Right Option · hold to speak</button>
         <div class="keygrid">
           <button data-key="escape">Esc</button><button data-key="tab">Tab</button
           ><button data-key="backspace" aria-label="Backspace">⌫</button><button data-key="delete">Delete</button
@@ -718,6 +719,7 @@ enum RemotePage {
           ><button data-key="right" aria-label="Right arrow">→</button><button data-key="enter">Return</button
           ><button data-key="space">Space</button>
         </div>
+        <div class="keyboard-bottom">
         <form id="text-form">
           <label for="text">Type on your Mac</label>
           <div class="typing-row"><input
@@ -728,6 +730,8 @@ enum RemotePage {
             aria-label="Text to send"
           /><button data-icon="send" aria-label="Send text" title="Send text"></button></div>
         </form>
+        <button id="right-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
+        </div>
       </div>
     </div>
     <div class="scrim" id="shortcuts-sheet">
