@@ -27,7 +27,7 @@ if [ -z "$IDENTITY" ] && [ "${SOFA_ALLOW_ADHOC:-0}" = 1 ]; then IDENTITY='-'; fi
 # Only public certificate bytes are extracted; private keys stay in Keychain.
 if [ -z "$IDENTITY" ] && [ -d "$PREVIOUS" ] && \
    ./scripts/verify-signing.sh --mode certificate --app "$PREVIOUS" >/dev/null 2>&1; then
-  codesign --display --extract-certificates "$STAGING/previous-cert-" "$PREVIOUS" 2>/dev/null
+  codesign --display --extract-certificates="$STAGING/previous-cert-" "$PREVIOUS" 2>/dev/null
   IDENTITY="$(shasum -a 1 "$STAGING/previous-cert-0" | awk '{print toupper($1)}')"
   if ! security find-identity -p codesigning ${IDENTITY_KEYCHAIN[@]+"${IDENTITY_KEYCHAIN[@]}"} | awk '{print $2}' | grep -Fxq "$IDENTITY"; then
     echo 'The installed signing key is unavailable. Restore that identity; do not replace it with an ad-hoc build.' >&2
