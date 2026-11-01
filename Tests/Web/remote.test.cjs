@@ -216,11 +216,11 @@ async function main() {
   const access=await evaluate(`(()=>{document.querySelector('#shortcuts-open').click();const keys=['present-open'].map(id=>{const el=document.getElementById(id);return !!el.getClientRects().length&&!!el.closest('#shortcuts-sheet.open')});document.querySelector('#present-open').click();const present=!!document.querySelector('#present-sheet.open');closeSheet();const back=!!document.querySelector('#shortcuts-sheet.open');closeSheet();return {keys,present,back}})()`);
   assert.deepEqual(access,{keys:[true],present:true,back:true},'presenter is discoverable in Shortcuts and retains navigation');
   const sharedPanel=await evaluate(`(()=>{const panel=document.querySelector('.remote-panel'),pad=document.querySelector('#pad');const keys=[...panel.querySelectorAll('button')];return {count:keys.length,separate:keys.every(b=>!pad.contains(b)),borderless:keys.every(b=>getComputedStyle(b).borderTopWidth==='0px'),inside:panel.contains(pad)&&keys.every(b=>panel.contains(b))}})()`);
-  assert.deepEqual(sharedPanel,{count:13,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
+  assert.deepEqual(sharedPanel,{count:11,separate:true,borderless:true,inside:true},'button controls share the panel while remaining separate from the touchpad gesture area');
   const touchSurface=await evaluate(`(()=>{const pad=getComputedStyle(document.querySelector('#pad')),panel=getComputedStyle(document.querySelector('.remote-panel'));return {padBorder:pad.borderTopWidth,padBackground:pad.backgroundColor,padShadow:pad.boxShadow,panelBorder:panel.borderTopWidth,panelBackground:panel.backgroundColor}})()`);
   assert.deepEqual(touchSurface,{padBorder:'0px',padBackground:'rgba(0, 0, 0, 0)',padShadow:'none',panelBorder:'0px',panelBackground:'rgba(0, 0, 0, 0)'},'idle touch area and shared panel have no boundary or second background');
-  const visual=await evaluate(`(()=>{const volume=document.querySelector('.volume'),track=getComputedStyle(volume,'::before'),drag=document.querySelector('#drag'),right=document.querySelector('#right');return {track:track.content,trackRole:volume.getAttribute('role'),drag:drag.getAttribute('aria-pressed'),right:right.getAttribute('aria-pressed'),play:parseFloat(getComputedStyle(document.querySelector('[data-action="playPause"] svg')).width),prev:parseFloat(getComputedStyle(document.querySelector('[data-action="previous"] svg')).width)}})()`);
-  assert.deepEqual({track:visual.track,role:visual.trackRole,drag:visual.drag,right:visual.right},{track:'none',role:null,drag:'false',right:null},'no volume line is shown, and right click remains separate from the drag toggle');assert.ok(visual.play>visual.prev,'play is the visual anchor');
+  const visual=await evaluate(`(()=>{const drag=document.querySelector('#drag'),right=document.querySelector('#right');return {drag:drag.getAttribute('aria-pressed'),right:right.getAttribute('aria-pressed'),previous:!!document.querySelector('[data-action="previous"]'),next:!!document.querySelector('[data-action="next"]')}})()`);
+  assert.deepEqual(visual,{drag:'false',right:null,previous:false,next:false},'right click and drag stay separate; seek buttons are removed');
   const navigation=await evaluate(`(()=>{const bar=document.querySelector('.bottom-tools');return {help:bar.contains(document.querySelector('.remote-guide')),keyboard:bar.contains(document.querySelector('#keyboard-open')),shortcuts:bar.contains(document.querySelector('#shortcuts-open')),settings:bar.contains(document.querySelector('#settings-open'))}})()`);
   assert.deepEqual(navigation,{help:true,keyboard:true,shortcuts:true,settings:true},'help, shortcuts and settings share the bottom navigation');
   const keyboardLayout=await evaluate(`(()=>{const sheet=document.querySelector('#keyboard-sheet'),form=sheet.querySelector('#text-form'),grid=sheet.querySelector('.keygrid');return {old:!!sheet.querySelector('#key-form'),textAfter:!!(grid.compareDocumentPosition(form)&Node.DOCUMENT_POSITION_FOLLOWING),last:grid.lastElementChild.dataset.key}})()`);
@@ -257,7 +257,7 @@ async function main() {
   await cdp('CSS.forcePseudoState',{nodeId:padNode.nodeId,forcedPseudoClasses:[]});
   if(process.env.SOFA_TEST_SCREENSHOT){await cdp('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
   const icons=await evaluate(`(()=>{const controls=[...document.querySelectorAll('[data-icon]')];return {count:controls.length,accessible:controls.every(b=>(b.getAttribute('aria-label')||b.textContent.trim())&&b.title&&b.querySelector('svg[aria-hidden="true"] use')),shortcuts:document.querySelector('#shortcuts-open').textContent.trim(),external:controls.some(b=>!b.querySelector('use').getAttribute('href').startsWith('#icon-')),controlTouch:getComputedStyle(document.querySelector('#right')).touchAction,padTouch:getComputedStyle(document.querySelector('#pad')).touchAction,bodyTouch:getComputedStyle(document.body).touchAction}})()`);
-  assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'manipulation');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
+  assert.ok(icons.count>=20);assert.equal(icons.accessible,true,'icons retain names and tooltips');assert.equal(icons.shortcuts,'');assert.equal(icons.external,false,'all SVG icons are local');assert.equal(icons.controlTouch,'none');assert.equal(icons.padTouch,'none');assert.equal(icons.bodyTouch,'auto','pinch and text selection remain available elsewhere');
   assert.deepEqual(await evaluate(`Array.from(document.querySelector('.bottom-tools').children).map(x=>x.id || 'help')`),['help','settings-open','keyboard-open','shortcuts-open'],'bottom navigation follows the requested order');
   assert.equal(await evaluate(`document.querySelector('[data-action="spotlight"]')`),null,'Spotlight icon removed');
   const hold=await evaluate(`(async()=>{
@@ -297,7 +297,7 @@ async function main() {
     down.dispatchEvent(new PointerEvent('pointerdown',{pointerId:44,button:0,pointerType:'touch',bubbles:true}));await sleep(650);
     down.dispatchEvent(new PointerEvent('pointerup',{pointerId:44,button:0,pointerType:'touch',bubbles:true}));down.dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}));await sleep(100);
     const repeated=calls.filter(c=>c.path==='/command'&&c.body.key==='down').length;calls.length=0;
-    speak.dispatchEvent(new PointerEvent('pointerdown',{pointerId:45,button:0,pointerType:'touch',bubbles:true}));await sleep(30);speak.dispatchEvent(new PointerEvent('pointerup',{pointerId:45,button:0,pointerType:'touch',bubbles:true}));await sleep(50);
+    speak.dispatchEvent(new PointerEvent('pointerdown',{pointerId:45,button:0,pointerType:'touch',bubbles:true}));await sleep(250);speak.dispatchEvent(new PointerEvent('pointerup',{pointerId:45,button:0,pointerType:'touch',bubbles:true}));await sleep(50);
     return {repeated,phases:calls.filter(c=>c.path==='/command'&&c.body.type==='rightOption').map(c=>c.body.phase),select:getComputedStyle(document.body).userSelect,editable:getComputedStyle(document.querySelector('#text')).userSelect};
   })()`);
   assert.ok(mainControls.repeated>=2,'main arrow repeats');assert.deepEqual(mainControls.phases,['start','end']);assert.equal(mainControls.select,'none');assert.equal(mainControls.editable,'text');
@@ -307,9 +307,10 @@ async function main() {
   for(const [width,height] of [[320,568],[375,667],[390,844],[430,932],[568,320],[844,390]]){
     await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     const geometry=await evaluate(`(()=>{const r=s=>{const x=document.querySelector(s).getBoundingClientRect();return {w:x.width,h:x.height,b:x.bottom}};return {pad:r('#pad'),keys:[...document.querySelectorAll('main button')].filter(x=>x.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]}),scroll:document.documentElement.scrollWidth,viewport:innerWidth,height:innerHeight,page:document.documentElement.scrollHeight}})()`);
-    assert.ok(geometry.pad.h>=150,`${width}x${height} usable touchpad`);
+    assert.ok(geometry.pad.h >= (height<=650 ? 100 : 150),`${width}x${height} usable touchpad`);
     assert.ok(geometry.keys.every(([w,h])=>w>=44&&h>=44),`${width}x${height} 44px controls`);
     assert.ok(geometry.scroll<=geometry.viewport+1,`${width}x${height} no horizontal overflow`);
+    if(height>=568) assert.ok(geometry.page<=geometry.height+1,`${width}x${height} remote controls fit on screen`);
     const presentGeometry=await evaluate(`(()=>{document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const sizes=[...sheet.querySelectorAll('button,select')].filter(b=>b.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]});const r={sizes,scroll:sheet.scrollWidth,client:sheet.clientWidth};closeSheet();return r})()`);
     assert.ok(presentGeometry.sizes.every(([w,h])=>w>=44&&h>=44),`${width}x${height} presenter touch targets`);
     assert.ok(presentGeometry.scroll<=presentGeometry.client+1,`${width}x${height} presenter has no horizontal overflow`);
@@ -332,7 +333,7 @@ async function main() {
   assert.deepEqual(rightTaps.commands,[{type:'click',button:'right',count:1},{type:'click',button:'right',count:1}],'repeated control taps are not lost or duplicated');assert.equal(rightTaps.scale,1,'double control tap does not zoom');assert.ok(rightTaps.defaults.every(x=>!x.prevented),'controls rely on CSS rather than global touch cancellation');
   await evaluate(`calls.length=0`);const playPoint=await point('[data-action="playPause"]');await tap(playPoint);await wait(200);
   assert.deepEqual(await evaluate(`calls.filter(x=>x.path==='/command').map(x=>x.body)`),[{type:'action',action:'playPause'}],'a real panel button touch sends only its action, never pad input');
-  for (const selector of ['#right', '[data-action="playPause"]', '#keyboard-open', '#shortcuts-open', '#settings-open', '.remote-guide summary']) {
+  for (const selector of ['#right', '[data-action="playPause"]', '.direction-pad [data-key="down"]', '#main-option-hold', '#keyboard-open', '#shortcuts-open', '#settings-open', '.remote-guide summary']) {
     await evaluate(`calls.length=0`);
     const origin=await point(selector);
     await touch('touchStart',[origin]);

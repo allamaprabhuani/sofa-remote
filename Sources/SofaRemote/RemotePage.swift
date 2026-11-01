@@ -382,7 +382,13 @@ enum RemotePage {
       .keygrid button { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
       body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
       input, textarea { user-select: text; -webkit-user-select: text; -webkit-touch-callout: default; }
-      .main-navigation { display:flex; justify-content:center; align-items:center; gap:24px; }
+      .control-deck { display:grid; grid-template-columns:1fr 132px; align-items:end; gap:12px; }
+      .primary-controls { display:grid; grid-template-columns:repeat(2, minmax(44px, 1fr)); align-content:end; gap:4px; }
+      .primary-controls button { min-height:48px; padding:0; background:transparent; border-radius:12px; touch-action:none; }
+      .primary-controls .control-icon { width:30px; height:30px; }
+      .primary-controls .play { grid-column:1 / -1; }
+      .main-navigation { display:flex; flex-direction:column; justify-content:end; align-items:center; gap:8px; }
+      main.is-pointing .primary-controls { opacity:0; pointer-events:none; }
       .direction-pad { display:grid; grid-template: repeat(3, 44px) / repeat(3, 44px); }
       .direction-pad button { min-height:44px; padding:0; background:transparent; font-size:23px; touch-action:none; }
       .direction-pad .up { grid-area:1 / 2; } .direction-pad .left { grid-area:2 / 1; }
@@ -488,8 +494,9 @@ enum RemotePage {
           gap: 7px;
         }
         #pad {
-          min-height: 150px;
+          min-height: 100px;
         }
+        #main-option-hold { width: 68px; height: 68px; font-size: 0.75rem; }
         .row button {
           min-height: 44px;
         }
@@ -649,20 +656,16 @@ enum RemotePage {
       >
         <span class="hint">Tap to click · Two fingers to scroll</span>
       </div>
-      <div class="row clicks">
+      <div class="control-deck">
+      <div class="primary-controls">
         <button id="right" data-icon="right-click" aria-label="Right click" title="Right click"></button>
         <button id="drag" data-icon="drag" aria-label="Drag" aria-pressed="false" title="Drag: toggle to hold or release"></button>
-      </div>
-      <div class="row media">
-        <button data-icon="previous" data-action="previous" aria-label="Previous track" title="Previous track"></button>
-        <button data-icon="play-pause" data-action="playPause" aria-label="Play or pause" title="Play or pause"></button>
-        <button data-icon="next" data-action="next" aria-label="Next track" title="Next track"></button>
-      </div>
-      <div class="row volume">
+        <button class="play" data-icon="play-pause" data-action="playPause" aria-label="Play or pause" title="Play or pause"></button>
         <button data-icon="volume-down" data-action="volumeDown" aria-label="Volume down" title="Volume down"></button>
         <button data-icon="volume-up" data-action="volumeUp" aria-label="Volume up" title="Volume up"></button>
       </div>
       <div class="main-navigation">
+        <button id="main-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
         <div class="direction-pad" role="group" aria-label="Arrow and return keys">
           <button class="up" data-key="up" aria-label="Up arrow" title="Up arrow">↑</button>
           <button class="left" data-key="left" aria-label="Left arrow" title="Left arrow">←</button>
@@ -670,12 +673,12 @@ enum RemotePage {
           <button class="right" data-key="right" aria-label="Right arrow" title="Right arrow">→</button>
           <button class="down" data-key="down" aria-label="Down arrow" title="Down arrow">↓</button>
         </div>
-        <button id="main-option-hold" type="button" aria-label="Hold to speak" title="Hold to speak" aria-pressed="false">Hold to speak</button>
+      </div>
       </div>
       </div>
       <nav class="bottom-tools" aria-label="Remote navigation">
         <details class="remote-guide"><summary aria-label="Explain remote icons" title="Explain remote icons">?</summary><div class="guide-content">
-          <p>The mouse icon is right click and the hand toggles drag. The next row controls playback; the last row changes volume. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
+          <p>The mouse icon is right click and the hand toggles drag. The play icon controls playback; the speaker icons change volume. The arrows and Return act like keyboard keys, and Hold to speak activates a compatible Mac dictation shortcut. The keyboard opens typing, the grid opens Shortcuts and the gear opens Settings.</p>
           <p>Display icons, in order: move the front window to the selected display, decrease brightness, increase brightness, turn screens off, and wake screens.</p>
           <p>Mac control icons, in order: show desktop, open Downloads, mute, and lock the Mac.</p>
           <p>Appearance is saved on this phone. The touchpad moves across connected displays. Brightness uses Mac keys and external display support varies. Keeping the Mac awake prevents idle system sleep, but displays can still sleep. Wake does not unlock the Mac; unlock on the Mac, or use Apple Watch unlock if configured.</p>
@@ -1455,7 +1458,7 @@ enum RemotePage {
         swipeClickGuard = null;
       }, true);
       touchSurface.addEventListener("lostpointercapture", (e) => {
-        if (fingers.has(e.pointerId)) {
+        if (e.target === touchSurface && fingers.has(e.pointerId)) {
           fingers.clear();
           $("main").classList.remove("is-pointing");
           dropQueuedMotion();
@@ -1705,10 +1708,10 @@ enum RemotePage {
       $("#present-next").onclick = () => presentSlide("right");
       $("#present-exit").onclick = () => { stopPresenting(); command({ type: "key", key: "escape", modifiers: [] }); };
       $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); refresh(true); };
-      let optionPointer = null, optionKeyboard = false, optionHeld = false, optionHeartbeat = 0, optionGeneration = 0;
+      let optionPointer = null, optionKeyboard = false, optionHeld = false, optionHeartbeat = 0, optionGeneration = 0, optionDelay = 0;
       const optionButtons = [$("#right-option-hold"), $("#main-option-hold")];
       function endRightOption() {
-        optionPointer = null; optionKeyboard = false;
+        optionPointer = null; optionKeyboard = false; clearTimeout(optionDelay); optionDelay = 0;
         clearInterval(optionHeartbeat); optionHeartbeat = 0;
         if (!optionHeld) return;
         optionHeld = false; optionGeneration++;
@@ -1725,7 +1728,9 @@ enum RemotePage {
       optionButtons.forEach((optionButton) => {
       optionButton.addEventListener("pointerdown", (e) => {
         if (e.button !== 0 || optionPointer !== null) return;
-        e.preventDefault(); optionPointer = e.pointerId; optionButton.setPointerCapture(e.pointerId); startRightOption();
+        e.preventDefault(); optionPointer = e.pointerId; optionButton.setPointerCapture(e.pointerId);
+        if (optionButton.id === "main-option-hold") optionDelay = setTimeout(() => { optionDelay = 0; if (optionPointer === e.pointerId) startRightOption(); }, 200);
+        else startRightOption();
       });
       for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) optionButton.addEventListener(eventName, (e) => {
         if (optionPointer === e.pointerId) endRightOption();
