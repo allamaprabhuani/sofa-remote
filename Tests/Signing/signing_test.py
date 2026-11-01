@@ -56,10 +56,12 @@ try:
  verify(b,mode='release',ok=False);reports.append('PASS self-signed fixture cannot pass Developer ID release policy')
  print('\n'.join(reports))
 finally:
- # Remove only this fixture entry, preserving concurrent search-list changes.
- current=shlex.split(subprocess.check_output(['security','list-keychains','-d','user'],text=True))
- remaining=[item for item in current if Path(item).resolve()!=k.resolve()]
- if len(remaining)!=len(current):
-  subprocess.run(['security','list-keychains','-d','user','-s',*remaining],capture_output=True,check=True)
- subprocess.run(['security','delete-keychain',str(k)],capture_output=True)
- shutil.rmtree(work)
+ try:
+  # Remove only this fixture entry, preserving concurrent search-list changes.
+  current=shlex.split(subprocess.check_output(['security','list-keychains','-d','user'],text=True))
+  remaining=[item for item in current if Path(item).resolve()!=k.resolve()]
+  if len(remaining)!=len(current):
+   subprocess.run(['security','list-keychains','-d','user','-s',*remaining],capture_output=True,check=True)
+ finally:
+  subprocess.run(['security','delete-keychain',str(k)],capture_output=True)
+  shutil.rmtree(work)

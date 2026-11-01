@@ -30,3 +30,9 @@ The current app provides manual release links only. No updater polls, silently d
 ## Encrypted transport investigation
 
 Tailscale IP links provide the currently documented encrypted network option. Native HTTPS pairing would need a certificate trust/renewal plan compatible with iPhone Safari and changing local addresses; a self-signed warning is not a usable solution. Browser WebCrypto also has secure-context constraints, and application-layer encryption needs a reviewed authenticated protocol and key lifecycle. No new cryptographic protocol, certificate installer or HTTPS endpoint is claimed by this release. Revisit this work with a specific threat model and usability prototype before broad promotion beyond trusted-network beta users.
+
+## Website and Homebrew
+
+The primary public app site is <https://sofa-remote.doublehoney1.chatgpt.site/>. Its public static source is `site/`; `./scripts/build-site.sh` copies only those assets into ignored `dist/`. `.openai/hosting.json` preserves the existing Sites project identity. Publish through the Sites source/version/deployment workflow for that ID; do not register a replacement site. The GitHub Pages URL remains a compatible mirror and its canonical metadata points to the primary site. Never package app settings, build outputs or signing credentials as website assets.
+
+The independent [Homebrew tap](https://github.com/allamaprabhuani/homebrew-tap) contains `Casks/sofa-remote.rb`. After publishing and independently downloading an intended release, update the cask version, exact asset URL and SHA-256 checksum. Run `ruby -c` and `brew style` on the cask, then verify `brew fetch --cask` without installing over a running helper. Keep preview/Gatekeeper caveats; never strip quarantine in a cask. This is separate from acceptance into Homebrew's official catalogue.

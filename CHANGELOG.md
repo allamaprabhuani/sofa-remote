@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — build 12
+## Certificate preview beta 6 — build 12 — build 12
 
 - Require stable certificate signing for normal local builds and check update identity across all architectures. Reject ad-hoc updates, changed signers, modified signatures and weakened requirements.
 - Reserve normal public release packaging for verified Developer ID and notarisation. Keep explicit certificate-signed previews and ad-hoc CI artifacts separate.
