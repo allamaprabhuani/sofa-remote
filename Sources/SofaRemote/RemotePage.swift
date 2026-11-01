@@ -761,7 +761,8 @@ enum RemotePage {
         <input
           class="field"
           id="url"
-          inputmode="url"
+          inputmode="text"
+          enterkeyhint="go"
           aria-label="Website address or Google search"
           placeholder="Website address or Google search"
           autocapitalize="off"

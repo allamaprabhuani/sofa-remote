@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — build 24
+## Unreleased — build 25
 
 - Show the Brave icon and open a blank Brave tab for its app shortcut.
 - Search Google from the address field and place the typing send button beside the field.
