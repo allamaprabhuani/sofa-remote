@@ -37,6 +37,34 @@ import Testing
         #expect(!input.isDragging)
         #expect(events == [.leftMouseDown, .leftMouseUp])
     }
+    @Test func moveEmitsMouseMovedWithoutPostingWhenTrustDenied() throws {
+        var events: [CGEvent] = []
+        let denied = InputController(displays: DisplayController(), emit: { events.append($0) },
+                                     trusted: { false }, secure: { false })
+        #expect(throws: RemoteError.self) { try denied.handle(.move(10, -5)) }
+        #expect(events.isEmpty)
+    }
+
+    @Test func moveWhileNotDraggingEmitsMouseMovedEventOnly() throws {
+        var events: [CGEvent] = []
+        let input = InputController(displays: DisplayController(), emit: { events.append($0) },
+                                    trusted: { true }, secure: { false })
+        try input.handle(.move(1, 1))
+        #expect(events.count == 1)
+        #expect(events.first?.type == .mouseMoved)
+    }
+
+    @Test func moveWhileDraggingEmitsLeftMouseDraggedForEachMotion() throws {
+        var events: [CGEventType] = []
+        let input = InputController(displays: DisplayController(), emit: { events.append($0.type) },
+                                    trusted: { true }, secure: { false })
+        try input.handle(.drag(.start, 0, 0))
+        try input.handle(.drag(.move, 7, 3))
+        try input.handle(.drag(.move, -2, 4))
+        try input.handle(.drag(.end, 0, 0))
+        #expect(events == [.leftMouseDown, .leftMouseDragged, .leftMouseDragged, .leftMouseUp])
+    }
+
     @Test func secureInputStartingDuringDragReleasesTheButton() throws {
         var secure = false
         var events: [CGEventType] = []

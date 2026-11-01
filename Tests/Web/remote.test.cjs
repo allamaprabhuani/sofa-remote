@@ -33,11 +33,14 @@ async function main() {
   await cdp('Page.enable');await cdp('Runtime.enable');
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`
     localStorage.setItem('sofaKey','a'.repeat(64)); Element.prototype.setPointerCapture=function(){};
-    window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';
+    window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';window.commandLatency=3;window.illegalMotion=[];
     window.testState={name:'Mock Mac',frontApp:'Brave Browser',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
     const realTimeout=window.setTimeout;window.setTimeout=(fn,ms,...args)=>realTimeout(fn,ms===9000?30:ms,...args);
+    const motionBody=b=>b&&(b.type==='move'||b.type==='scroll'||(b.type==='drag'&&b.phase==='move'));
+    const badDelta=v=>!Number.isFinite(v)||Math.abs(v)>300;
     window.fetch=async(path,options={})=>{const body=options.body?JSON.parse(options.body):null;calls.push({path,body,key:options.headers?.['X-Sofa-Key']});
-      if(path==='/command'){window.mockActive++;window.maxActive=Math.max(window.maxActive,window.mockActive);try{await new Promise((resolve,reject)=>{if(!hang)realTimeout(resolve,3);options.signal.addEventListener('abort',()=>reject(Error('aborted')),{once:true})})}finally{window.mockActive--}}
+      if(path==='/command'&&motionBody(body)&&(badDelta(body.dx||0)||badDelta(body.dy||0))){window.illegalMotion.push({dx:body.dx,dy:body.dy});return {status:400,ok:false,json:async()=>({error:'Motion delta out of ±300 range'})}}
+      if(path==='/command'){window.mockActive++;window.maxActive=Math.max(window.maxActive,window.mockActive);try{await new Promise((resolve,reject)=>{if(!hang)realTimeout(resolve,window.commandLatency);options.signal.addEventListener('abort',()=>reject(Error('aborted')),{once:true})})}finally{window.mockActive--}}
       if(path==='/command'&&commandFailure)return {status:commandFailure==='unauthorized'?401:500,ok:false,json:async()=>({error:'Send failed'})};
       return {status:200,ok:true,json:async()=>path==='/state'?testState:path==='/devices'?[]:{ok:true,token:'b'.repeat(64)}}};
   `});
@@ -67,9 +70,10 @@ async function main() {
     gesture('pointerdown',3,0,0);gesture('pointerdown',4,0,0);gesture('pointermove',3,0,12);gesture('pointerup',3,0,12);gesture('pointerup',4,0,0);await sleep(60);
     return {commands:calls.filter(x=>x.path==='/command').map(x=>x.body),maxActive};
   })()`);
-  assert.deepEqual(result.commands.map(x=>x.type),['move','click','click','drag','drag','drag','scroll']);
+  assert.deepEqual(result.commands.map(x=>x.type),['move','click','click','drag','drag','scroll']);
   assert.equal(result.commands[1].button,'right');assert.equal(result.commands[2].count,2);
-  assert.deepEqual(result.commands.slice(3,6).map(x=>x.phase),['start','move','end']);assert.equal(result.maxActive,1,'commands are serialized');
+  assert.deepEqual(result.commands.slice(3,5).map(x=>x.phase),['start','end'],'pointercancel drops queued drag-move and still releases the button');
+  assert.equal(result.maxActive,1,'commands are serialized');
   const heartbeat=await evaluate(`(async()=>{
     calls.length=0;document.querySelector('#drag').click();await new Promise(r=>setTimeout(r,1100));
     Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));
@@ -118,6 +122,58 @@ async function main() {
   assert.equal(textFailure.timed.value,'preserve me');assert.ok(textFailure.timed.status,'timeout is visible');
   assert.equal(textFailure.stateCleared,'','successful state clears a runtime error');
   assert.equal(textFailure.unauthorized.value,'preserve me');assert.equal(textFailure.unauthorized.pair,true);assert.match(textFailure.unauthorized.status,/Pair/);
+  const burst=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms)), pad=document.querySelector('#pad');
+    const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
+    calls.length=0; window.illegalMotion.length=0; window.maxActive=0; window.commandLatency=10;
+    gesture('pointerdown',30,0,0);
+    for(let i=1;i<=6;i++) gesture('pointermove',30,i*500,i*500);
+    gesture('pointerup',30,3000,3000);
+    while(queue.length||active) await sleep(10);
+    window.commandLatency=3;
+    const commands=calls.filter(c=>c.path==='/command').map(c=>c.body);
+    const motions=commands.filter(c=>c.type==='move');
+    return {commands:commands.map(c=>c.type),motions:motions.length,totalX:motions.reduce((s,c)=>s+c.dx,0),totalY:motions.reduce((s,c)=>s+c.dy,0),illegal:window.illegalMotion.length,maxActive:window.maxActive};
+  })()`);
+  assert.equal(burst.illegal,0,'every posted motion delta is within ±300');
+  assert.ok(burst.motions>=6,`burst produced multiple motion posts (got ${burst.motions})`);
+  assert.equal(burst.totalX,1800,'motion travel accumulated and preserved on ordinary lift');
+  assert.equal(burst.totalY,1800,'motion travel accumulated and preserved on ordinary lift');
+  assert.equal(burst.maxActive,1,'commands remain single-flight across the burst');
+  assert.ok(burst.commands.every(t=>t==='move'),'ordinary lift after a long swipe posts only the split motion packets, no spurious click');
+  const cancel=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms)), pad=document.querySelector('#pad');
+    const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
+    calls.length=0; window.illegalMotion.length=0; hang=true;
+    gesture('pointerdown',40,0,0);
+    for(let i=1;i<=6;i++) gesture('pointermove',40,i*500,0);
+    await sleep(5);
+    const queuedBefore=queue.length;
+    gesture('pointercancel',40,3000,0);
+    const queuedAfter=queue.filter(x=>x.body.type==='move'||x.body.type==='scroll'||(x.body.type==='drag'&&x.body.phase==='move')).length;
+    active?.abort(); hang=false; await sleep(30);
+    return {queuedBefore,queuedAfter,illegal:window.illegalMotion.length,inflight:calls.filter(c=>c.path==='/command'&&c.body.type==='move').length};
+  })()`);
+  assert.ok(cancel.queuedBefore>=1,'burst populated the motion queue while transport was hung');
+  assert.equal(cancel.queuedAfter,0,'pointercancel discards unsent motion');
+  assert.equal(cancel.illegal,0,'cancellation never ships an out-of-range delta');
+  const dragOrder=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms)), pad=document.querySelector('#pad');
+    const gesture=(type,id,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:id,clientX:x,clientY:y,bubbles:true}));
+    calls.length=0; window.illegalMotion.length=0; window.commandLatency=10;
+    document.querySelector('#drag').click();
+    gesture('pointerdown',50,0,0);
+    for(let i=1;i<=4;i++) gesture('pointermove',50,i*400,0);
+    gesture('pointerup',50,1600,0);
+    document.querySelector('#drag').click();
+    while(queue.length||active) await sleep(10);
+    window.commandLatency=3;
+    return {types:calls.filter(c=>c.path==='/command').map(c=>c.body.type+':'+(c.body.phase||'')),illegal:window.illegalMotion.length};
+  })()`);
+  assert.equal(dragOrder.illegal,0,'drag motion packets stay within ±300');
+  const dragPhases=dragOrder.types.filter(t=>t.startsWith('drag:')).map(t=>t.slice(5));
+  assert.equal(dragPhases[0],'start','drag start posts first');
+  assert.equal(dragPhases.at(-1),'end','drag end posts after every queued move');
   await cdp('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/?test=pair#pair=123456`});await wait(100);
   const pairing=await evaluate(`({hash:location.hash,call:calls.find(x=>x.path==='/pair')})`);
   assert.equal(pairing.hash,'','pairing code removed from address bar');

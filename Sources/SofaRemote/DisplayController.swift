@@ -63,10 +63,45 @@ final class DisplayController {
                        y: min(max(point.y, rect.minY), rect.maxY - 1))
     }
 
+    /// Bounding rect of all screens' Quartz frames. Useful for sanity reporting; not a
+    /// substitute for projection on staggered/L-shaped layouts where the bounding rect
+    /// covers virtual gap pixels that no display owns.
+    static func desktopBounds(_ frames: [CGRect], primaryHeight: CGFloat) -> CGRect {
+        let quartz = frames.map { quartzFrame(for: $0, primaryHeight: primaryHeight) }
+        guard let first = quartz.first else { return .zero }
+        return quartz.dropFirst().reduce(first) { $0.union($1) }
+    }
+
+    /// Project a Quartz point onto the nearest real display rect. Points already inside any
+    /// display pass through unchanged (free crossing between adjacent monitors, including
+    /// negative-coordinate secondaries). Points in a gap or past an outer edge snap to the
+    /// nearest in-bounds pixel of the closest display rect.
+    static func project(_ point: CGPoint, onto quartzFrames: [CGRect]) -> CGPoint {
+        guard !quartzFrames.isEmpty else { return point }
+        guard point.x.isFinite, point.y.isFinite else {
+            let first = quartzFrames[0]
+            return CGPoint(x: first.midX, y: first.midY)
+        }
+        for rect in quartzFrames where rect.contains(point) { return point }
+        var best = CGPoint(x: quartzFrames[0].midX, y: quartzFrames[0].midY)
+        var bestDistance = CGFloat.infinity
+        for rect in quartzFrames where rect.width > 0 && rect.height > 0 {
+            let clamped = clamp(point, to: rect)
+            let dx = point.x - clamped.x, dy = point.y - clamped.y
+            let distance = dx * dx + dy * dy
+            if distance < bestDistance { bestDistance = distance; best = clamped }
+        }
+        return best
+    }
+
+    /// Map a would-be cursor position to a pixel that is actually visible on some display.
+    /// The selected display is a jump-to/window-move destination, not consulted here, so a
+    /// swipe can freely cross monitors like a native trackpad.
     func clampQuartz(_ point: CGPoint) -> CGPoint {
-        guard let screen = target else { return point }
-        return Self.clamp(point, to: Self.quartzFrame(for: screen.frame,
-                          primaryHeight: NSScreen.screens.first?.frame.height ?? screen.frame.maxY))
+        let screens = NSScreen.screens
+        guard let primaryHeight = screens.first?.frame.height else { return point }
+        let frames = screens.map { Self.quartzFrame(for: $0.frame, primaryHeight: primaryHeight) }
+        return Self.project(point, onto: frames)
     }
 
     /// Move the one window focused when this operation starts. Never switch to another window.
