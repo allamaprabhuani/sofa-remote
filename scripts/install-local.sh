@@ -10,17 +10,21 @@ DEST='/Applications/Sofa Remote.app'
 if pgrep -x SofaRemote >/dev/null; then
   echo 'Quit Sofa Remote before installing. This installer does not stop it or replace a live bundle.' >&2; exit 1
 fi
-if [ -d "$DEST" ]; then
-  if ./scripts/verify-signing.sh --mode certificate --app "$DEST" >/dev/null 2>&1; then
-    ./scripts/verify-signing.sh --mode certificate --app "$CANDIDATE" --previous "$DEST"
-  else
-    if [ "$MIGRATE" != 1 ]; then
-      echo 'Existing app has no verified certificate identity. A first migration needs --first-certificate-migration and manual macOS permission approval.' >&2; exit 1
+verify_update() {
+  local update="$1"
+  if [ -d "$DEST" ]; then
+    if ./scripts/verify-signing.sh --mode certificate --app "$DEST" >/dev/null 2>&1; then
+      ./scripts/verify-signing.sh --mode certificate --app "$update" --previous "$DEST"
+    else
+      if [ "$MIGRATE" != 1 ]; then
+        echo 'Existing app has no verified certificate identity. A first migration needs --first-certificate-migration and manual macOS permission approval.' >&2; exit 1
+      fi
+      ./scripts/verify-signing.sh --mode development --app "$DEST"
+      echo 'First certificate migration: macOS permission must be approved by the owner. Nothing grants it automatically.' >&2
     fi
-    ./scripts/verify-signing.sh --mode development --app "$DEST"
-    echo 'First certificate migration: macOS permission must be approved by the owner. Nothing grants it automatically.' >&2
   fi
-fi
+}
+verify_update "$CANDIDATE"
 STAGE="$(mktemp -d /Applications/.sofa-remote-install.XXXXXX)"
 COMPLETE=0
 cleanup() {
@@ -37,6 +41,8 @@ trap cleanup EXIT
 chmod 700 "$STAGE"
 ditto "$CANDIDATE" "$STAGE/new.app"
 ./scripts/verify-signing.sh --mode certificate --app "$STAGE/new.app"
+# Verify the actual staged bytes against the current installed identity.
+verify_update "$STAGE/new.app"
 if pgrep -x SofaRemote >/dev/null; then echo 'Sofa Remote restarted; installation stopped.' >&2; exit 1; fi
 if [ -e "$DEST" ]; then mv "$DEST" "$STAGE/previous.app"; fi
 mv "$STAGE/new.app" "$DEST"

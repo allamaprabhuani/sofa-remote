@@ -67,6 +67,13 @@ trap 'rm -rf "$STAGING"' EXIT
 chmod 700 "$STAGING"
 ditto "$APP" "$STAGING/Sofa Remote.app"
 APP="$STAGING/Sofa Remote.app"
+# Recheck the copied bytes: the candidate may have changed during staging.
+STAGED_VERIFY=(--mode "$MODE" --app "$APP")
+if [ "$MODE" = release ]; then STAGED_VERIFY+=(--team "$SOFA_TEAM_ID"); fi
+if [ "$MODE" != development ] && [ -n "${SOFA_PREVIOUS_APP:-}" ]; then
+  STAGED_VERIFY+=(--previous "$SOFA_PREVIOUS_APP")
+fi
+./scripts/verify-signing.sh "${STAGED_VERIFY[@]}"
 NOTARY=(--keychain-profile "${SOFA_NOTARY_PROFILE:-}")
 SIGN=(codesign --force --timestamp --sign "${SOFA_SIGN_IDENTITY:--}")
 if [ -n "${SOFA_SIGN_KEYCHAIN:-}" ]; then
