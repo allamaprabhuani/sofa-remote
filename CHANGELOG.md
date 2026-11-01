@@ -2,6 +2,7 @@
 
 ## Unreleased — build 23
 
+- Simplify saved shortcut icons and move reordering to edit mode; group website entry below.
 - Remove the duplicate keyboard key field and move typing to the bottom while retaining modifier shortcuts.
 - Simplify the Shortcuts and Settings panels while keeping safety guidance available.
 - Put Keyboard in the bottom navigation and use the system font across phone appearances.

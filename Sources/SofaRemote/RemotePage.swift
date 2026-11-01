@@ -515,6 +515,21 @@ enum RemotePage {
       #help-sheet .support-icons a:active { background: var(--pressed); }
       #shortcuts-sheet .shortcut-initial { background: transparent; color: var(--ink); }
       #shortcuts-sheet .shortcut { min-height: 52px; }
+      #shortcuts-sheet .shortcut-heading { display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:.875rem; }
+      #shortcuts-sheet .shortcut-heading button { width:48px; padding:0; background:transparent; }
+      #shortcut-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(60px,1fr)); gap:8px; }
+      #shortcut-list .shortcut { justify-content:center; }
+      #shortcut-list .launch { flex:0 0 60px; min-height:52px; justify-content:center; padding:0; border-radius:12px; }
+      #shortcut-list .shortcut-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+      #shortcut-list .shortcut > button:not(.launch) { display:none; }
+      #shortcut-list.editing { display:flex; flex-direction:column; }
+      #shortcut-list.editing .shortcut { justify-content:initial; }
+      #shortcut-list.editing .launch { flex:1; justify-content:flex-start; }
+      #shortcut-list.editing .shortcut-label { position:static; width:auto; height:auto; clip-path:none; }
+      #shortcut-list.editing .shortcut > button:not(.launch) { display:inline-flex; }
+      #shortcuts-sheet #open-form { flex-direction:row; align-items:center; width:100%; }
+      #open-form button { flex:0 0 48px; width:48px; padding:0; }
+
       :is(#settings-sheet, #shortcuts-sheet) .field { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding-inline: 4px; }
       #shortcuts-sheet .shortcut-actions { display: grid; grid-template-columns: repeat(4, minmax(44px, 1fr)); gap: 8px; }
       #shortcuts-sheet .shortcut-actions button { min-height: 52px; border-radius: 12px; }
@@ -553,6 +568,7 @@ enum RemotePage {
       <symbol id="icon-volume-up" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5m5 7h6m-3-3v6"/></symbol>
       <symbol id="icon-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></symbol>
       <symbol id="icon-apps" viewBox="0 0 24 24"><rect x="2" y="6" width="15" height="15" rx="2"/><path d="M7 6V3h15v15h-5M2 11h15"/></symbol>
+      <symbol id="icon-present" viewBox="0 0 24 24"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/><path d="m10 8 5 2.5L10 13z"/></symbol>
       <symbol id="icon-fullscreen" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
       <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></symbol>
       <symbol id="icon-desktop" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd" />
@@ -711,21 +727,8 @@ enum RemotePage {
           <button data-help data-icon="help" aria-label="About and Help" title="About and Help"></button>
           <button data-close data-icon="close" aria-label="Close" title="Close"></button>
         </div>
-        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="fullscreen" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
-        <label for="url">Open a website on your Mac</label>
-      <form class="address" id="open-form">
-        <input
-          class="field"
-          id="url"
-          inputmode="url"
-          aria-label="Website address"
-          placeholder="Website address"
-          autocapitalize="off"
-          autocorrect="off"
-          spellcheck="false"
-        /><button data-icon="send" aria-label="Open website" title="Open website"></button>
-      </form>
-        <p>Saved on your Mac</p>
+        <div class="sheet-row shortcut-actions"><button id="present-open" data-icon="present" aria-label="Present" title="Present"></button><button data-icon="apps" data-action="appSwitcher" aria-label="App switcher" title="App switcher"></button><button data-icon="fullscreen" data-action="fullscreen" aria-label="Full screen" title="Full screen"></button><button data-icon="search" data-action="spotlight" aria-label="Spotlight search" title="Spotlight search"></button></div>
+        <div class="shortcut-heading"><span>Saved on your Mac</span><button id="shortcut-edit" data-icon="pen" aria-label="Edit shortcuts" title="Edit shortcuts" aria-pressed="false"></button></div>
         <div id="shortcut-list"></div>
         <details class="shortcut-add"><summary aria-label="Add shortcut" title="Add shortcut">+</summary>
         <form id="shortcut-form">
@@ -749,6 +752,19 @@ enum RemotePage {
           ><button data-icon="add" aria-label="Add shortcut" title="Add shortcut"></button>
         </form>
         </details>
+        <label for="url">Open a website on your Mac</label>
+      <form class="address" id="open-form">
+        <input
+          class="field"
+          id="url"
+          inputmode="url"
+          aria-label="Website address"
+          placeholder="Website address"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        /><button data-icon="send" aria-label="Open website" title="Open website"></button>
+      </form>
       </div>
     </div>
     <div class="scrim" id="settings-sheet">
@@ -1680,6 +1696,10 @@ enum RemotePage {
           $("#shortcut-value").value = "";
         }
       };
+      $("#shortcut-edit").onclick = (e) => {
+        const editing = $("#shortcut-list").classList.toggle("editing");
+        e.currentTarget.setAttribute("aria-pressed", String(editing));
+      };
       function renderShortcuts() {
         const list = $("#shortcut-list");
         list.replaceChildren();
@@ -1692,13 +1712,14 @@ enum RemotePage {
           const icon = document.createElement("span");
           icon.className = "shortcut-initial";
           icon.setAttribute("aria-hidden", "true");
-          if (item.kind === "downloads") {
+          const knownIcon = item.kind === "downloads" ? "folder" : ({ brave: "globe", iina: "play-pause" })[name.trim().toLowerCase()];
+          if (knownIcon) {
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("class", "control-icon");
             svg.setAttribute("viewBox", "0 0 24 24");
             svg.setAttribute("focusable", "false");
             const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-            use.setAttribute("href", "#icon-folder"); svg.append(use); icon.append(svg);
+            use.setAttribute("href", "#icon-" + knownIcon); svg.append(use); icon.append(svg);
           } else {
             icon.textContent = (Array.from(name.trim())[0] || "•").toUpperCase();
           }
