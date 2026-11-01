@@ -6,13 +6,15 @@ The first phone layout keeps a large touchpad, labelled click/drag controls and 
 
 Pointer motion uses every connected screen, including negative-coordinate monitors. Points in a gap or beyond the desktop project to the nearest real display edge. Each move starts at the physical cursor position so another mouse remains usable. Selecting a display is a one-time pointer jump and the destination for an explicit window move; it does not confine the pointer.
 
-The command queue keeps one request in flight and targets roughly 60 motion updates per second where network latency permits. Accumulated relative travel is split into packets within the server's ±300-per-axis limit. Ordinary finger lift flushes pending movement before a following click; cancellation/hidden-page events discard unsent movement and release drag. The drag latch supports multiple finger strokes and sends a heartbeat while stationary.
+The authenticated WebSocket queue shares the HTTP port and allows up to four messages in flight, targeting roughly 60 motion updates per second without waiting for each round trip. The server executes commands in stream order. HTTP compatibility control keeps one request in flight. Accumulated relative travel is split into packets within the server's ±300-per-axis limit. Ordinary finger lift flushes pending movement before a following click; cancellation/hidden-page events discard unsent movement and release drag. The drag latch supports multiple finger strokes and sends a heartbeat while stationary.
 
 Backpressure is bounded: twelve queue entries, a maximum coalesced movement of 3,600 points per axis, and a 250 ms age limit for unsent movement. Overload, expired movement or a failed send rejects queued input, including dependent clicks, rather than replaying it after the connection recovers. Urgent Wake can cancel earlier work. Network latency still limits smoothness; physical testing is required.
 
 ## Power
 
 Screen off applies to all connected displays. The Mac must stay awake for remote wake to remain reachable. macOS may lock after display sleep; Wake does not unlock. The helper does not change lock policy or inject unlock credentials.
+
+The opt-in disposable input fixture includes a local timing readout: the last forty motion packet intervals and Mac processing durations, held only in memory. Normal launches do not collect these samples. No text, cursor coordinates or screenshots are recorded. Native settings are not redrawn for each motion packet.
 
 ## Artwork
 

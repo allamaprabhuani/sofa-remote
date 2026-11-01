@@ -8,6 +8,8 @@ Direct LAN HTTP does **not** encrypt pairing codes, tokens, URLs or text. A host
 
 The listener accepts loopback, RFC1918, link-local and shared/Tailscale address ranges; validates literal/private Host headers and browser Origin; serves no CORS access; bounds requests, deadlines and clients. These reduce exposure and denial-of-service risk, and are not a substitute for encrypted transport. Tailscale hostnames and custom HTTPS reverse-proxy origins are not supported by the current Host policy; use the displayed IP link.
 
+The input WebSocket shares the HTTP port and the same unencrypted transport boundary. It requires a matching Origin and a paired-device token in its first message, never a URL token. Frame/buffer/client bounds and per-device input rate limits apply. The server processes commands in order and checks authorization again during asynchronous operations. Closing a stream cancels its pending operation and releases held input; the browser does not replay uncertain commands after reconnecting. A revoked idle stream is rejected on its next activity or closed by the idle deadline.
+
 ## Pairing and stored data
 
 Pairing is opened by the person at the Mac, lasts five minutes, and ends when its window closes. Failed attempts are rate-limited. Each phone receives an independent 32-byte random secret; the Mac stores only SHA-256 digests with file mode 0600. The browser stores its actual secret in that origin's local storage. Local storage can be copied by someone with access to that browser or by hostile injected page code; do not pair over an untrusted network.

@@ -32,6 +32,7 @@ async function main() {
   const evaluate=async expression=>{const r=await cdp('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(JSON.stringify(r.exceptionDetails));return r.result.value};
   await cdp('Page.enable');await cdp('Runtime.enable');
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`
+    window.WebSocket=undefined;
     localStorage.setItem('sofaKey','a'.repeat(64)); Element.prototype.setPointerCapture=function(){};
     window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';window.commandLatency=3;window.illegalMotion=[];
     window.testState={name:'Mock Mac',frontApp:'Brave Browser',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};

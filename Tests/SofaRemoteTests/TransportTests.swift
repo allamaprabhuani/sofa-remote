@@ -138,4 +138,66 @@ import Testing
         server.stop()
         #expect(server.activeConnectionCount == 0)
     }
+
+    @Test func webSocketAuthenticatesRoutesAndClosesOnRevocation() async throws {
+        let folder = try temporaryFolder(); defer { try? FileManager.default.removeItem(at: folder) }
+        let store = PairingStore(folder: folder)
+        let issued = try store.issue(name: "Test")
+        var routed = 0, resets = 0
+        let server = RemoteServer(store: store, html: { "" }, state: { [:] }, route: { request in
+            #expect(request.path == "/command"); routed += 1
+            return .json(["ok": true])
+        }, onRevoke: { resets += 1 })
+        defer { server.stop() }
+        var port: UInt16?
+        server.start(ports: [0]) { port = $0 }
+        for _ in 0..<100 where port == nil { try await Task.sleep(for: .milliseconds(20)) }
+        let chosen = try #require(port)
+        var request = URLRequest(url: try #require(URL(string: "ws://127.0.0.1:\(chosen)/input")))
+        request.setValue("http://127.0.0.1:\(chosen)", forHTTPHeaderField: "Origin")
+        request.setValue("sofa.v1", forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        let socket = URLSession.shared.webSocketTask(with: request)
+        socket.resume()
+        try await socket.send(.string("{\"type\":\"auth\",\"token\":\"\(issued.token)\"}"))
+        guard case .string(let ready) = try await socket.receive() else { Issue.record("Expected ready"); return }
+        #expect(ready.contains("ready"))
+        try await socket.send(.string("{\"id\":1,\"body\":{\"action\":\"test\"}}"))
+        guard case .string(let reply) = try await socket.receive() else { Issue.record("Expected reply"); return }
+        let json = try #require(try JSONSerialization.jsonObject(with: Data(reply.utf8)) as? [String: Any])
+        #expect(json["id"] as? Int == 1 && json["ok"] as? Bool == true && routed == 1)
+        try store.revoke(id: issued.deviceID)
+        try await socket.send(.string("{\"id\":2,\"body\":{}}"))
+        do { _ = try await socket.receive(); Issue.record("Revoked stream remained open") } catch { }
+        for _ in 0..<100 where server.activeConnectionCount != 0 { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(server.activeConnectionCount == 0 && resets == 1 && routed == 1)
+    }
+
+    @Test func disconnectCancelsSuspendedWebSocketRoute() async throws {
+        let folder = try temporaryFolder(); defer { try? FileManager.default.removeItem(at: folder) }
+        let store = PairingStore(folder: folder)
+        let issued = try store.issue(name: "Test")
+        var started = false, cancelled = false
+        let server = RemoteServer(store: store, html: { "" }, state: { [:] }, route: { _ in
+            started = true
+            do { try await Task.sleep(for: .seconds(5)) } catch { cancelled = true }
+            return .json(["ok": true])
+        })
+        defer { server.stop() }
+        var port: UInt16?
+        server.start(ports: [0]) { port = $0 }
+        for _ in 0..<100 where port == nil { try await Task.sleep(for: .milliseconds(20)) }
+        let chosen = try #require(port)
+        var request = URLRequest(url: try #require(URL(string: "ws://127.0.0.1:\(chosen)/input")))
+        request.setValue("http://127.0.0.1:\(chosen)", forHTTPHeaderField: "Origin")
+        request.setValue("sofa.v1", forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        let socket = URLSession.shared.webSocketTask(with: request); socket.resume()
+        try await socket.send(.string("{\"type\":\"auth\",\"token\":\"\(issued.token)\"}"))
+        _ = try await socket.receive()
+        try await socket.send(.string("{\"id\":1,\"body\":{}}"))
+        for _ in 0..<100 where !started { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(started)
+        socket.cancel(with: .goingAway, reason: nil)
+        for _ in 0..<100 where !cancelled { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(cancelled)
+    }
 }

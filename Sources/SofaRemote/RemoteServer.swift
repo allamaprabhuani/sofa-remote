@@ -18,6 +18,11 @@ final class RemoteServer {
         var requestStarted = Date()
         var reading = false
         var responding = false
+        var webSocket = false
+        var streamBusy = false
+        var credential: String?
+        var lastID: Int64 = 0
+        var buffer = Data()
         init(_ connection: NWConnection) { self.connection = connection }
     }
     private let store: PairingStore
@@ -61,11 +66,14 @@ final class RemoteServer {
     func start(ports: [UInt16] = Array(8740...8749), onReady: @escaping @MainActor (UInt16) -> Void) {
         guard !stopped, listener == nil, let first = ports.first else { return }
         do {
+            let tcp = NWProtocolTCP.Options()
+            tcp.noDelay = true // Interactive input responses must not wait for TCP coalescing.
+            let parameters = NWParameters(tls: nil, tcp: tcp)
             let listener: NWListener
-            if first == 0 { listener = try NWListener(using: .tcp) }
+            if first == 0 { listener = try NWListener(using: parameters) }
             else {
                 guard let endpoint = NWEndpoint.Port(rawValue: first) else { return }
-                listener = try NWListener(using: .tcp, on: endpoint)
+                listener = try NWListener(using: parameters, on: endpoint)
             }
             listener.newConnectionHandler = { [weak self] connection in
                 MainActor.assumeIsolated {
@@ -99,7 +107,10 @@ final class RemoteServer {
         listener?.stateUpdateHandler = nil; listener?.newConnectionHandler = nil
         listener?.cancel(); listener = nil; port = nil
         let active = Array(clients.values); clients.removeAll()
-        for client in active { client.timer?.cancel(); client.task?.cancel(); client.connection.cancel() }
+        for client in active {
+            client.timer?.cancel(); client.task?.cancel(); client.connection.cancel()
+            if client.credential != nil { onRevoke() }
+        }
         buckets.removeAll()
     }
 
@@ -113,13 +124,16 @@ final class RemoteServer {
         read(client, buffer: Data())
     }
     private func discard(_ client: Client) {
+        guard clients[ObjectIdentifier(client.connection)] != nil else { return }
         client.timer?.cancel(); client.task?.cancel()
         clients.removeValue(forKey: ObjectIdentifier(client.connection))
         client.connection.cancel()
+        if client.credential != nil { onRevoke() }
     }
     private func armDeadline(_ client: Client) {
         client.timer?.cancel()
-        let remaining = max(0, limits.requestSeconds - Date().timeIntervalSince(client.requestStarted))
+        let duration = client.webSocket && client.credential == nil ? min(5, limits.requestSeconds) : limits.requestSeconds
+        let remaining = max(0, duration - Date().timeIntervalSince(client.requestStarted))
         let timer = DispatchWorkItem { [weak self, weak client] in
             guard let self, let client else { return }
             MainActor.assumeIsolated { self.discard(client) }
@@ -150,6 +164,22 @@ final class RemoteServer {
                 case .invalid(let status):
                     self.send(.json(["error": "Invalid request"], status: status), to: client)
                 case .complete(let request, let consumed):
+                    if request.method == "GET", request.path == "/input" {
+                        guard !complete, error == nil, consumed == buffer.count, let port = self.port,
+                              let handshake = WebSocketFrame.handshake(request, port: port) else {
+                            self.send(.json(["error": "WebSocket upgrade rejected"], status: "403 Forbidden"), to: client); return
+                        }
+                        client.webSocket = true
+                        client.requestStarted = Date()
+                        self.armDeadline(client)
+                        client.connection.send(content: handshake, completion: .contentProcessed { [weak self, weak client] error in
+                            MainActor.assumeIsolated {
+                                guard let self, let client else { return }
+                                if error != nil { self.discard(client) } else { self.readWebSocket(client) }
+                            }
+                        })
+                        return
+                    }
                     guard !complete, error == nil, consumed == buffer.count, let port = self.port,
                           RemotePeer.validRequestHost(request.headers, port: port,
                                                       allowDocumentNavigation: request.method == "GET" && request.path == "/"),
@@ -166,6 +196,103 @@ final class RemoteServer {
                     }
                 }
             }
+        }
+    }
+    // One command is routed at a time. No unbounded task or message queue is created.
+    private func readWebSocket(_ client: Client) {
+        guard !stopped, clients[ObjectIdentifier(client.connection)] != nil else { return }
+        if let credential = client.credential, store.authenticate(credential) == nil {
+            discard(client); return
+        }
+        if client.streamBusy {
+            // A browser close is a frame, not necessarily an immediate TCP EOF. Scan
+            // buffered frames without executing commands while a route is pending.
+            var remaining = client.buffer
+            var queuedFrames = 0
+            while !remaining.isEmpty {
+                switch WebSocketFrame.parse(remaining) {
+                case .invalid: discard(client); return
+                case .incomplete: receiveWebSocket(client); return
+                case .frame(let opcode, _, let consumed):
+                    queuedFrames += 1
+                    guard queuedFrames <= 32 else { discard(client); return }
+                    if opcode == 8 { discard(client); return }
+                    remaining.removeFirst(consumed)
+                }
+            }
+            receiveWebSocket(client); return
+        }
+        switch WebSocketFrame.parse(client.buffer) {
+        case .invalid: discard(client)
+        case .incomplete:
+            receiveWebSocket(client)
+        case .frame(let opcode, let payload, let consumed):
+            client.buffer.removeFirst(consumed)
+            guard client.credential != nil || opcode == 1 else { discard(client); return }
+            client.requestStarted = Date(); armDeadline(client)
+            switch opcode {
+            case 8: sendFrame(8, payload, to: client, close: true)
+            case 9: sendFrame(10, payload, to: client)
+            case 10: readWebSocket(client)
+            default: handleWebSocketText(payload, client: client)
+            }
+        }
+    }
+    private func receiveWebSocket(_ client: Client) {
+        guard !client.reading else { return }
+        armDeadline(client)
+        client.reading = true
+        client.connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self, weak client] data, _, complete, error in
+            MainActor.assumeIsolated {
+                guard let self, let client, self.clients[ObjectIdentifier(client.connection)] != nil else { return }
+                client.reading = false
+                if let data { client.buffer.append(data) }
+                guard !complete, error == nil, client.buffer.count <= 65536 else { self.discard(client); return }
+                self.readWebSocket(client)
+            }
+        }
+    }
+    private func sendFrame(_ opcode: UInt8 = 1, _ payload: Data, to client: Client, close: Bool = false) {
+        client.streamBusy = true
+        client.connection.send(content: WebSocketFrame.encode(opcode, payload), completion: .contentProcessed { [weak self, weak client] error in
+            MainActor.assumeIsolated {
+                guard let self, let client else { return }
+                if close || error != nil { self.discard(client) }
+                else { client.streamBusy = false; self.readWebSocket(client) }
+            }
+        })
+    }
+    private func sendJSON(_ value: [String: Any], to client: Client) {
+        guard let data = try? JSONSerialization.data(withJSONObject: value) else { discard(client); return }
+        sendFrame(1, data, to: client)
+    }
+    private func handleWebSocketText(_ payload: Data, client: Client) {
+        guard let object = try? JSONSerialization.jsonObject(with: payload) as? [String: Any] else { discard(client); return }
+        guard let credential = client.credential else {
+            guard object["type"] as? String == "auth", let token = object["token"] as? String,
+                  store.authenticate(token) != nil else { discard(client); return }
+            client.credential = token
+            sendJSON(["type": "ready"], to: client); return
+        }
+        guard store.authenticate(credential) != nil else { discard(client); return }
+        if object["type"] as? String == "ping" { sendJSON(["type": "pong"], to: client); return }
+        guard let number = object["id"] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+              number.doubleValue.isFinite, number.doubleValue.rounded() == number.doubleValue,
+              number.doubleValue > 0, number.doubleValue <= 9_007_199_254_740_991,
+              number.int64Value > client.lastID, let body = object["body"] as? [String: Any],
+              let encoded = try? JSONSerialization.data(withJSONObject: body) else { discard(client); return }
+        let id = number.int64Value; client.lastID = id
+        let request = HTTPRequest(method: "POST", path: "/command", query: [:], headers: ["x-sofa-key": credential], body: encoded)
+        client.streamBusy = true
+        readWebSocket(client) // Monitor disconnects and bound incoming data while the route suspends.
+        client.task = Task { @MainActor [weak self, weak client] in
+            guard let self, let client else { return }
+            let response = await self.respond(to: request)
+            guard !Task.isCancelled, self.clients[ObjectIdentifier(client.connection)] != nil else { return }
+            client.streamBusy = false
+            let ok = response.status.hasPrefix("2")
+            let result = (try? JSONSerialization.jsonObject(with: response.body)) as? [String: Any]
+            self.sendJSON(ok ? ["id": id, "ok": true] : ["id": id, "ok": false, "error": result?["error"] as? String ?? "Command failed"], to: client)
         }
     }
     private func send(_ response: HTTPResponse, to client: Client, keepAlive: Bool = false) {

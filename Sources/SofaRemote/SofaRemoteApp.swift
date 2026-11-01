@@ -66,7 +66,7 @@ import ServiceManagement
     }
     @objc private func toggleSharing() { if model.sharing { model.stopSharing() } else { model.startSharing() }; show() }
     @objc private func showFixture() {
-        if fixture == nil { fixture = InputFixture() }
+        if fixture == nil { fixture = InputFixture(timing: { [weak model] in model?.inputTimingText ?? "Timing unavailable." }) }
         fixture?.show(on: model.displays.target)
     }
     @objc private func quit() { NSApp.terminate(nil) }

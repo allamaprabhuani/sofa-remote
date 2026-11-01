@@ -17,6 +17,7 @@ jobs:
         run: |
           swift test --disable-xctest
           node Tests/Web/transport.test.cjs
+          node Tests/Web/stream.test.cjs
           node Tests/Web/remote.test.cjs
       - name: Build universal app
         run: ./build.sh

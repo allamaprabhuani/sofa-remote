@@ -9,4 +9,5 @@ PLUGIN="$(dirname "$SWIFT_BIN")/../lib/swift/host/plugins/testing/libTestingMacr
 if [ -f "$PLUGIN" ]; then EXTRA=(-Xswiftc -load-plugin-library -Xswiftc "$PLUGIN"); fi
 swift test "${LOCATION[@]}" --disable-xctest "${EXTRA[@]}"
 node Tests/Web/transport.test.cjs
+node Tests/Web/stream.test.cjs
 node Tests/Web/remote.test.cjs

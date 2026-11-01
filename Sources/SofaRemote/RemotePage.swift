@@ -481,6 +481,7 @@ enum RemotePage {
         </div>
         <label for="display">Jump pointer to display</label
         ><select class="field" id="display"></select>
+        <p id="input-transport" class="hint"></p>
         <p>Choosing a display jumps the pointer there once. The touchpad still moves the pointer freely across every connected display, like a Mac trackpad.</p>
         <button data-action="moveWindow">Move front window to this display</button>
         <div class="sheet-row">
@@ -598,6 +599,8 @@ enum RemotePage {
         sheet.append(note);
       });
       function showPair() {
+        closeStream();
+        while (queue.length) queue.shift().done(false);
         clearInterval(dragHeartbeat);
         dragHeartbeat = 0;
         drag = false;
@@ -666,6 +669,7 @@ enum RemotePage {
           storage.set(key);
           $("#pair").classList.remove("open");
           $("#pair-error").textContent = "";
+          connectStream();
           await refresh();
         } catch (e) {
           $("#pair-error").textContent = e.message;
@@ -678,7 +682,125 @@ enum RemotePage {
       let active = null,
         gestureTimer = 0,
         lastGesture = 0;
+      // The socket is an optional ordered transport. A command sent on it is never retried.
+      let socket = null, streamState = "off", streamTimer = 0, heartbeat = 0,
+        reconnectTimer = 0, reconnectDelay = 1000, nextID = 0, fence = null, streamUnavailable = false, everReady = false;
+      const pending = new Map();
+      function streamHint(message) { $("#input-transport").textContent = message; }
+      function resetDragUI() {
+        drag = false;
+        clearInterval(dragHeartbeat);
+        dragHeartbeat = 0;
+        $("#drag").classList.remove("on");
+        $("#drag").setAttribute("aria-pressed", "false");
+      }
+      function closeStream(reconnect = false) {
+        const old = socket;
+        if (old && everReady) streamUnavailable = true;
+        socket = null;
+        streamState = streamUnavailable ? "disconnected" : "off";
+        clearTimeout(streamTimer);
+        clearInterval(heartbeat);
+        clearTimeout(reconnectTimer);
+        streamTimer = heartbeat = reconnectTimer = 0;
+        for (const entry of pending.values()) {
+          clearTimeout(entry.timer);
+          entry.resolve(false);
+        }
+        pending.clear();
+        if (fence?.kind === "stream") fence = null;
+        if (old) { old.onclose = old.onerror = old.onmessage = old.onopen = null; old.close(); }
+        if (reconnect && key && document.visibilityState === "visible") {
+          streamHint(streamUnavailable ? "Input disconnected; reconnecting…" : "Using the standard connection; touchpad movement may be less smooth.");
+          reconnectTimer = setTimeout(() => { reconnectTimer = 0; connectStream(); }, reconnectDelay);
+          reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+        }
+      }
+      function streamFailed() {
+        const opening = streamState === "connecting";
+        if (!opening) streamUnavailable = true;
+        closeStream(true);
+        if (streamUnavailable) streamState = "disconnected";
+        if (opening && !streamUnavailable) { pump(); return; }
+        while (queue.length) queue.shift().done(false);
+        clearTimeout(gestureTimer);
+        gestureTimer = 0;
+        resetDragUI();
+        pump();
+      }
+      function connectStream() {
+        if (!key || document.visibilityState !== "visible" || socket || reconnectTimer) return;
+        if (typeof WebSocket === "undefined") {
+          if (everReady) { streamUnavailable = true; streamState = "disconnected"; }
+          streamHint("Using the standard connection; touchpad movement may be less smooth.");
+          return;
+        }
+        let ws;
+        try { ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/input", "sofa.v1"); }
+        catch {
+          if (everReady) { streamUnavailable = true; closeStream(true); }
+          else streamHint("Using the standard connection; touchpad movement may be less smooth.");
+          return;
+        }
+        socket = ws;
+        streamState = "connecting";
+        const credential = key;
+        streamTimer = setTimeout(() => { if (socket === ws) streamFailed(); }, 3000);
+        ws.onopen = () => {
+          if (socket === ws) ws.send(JSON.stringify({ type: "auth", token: credential }));
+        };
+        ws.onmessage = (event) => {
+          if (socket !== ws) return;
+          let message;
+          try { message = JSON.parse(event.data); } catch { streamFailed(); return; }
+          if (streamState === "connecting" && message.type === "ready") {
+            if (key !== credential) { closeStream(); connectStream(); return; }
+            clearTimeout(streamTimer);
+            streamState = "ready";
+            streamUnavailable = false;
+            everReady = true;
+            reconnectDelay = 1000;
+            streamHint("");
+            heartbeat = setInterval(() => {
+              if (socket === ws && streamState === "ready") {
+                try { ws.send(JSON.stringify({ type: "ping" })); } catch { streamFailed(); }
+              }
+            }, 3000);
+            pump();
+            return;
+          }
+          if (message.type === "pong") return;
+          const entry = pending.get(message.id);
+          if (!entry || typeof message.ok !== "boolean") { streamFailed(); return; }
+          pending.delete(message.id);
+          clearTimeout(entry.timer);
+          if (!message.ok) {
+            if (message.error) status(message.error, true, "runtime");
+            entry.resolve(false);
+            streamFailed();
+            return;
+          }
+          entry.resolve(true);
+          pump();
+        };
+        ws.onerror = ws.onclose = () => { if (socket === ws) streamFailed(); };
+      }
+      function sendStream(body) {
+        return new Promise((resolve) => {
+          const id = ++nextID;
+          const frame = JSON.stringify({ id, body });
+          if (new TextEncoder().encode(frame).length > 4096) {
+            status("Text is too large to send at once. Please send it in smaller parts.", true, "runtime");
+            resolve(false);
+            return;
+          }
+          const timer = setTimeout(() => { if (pending.has(id)) streamFailed(); }, 9000);
+          pending.set(id, { resolve, timer });
+          try { socket.send(frame); } catch { streamFailed(); }
+        });
+      }
       function isMotion(body) {
+        if (!body) return false;
         return (
           body.type === "move" ||
           body.type === "scroll" ||
@@ -686,7 +808,7 @@ enum RemotePage {
         );
       }
       function discardQueuedInput() {
-        const release = drag || queue.some((item) => item.body.type === "drag");
+        const release = drag || queue.some((item) => item.body?.type === "drag");
         while (queue.length) queue.shift().done(false);
         clearTimeout(gestureTimer);
         gestureTimer = 0;
@@ -694,11 +816,27 @@ enum RemotePage {
         else if (release) command({ type: "drag", phase: "end" });
       }
       function pump() {
-        if (active || gestureTimer || !queue.length) return;
-        const head = queue[0],
-          body = head.body,
+        if (active || (fence && queue[0]?.body?.action !== "screenOn") || gestureTimer || !queue.length || (streamState === "connecting" || (streamState === "disconnected" && queue[0]?.body?.action !== "screenOn"))) return;
+        if (streamState === "ready" && pending.size >= 4) return;
+        const head = queue[0];
+        if (head.run) {
+          if (pending.size) return;
+          queue.shift();
+          if (locked || streamUnavailable || Date.now() - head.queuedAt > 250) {
+            head.done(false);
+            pump();
+            return;
+          }
+          const token = fence = { kind: "http" };
+          Promise.resolve().then(head.run).then(
+            (ok) => head.done(ok === true),
+            () => head.done(false),
+          ).finally(() => { if (fence === token) fence = null; pump(); });
+          return;
+        }
+        const body = head.body,
           motion = isMotion(body);
-        if (motion && Date.now() - head.queuedAt > 250) {
+        if (head.queuedAt && Date.now() - head.queuedAt > 250) {
           discardQueuedInput();
           status("Connection is slow; old movement was stopped. Try again.", true, "runtime");
           return;
@@ -735,6 +873,18 @@ enum RemotePage {
           queue.shift();
           outbound = body;
         }
+        if (streamState === "ready") {
+          const longAction = outbound.type === "action" && outbound.action === "moveWindow";
+          const token = longAction ? (fence = { kind: "stream" }) : null;
+          sendStream(outbound).then((ok) => {
+            if (token && fence === token) fence = null;
+            if (!motion) head.done(ok);
+            if (ok) clearRuntimeError();
+            pump();
+          });
+          pump();
+          return;
+        }
         const controller = new AbortController();
         active = controller;
         request("/command", outbound, true, controller.signal)
@@ -750,6 +900,7 @@ enum RemotePage {
           )
           .then((ok) => {
             active = null;
+            if (streamUnavailable) streamState = "disconnected";
             if (!motion) head.done(ok);
             // A failed/ambiguous send invalidates queued input rather than replaying it later.
             // An urgent wake already cleared the old queue before aborting its request.
@@ -757,9 +908,19 @@ enum RemotePage {
             pump();
           });
       }
+      function orderedHTTP(run) {
+        return new Promise((resolve) => {
+          if (!key || locked || streamUnavailable || fence || queue.length >= 12 || queue.some((item) => item.run)) {
+            resolve(false);
+            return;
+          }
+          queue.push({ run, done: resolve, queuedAt: Date.now() });
+          pump();
+        });
+      }
       function command(body, urgent = false) {
         return new Promise((resolve) => {
-          if (locked && body.action !== "screenOn") {
+          if ((locked && body.action !== "screenOn") || (streamUnavailable && !urgent)) {
             resolve(false);
             return;
           }
@@ -768,8 +929,11 @@ enum RemotePage {
             clearTimeout(gestureTimer);
             gestureTimer = 0;
             active?.abort();
+            closeStream(true);
+            resetDragUI();
           }
           const motion = isMotion(body);
+          if (motion && (fence || queue.some((item) => item.run))) { resolve(false); return; }
           const last = queue[queue.length - 1];
           if (
             !urgent &&
@@ -797,7 +961,7 @@ enum RemotePage {
           if (body.type === "drag" && body.phase === "end") {
             while (queue.length >= 12) {
               let i = queue.length - 1;
-              while (i >= 0 && !(queue[i].body.type === "drag" && queue[i].body.phase === "move")) i--;
+              while (i >= 0 && !(queue[i].body?.type === "drag" && queue[i].body.phase === "move")) i--;
               (i >= 0 ? queue.splice(i, 1)[0] : queue.pop()).done(false);
             }
           }
@@ -810,7 +974,7 @@ enum RemotePage {
             queue.push({ body, done: () => {}, queuedAt: Date.now() });
             resolve(true);
           } else {
-            queue.push({ body, done: resolve });
+            queue.push({ body, done: resolve, queuedAt: Date.now() });
           }
           pump();
         });
@@ -985,15 +1149,20 @@ enum RemotePage {
       }
       $("#open-form").onsubmit = async (e) => {
         e.preventDefault();
-        const url = $("#url").value.trim();
+        const input = $("#url"), original = input.value, url = original.trim();
         if (!url || locked) return;
         const button = e.currentTarget.querySelector("button");
         if (button.disabled) return;
         button.disabled = true;
         try {
-          await request("/open", { url });
-          $("#url").value = "";
-          status("Opened on your Mac.");
+          const opened = await orderedHTTP(async () => {
+            await request("/open", { url });
+            return true;
+          });
+          if (opened) {
+            if (input.value === original) input.value = "";
+            status("Opened on your Mac.");
+          } else status("Could not open the URL. Try again.", true);
         } catch (err) {
           if (err.message !== "unpaired") status(err.message, true);
         } finally {
@@ -1021,7 +1190,7 @@ enum RemotePage {
           const launch = document.createElement("button");
           launch.className = "launch";
           launch.textContent = item.name;
-          launch.onclick = () => mutate("/launch", { id: item.id });
+          launch.onclick = () => orderedHTTP(() => mutate("/launch", { id: item.id }));
           row.append(launch);
           for (const [label, offset] of [
             ["↑", -1],
@@ -1044,7 +1213,10 @@ enum RemotePage {
           list.append(row);
         });
       }
-      $("#display").onchange = (e) => mutate("/display", { id: e.target.value });
+      $("#display").onchange = (e) => {
+        const id = e.target.value;
+        orderedHTTP(() => mutate("/display", { id }));
+      };
       $("#awake").onchange = (e) => mutate("/settings", { keepAwake: e.target.checked });
       $("#lock").onclick = () => {
         if (confirm("Lock this Mac? Unlock it on the Mac.")) {
@@ -1158,20 +1330,30 @@ enum RemotePage {
         }
       }
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") refresh();
+        if (document.visibilityState === "visible") { connectStream(); refresh(); }
         else {
           fingers.clear();
           dropQueuedMotion();
           endDrag();
+          if (socket) {
+            closeStream();
+            while (queue.length) queue.shift().done(false);
+            resetDragUI();
+          }
         }
       });
       window.addEventListener("pagehide", () => {
         fingers.clear();
         dropQueuedMotion();
         endDrag();
+        if (socket) {
+          closeStream();
+          while (queue.length) queue.shift().done(false);
+          resetDragUI();
+        }
       });
       if (/^\d{6}$/.test(pairCode)) pair(pairCode);
-      else refresh();
+      else { connectStream(); refresh(); }
       setInterval(() => {
         if (document.visibilityState === "visible" && key) refresh();
       }, 3000);

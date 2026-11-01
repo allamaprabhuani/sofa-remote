@@ -6,6 +6,8 @@ Your iPhone is the mouse and keyboard. Your Mac does the playing.
 
 A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen streaming, Screen Recording permission, accounts, ads, analytics, subscriptions, or cloud relay. Keep using Brave for websites and IINA for movies and subtitles.
 
+**Experimental input-stream branch:** physical iPhone Safari testing found worse jitter despite passing loopback tests. This stream version is not a recommended update; the earlier HTTP build was restored for the owner. See [the device record](docs/REVIEW.md).
+
 **Experimental v0.1.** Direct local HTTP is **unencrypted**. Use a trusted private network or your own Tailscale connection. Do not expose the listener through router port forwarding. This is not an internet remote-desktop service. See [SECURITY.md](SECURITY.md).
 
 ## What it does
@@ -51,7 +53,7 @@ SOFA_BUILD_DIR=/absolute/local/scratch ./build.sh
 4. Choose the TV display in the phone's settings. Use **Move front window to display** when you need to relocate an app, then **Full screen**.
 5. Close the settings window to keep sharing running. Use **Stop sharing** or **Quit Sofa Remote** to end access. Open at login and Keep Mac awake are optional and off by default.
 
-The app uses one TCP listener, on the first available port in 8740–8749. The phone polls state only while visible; input is coalesced and bounded. It does not inspect the screen or record keystrokes.
+The app uses one TCP listener, on the first available port in 8740–8749. An authenticated WebSocket input stream shares that port; up to four bounded messages can be in flight so motion does not wait for every network round trip. The phone polls state only while visible; input is coalesced and bounded. HTTP compatibility control remains available when the initial stream cannot open, with reduced smoothness. It does not inspect the screen or record keystrokes.
 
 Downloaded beta builds are ad-hoc signed, **not Developer ID notarized**. macOS may block their first launch. Building the source locally is the development path; a notarized public download is not claimed. A publisher can set `SOFA_SIGN_IDENTITY` when building with their own signing identity. Never replace a running app bundle during an update.
 
