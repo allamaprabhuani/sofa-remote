@@ -31,9 +31,9 @@ enum RemotePage {
         --danger: #ffb4ab;
         --error: #ffb4ab;
       }
-      html[data-appearance="velvet"] { --bg:#191417; --card:#302329; --pad:#302329; --touch:#382a30; --online:#59db88; --sheet:#191417; --line:#9d8583; --muted:#dec9ba; --accent:#ddb65e; --ink:#f7ede1; --pressed:#49393a; --selection:#f7ede1; --selection-ink:#191417; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
-      html[data-appearance="paper"] { --bg:#f6f3ec; --card:#f6f3ec; --pad:#ebe5d9; --touch:#f0ece3; --online:#187544; --sheet:#f6f3ec; --line:#71665d; --muted:#5b534c; --accent:#a22f1d; --ink:#252322; --pressed:#ded5c7; --selection:#252322; --selection-ink:#f6f3ec; --danger:#9d1e2c; --error:#9d1e2c; color-scheme:light; }
-      html[data-appearance="soft"] { --bg:#111214; --card:#28272f; --pad:#28272f; --touch:#302f39; --online:#59db88; --sheet:#111214; --line:#8e8c9c; --muted:#d4cdec; --accent:#c4b8ff; --ink:#f7f6fb; --pressed:#3d3b49; --selection:#f7f6fb; --selection-ink:#111214; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="velvet"] { --bg:#191417; --card:#302329; --pad:#302329; --online:#59db88; --sheet:#191417; --line:#9d8583; --muted:#dec9ba; --accent:#ddb65e; --ink:#f7ede1; --pressed:#49393a; --selection:#f7ede1; --selection-ink:#191417; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
+      html[data-appearance="paper"] { --bg:#f6f3ec; --card:#f6f3ec; --pad:#ebe5d9; --online:#187544; --sheet:#f6f3ec; --line:#71665d; --muted:#5b534c; --accent:#a22f1d; --ink:#252322; --pressed:#ded5c7; --selection:#252322; --selection-ink:#f6f3ec; --danger:#9d1e2c; --error:#9d1e2c; color-scheme:light; }
+      html[data-appearance="soft"] { --bg:#111214; --card:#28272f; --pad:#28272f; --online:#59db88; --sheet:#111214; --line:#8e8c9c; --muted:#d4cdec; --accent:#c4b8ff; --ink:#f7f6fb; --pressed:#3d3b49; --selection:#f7f6fb; --selection-ink:#111214; --danger:#ffb4ab; --error:#ffb4ab; color-scheme:dark; }
       html[data-appearance="velvet"] header h1, html[data-appearance="paper"] header h1 { font-family: Georgia, serif; }
       html[data-appearance="paper"] .remote-panel { border-radius:24px; }
       html[data-appearance="soft"] .remote-panel { border-radius:38px; }
@@ -163,15 +163,14 @@ enum RemotePage {
         gap: 4px;
         padding: 0 10px 12px;
         background: var(--pad);
-        border: 1px solid var(--line);
+        border: 0;
         border-radius: 36px;
       }
       #pad {
         flex: 1 1 auto;
         min-height: 180px;
         border-radius: 28px;
-        background: var(--touch);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.1);
+        background: transparent;
         touch-action: none;
         position: relative;
         user-select: none;
