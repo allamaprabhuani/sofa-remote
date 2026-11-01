@@ -4,6 +4,7 @@ import Testing
 @Suite struct PresenterTargetTests {
     @Test func recognizesOnlySupportedFrontmostApps() {
         #expect(PresenterTarget.classify("com.apple.iWork.Keynote") == "keynote")
+        #expect(PresenterTarget.classify("com.apple.Keynote") == "keynote")
         #expect(PresenterTarget.classify("com.microsoft.Powerpoint") == "powerpoint")
         #expect(PresenterTarget.classify("com.brave.Browser") == "browser")
         #expect(PresenterTarget.classify("unknown") == "")

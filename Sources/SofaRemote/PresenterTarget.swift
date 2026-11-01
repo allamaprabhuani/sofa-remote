@@ -4,7 +4,7 @@ import Foundation
 enum PresenterTarget {
     static func classify(_ bundleID: String?) -> String {
         switch bundleID {
-        case "com.apple.iWork.Keynote": return "keynote"
+        case "com.apple.iWork.Keynote", "com.apple.Keynote": return "keynote"
         case "com.microsoft.Powerpoint": return "powerpoint"
         case "com.apple.Safari", "com.google.Chrome", "com.brave.Browser", "org.mozilla.firefox", "com.microsoft.edgemac": return "browser"
         default: return ""
