@@ -33,14 +33,15 @@ async function main() {
   await cdp('Page.enable');await cdp('Runtime.enable');
   await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`
     localStorage.setItem('sofaKey','a'.repeat(64)); Element.prototype.setPointerCapture=function(){};
-    window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';window.stateFailure=false;window.commandLatency=3;window.illegalMotion=[];
+    window.confirm=()=>true;window.calls=[];window.mockActive=0;window.maxActive=0;window.hang=false;window.commandFailure='';window.presenterFailure=false;window.stateFailure=false;window.commandLatency=3;window.illegalMotion=[];
     window.testState={name:'Mock Mac',frontApp:'Brave Browser',appVersion:'0.1.0',appBuild:'7',macOSVersion:'15.0.1',signingStatus:'ad-hoc',accessibility:true,sharing:true,sessionLocked:false,screenSleeping:false,displays:[{id:'d1',name:'Display'}],displayID:'d1',shortcuts:[],keepAwake:false};
     const realTimeout=window.setTimeout;window.setTimeout=(fn,ms,...args)=>realTimeout(fn,ms===9000&&window.hang?30:ms,...args);
     const motionBody=b=>b&&(b.type==='move'||b.type==='scroll'||(b.type==='drag'&&b.phase==='move'));
     const badDelta=(v,limit)=>!Number.isFinite(v)||Math.abs(v)>limit;
     window.fetch=async(path,options={})=>{const body=options.body?JSON.parse(options.body):null;calls.push({path,body,key:options.headers?.['X-Sofa-Key']});
       if(path==='/command'&&motionBody(body)&&(badDelta(body.dx||0,body.type==='scroll'?300:1000)||badDelta(body.dy||0,body.type==='scroll'?300:1000))){window.illegalMotion.push({dx:body.dx,dy:body.dy});return {status:400,ok:false,json:async()=>({error:'Motion delta exceeds command limit'})}}
-      if(path==='/command'){window.mockActive++;window.maxActive=Math.max(window.maxActive,window.mockActive);try{await new Promise((resolve,reject)=>{if(!hang)realTimeout(resolve,window.commandLatency);options.signal.addEventListener('abort',()=>reject(Error('aborted')),{once:true})})}finally{window.mockActive--}}
+      if(path==='/command'||path==='/presenter'){window.mockActive++;window.maxActive=Math.max(window.maxActive,window.mockActive);try{await new Promise((resolve,reject)=>{if(!hang)realTimeout(resolve,window.commandLatency);options.signal.addEventListener('abort',()=>reject(Error('aborted')),{once:true})})}finally{window.mockActive--}}
+      if(path==='/presenter'&&presenterFailure)return {status:500,ok:false,json:async()=>({error:'Presenter unavailable'})};
       if(path==='/command'&&commandFailure)return {status:commandFailure==='unauthorized'?401:500,ok:false,json:async()=>({error:'Send failed'})};
       if(path==='/state'&&stateFailure)throw Error('Connection unavailable');
       return {status:200,ok:true,json:async()=>path==='/state'?testState:path==='/devices'?[]:{ok:true,token:'b'.repeat(64)}}};
@@ -53,6 +54,64 @@ async function main() {
   })()`);
   assert.equal(subtitle.withApp,'Connected · Mock Mac · Brave Browser');
   assert.equal(subtitle.withoutApp,'Connected · Mock Mac');
+  const presenterUI=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));calls.length=0;
+    document.querySelector('#present-open').click();
+    const display=document.querySelector('#present-display').value;
+    document.querySelector('#present-undo').click();document.querySelector('#present-clear').click();
+    document.querySelector('#present-next').click();document.querySelector('#present-previous').click();document.querySelector('#present-exit').click();
+    document.querySelector('#present-pen').click();
+    const pad=document.querySelector('#present-pad'),rect=pad.getBoundingClientRect();
+    const emit=(type,x,y)=>pad.dispatchEvent(new PointerEvent(type,{pointerId:42,button:0,clientX:rect.left+rect.width*x,clientY:rect.top+rect.height*y,bubbles:true}));
+    emit('pointerdown',0.25,0.25);emit('pointermove',0.75,0.75);emit('pointerup',0.75,0.75);
+    await sleep(90);const heartbeat=!!presentHeartbeat;
+    document.querySelector('#present-next').click();await sleep(30);
+    document.querySelector('#present-exit').click();await sleep(30);
+    document.querySelector('#present-sheet [data-close]').click();await sleep(50);
+    return {display,heartbeat,cleared:!presentHeartbeat, calls:calls.filter(c=>c.path==='/command'||c.path==='/presenter'),closed:!document.querySelector('#present-sheet').classList.contains('open'),modal:document.querySelector('#present-sheet [role=dialog]').getAttribute('aria-label')};
+  })()`);
+  assert.equal(presenterUI.display,'d1');assert.equal(presenterUI.modal,'Presenter controls');
+  assert.equal(presenterUI.heartbeat,true);assert.equal(presenterUI.cleared,true);assert.equal(presenterUI.closed,true);
+  const pc=presenterUI.calls.filter(c=>c.path==='/presenter');
+  assert.deepEqual(pc.map(c=>c.body.action),['start','move','end','clear','stop']);
+  assert.equal(pc[0].body.mode,'pen');assert.equal(pc[0].body.display,'d1');
+  assert.ok(Math.abs(pc[0].body.x-0.25)<0.001 && Math.abs(pc[1].body.x-0.75)<0.001);
+  assert.ok(pc.every(c=>c.key==='a'.repeat(64)),'presenter calls are authenticated');
+  assert.ok(presenterUI.calls.findIndex(c=>c.body.action==='clear') < presenterUI.calls.findLastIndex(c=>c.body.key==='right'),'clear precedes the next slide');
+  assert.ok(presenterUI.calls.findIndex(c=>c.body.action==='stop') < presenterUI.calls.findLastIndex(c=>c.body.key==='escape'),'overlay stops before ending slideshow');
+  assert.deepEqual(presenterUI.calls.filter(c=>c.path==='/command').map(c=>c.body.key),['right','left','escape','right','escape']);
+  assert.ok(presenterUI.calls.filter(c=>c.path==='/command').every(c=>c.body.modifiers.length===0));
+  console.log('PASS presenter slides, authenticated ordered pen gestures, display selection and cleanup');
+  await evaluate(`document.querySelector('#present-open').click();document.querySelector('#present-clear').focus();calls.length=0`);
+  await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
+  await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
+  assert.equal(await evaluate(`document.activeElement.id`),'present-pad','keyboard can tab from final button to drawing pad');
+  await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
+  await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
+  await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39});
+  await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32});
+  await wait(100);
+  const keyboardPresenter=await evaluate(`calls.filter(c=>c.path==='/presenter').map(c=>c.body.action)`);
+  assert.deepEqual(keyboardPresenter,['start','move','end'],'keyboard can point and draw');
+  const presenterErrors=await evaluate(`(async()=>{
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+    presenterFailure=true;await presenter('heartbeat');await sleep(50);
+    const failure=document.querySelector('#status').textContent;
+    const note=document.querySelector('#present-sheet .sheet-status');
+    const sheet=document.querySelector('#present-sheet .sheet');sheet.scrollTop=sheet.scrollHeight;
+    const nr=note.getBoundingClientRect(),sr=sheet.getBoundingClientRect();
+    const inline=note.previousElementSibling?.classList.contains('sheet-head') && getComputedStyle(note).position==='sticky' && nr.height>0 && nr.top>=sr.top && nr.bottom<=sr.bottom;
+    presenterFailure=false;await refresh();const afterRefresh=document.querySelector('#status').textContent;
+    await presenter('heartbeat');const afterHeartbeat=document.querySelector('#status').textContent;
+    startPresentPoint();await sleep(40);const afterGesture=document.querySelector('#status').textContent;
+    return {failure,afterRefresh,afterHeartbeat,afterGesture,inline};
+  })()`);
+  assert.match(presenterErrors.failure,/Presenter unavailable/);
+  assert.equal(presenterErrors.inline,true,'presenter status is visible and sticky immediately below the heading');
+  assert.equal(presenterErrors.afterRefresh,presenterErrors.failure,'state refresh preserves presenter error');
+  assert.equal(presenterErrors.afterHeartbeat,presenterErrors.failure,'heartbeat preserves presenter error');
+  assert.equal(presenterErrors.afterGesture,'','a successful deliberate gesture clears presenter error');
+  await evaluate(`document.querySelector('#present-sheet [data-close]').click()`);await wait(50);
   for(const [name,bg] of [['dark','#1f1f1f'],['black','#000000'],['light','#f8f8f8'],['ivory','#f6f1e7'],['plum','#f8f2ed'],['ocean','#062d35'],['custom','#757575']]){
     await evaluate(`(()=>{const theme=document.querySelector('#theme');theme.value=${JSON.stringify(name)};theme.dispatchEvent(new Event('change'));if(theme.value==='custom'){const colour=document.querySelector('#custom-colour');colour.value=${JSON.stringify(bg)};colour.dispatchEvent(new Event('input'));colour.dispatchEvent(new Event('change'));}})()`);
     await cdp('Page.reload',{ignoreCache:true});await wait(200);

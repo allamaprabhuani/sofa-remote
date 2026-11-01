@@ -206,6 +206,18 @@ enum RemotePage {
       .media button {
         font-size: 1.25rem;
       }
+      .present-open { width: 100%; margin-top: 8px; min-height: 48px; font-weight: 650; }
+      .present-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .present-nav button { min-height: 64px; font-size: 1.05rem; font-weight: 700; }
+      #present-sheet .sheet-status:empty { display: none; }
+      #present-sheet .sheet-status:not(:empty) { position: sticky; top: 0; z-index: 2; margin: 0; padding: 10px 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; }
+      #present-sheet .sheet-status.error { color: var(--error); }
+      .present-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+      .present-tools button { flex: 1 1 auto; min-height: 48px; }
+      .present-tools button[aria-pressed="true"] { background: var(--selection); color: var(--selection-ink); }
+      #present-pad { position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 150px; max-height: 300px; border: 2px solid var(--line); border-radius: 15px; background: var(--pad); touch-action: none; user-select: none; display: grid; place-items: center; text-align: center; padding: 16px; }
+      #present-pad:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+      #present-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); transform: translate(-50%, -50%); pointer-events: none; }
       .status {
         font-size: 12px;
         color: var(--muted);
@@ -489,12 +501,29 @@ enum RemotePage {
         ><button data-icon="fullscreen" class="icon-caption" data-action="fullscreen" title="Full screen"><span>Full screen</span></button
         ><button data-icon="search" class="icon-caption" data-action="spotlight" title="Spotlight search"><span>Spotlight</span></button>
       </div>
+      <button id="present-open" class="present-open" data-icon="fullscreen" title="Slideshow controls">Present</button>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <aside id="connection-help" hidden aria-label="Reconnect to your Mac">
         <p>Keep your Mac awake and Sofa Remote sharing. Check that both devices are on the same Wi-Fi or Tailscale network. If the Mac's address changed, open Sofa Remote on the Mac and scan its new QR code.</p>
         <div class="sheet-row"><button id="reconnect">Try reconnecting</button><button data-help data-icon="help" title="About and Help">About &amp; Help</button></div>
       </aside>
     </main>
+    <div class="scrim" id="present-sheet">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Presenter controls">
+        <div class="sheet-head"><h2>Present</h2><button data-close>Done</button></div>
+        <p>Start your slideshow on the Mac. Previous and Next send arrow keys to the active app.</p>
+        <div class="present-nav"><button id="present-previous" aria-label="Previous slide">← Previous</button><button id="present-next" aria-label="Next slide">Next →</button></div>
+        <div class="present-tools"><button id="present-exit">End slideshow</button></div>
+        <label for="present-display">Presentation display</label><select class="field" id="present-display" aria-label="Presentation display"></select>
+        <p>Choose the screen showing your slides. Changing display clears marks.</p>
+        <div class="present-tools" role="group" aria-label="Pointer and annotation tools">
+          <button id="present-laser" aria-pressed="true">Laser</button><button id="present-pen" aria-pressed="false">Pen</button>
+          <button id="present-undo">Undo</button><button id="present-clear">Clear</button>
+        </div>
+        <div id="present-pad" role="application" tabindex="0" aria-label="Presentation pointer. Touch and move to point or draw. Keyboard: move with arrow keys, hold Space to point or draw."><span>Touch and move to point or draw</span><span id="present-dot" hidden aria-hidden="true"></span></div>
+        <p>This is a control surface, not a slide preview. Marks are temporary and are not saved to your slides. They clear on Previous or Next, when you leave Present, or after 30 seconds without a connection. They may not appear when sharing a single app window.</p>
+      </div>
+    </div>
     <div class="scrim" id="keyboard-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard">
         <div class="sheet-head">
@@ -897,9 +926,11 @@ enum RemotePage {
         const note = document.createElement("p");
         note.className = "sheet-status";
         note.setAttribute("role", "status");
-        sheet.append(note);
+        if (sheet.parentElement?.id === "present-sheet") sheet.querySelector(".sheet-head").after(note);
+        else sheet.append(note);
       });
       function showPair() {
+        stopPresenting();
         supportState = null;
         updateSupport();
         clearInterval(dragHeartbeat);
@@ -995,7 +1026,8 @@ enum RemotePage {
         return (
           body.type === "move" ||
           body.type === "scroll" ||
-          (body.type === "drag" && body.phase === "move")
+          (body.type === "drag" && body.phase === "move") ||
+          (body.type === "presenter" && body.action === "move")
         );
       }
       function discardQueuedInput() {
@@ -1003,6 +1035,7 @@ enum RemotePage {
         while (queue.length) queue.shift().done(false);
         clearTimeout(gestureTimer);
         gestureTimer = 0;
+        if (presentUsed) stopPresenting();
         if (drag) endDrag();
         else if (release) command({ type: "drag", phase: "end" });
       }
@@ -1031,7 +1064,11 @@ enum RemotePage {
           return;
         }
         let outbound;
-        if (motion) {
+        if (motion && body.type === "presenter") {
+          queue.shift();
+          outbound = body;
+          lastGesture = Date.now();
+        } else if (motion) {
           // Split accumulated travel into bounded packets so the server never sees
           // out-of-range deltas. The head keeps the remainder in correct order so trailing
           // clicks/drag-end stay queued behind the full gesture.
@@ -1051,14 +1088,15 @@ enum RemotePage {
         }
         const controller = new AbortController();
         active = controller;
-        request("/command", outbound, true, controller.signal)
+        request(body.type === "presenter" ? "/presenter" : "/command", outbound, true, controller.signal)
           .then(
             () => {
-              clearRuntimeError();
+              if (body.type === "presenter" && !["heartbeat", "stop"].includes(body.action) && statusKind === "presenter") status("");
+              else clearRuntimeError();
               return true;
             },
             (e) => {
-              if (e.message !== "unpaired" && e.message !== "cancelled") status(e.message, true, "runtime");
+              if (e.message !== "unpaired" && e.message !== "cancelled") status(e.message, true, body.type === "presenter" ? "presenter" : "runtime");
               return false;
             },
           )
@@ -1093,6 +1131,13 @@ enum RemotePage {
             last.body.type === body.type &&
             last.body.phase === body.phase
           ) {
+            if (body.type === "presenter") {
+              // Absolute points are coalesced to the latest position under load.
+              last.body.x = body.x; last.body.y = body.y;
+              last.queuedAt = Date.now();
+              resolve(true);
+              return;
+            }
             // Keep exact accumulated proportional travel; splitting at pump time bounds the
             // per-packet delta sent to the server.
             const dx = (last.body.dx || 0) + (body.dx || 0),
@@ -1107,6 +1152,10 @@ enum RemotePage {
             last.body.dy = dy;
             resolve(true);
             return;
+          }
+          if (body.type === "presenter" && body.action === "stop") {
+            // Always make room for cleanup without overtaking the in-flight request.
+            while (queue.length >= 12) queue.pop().done(false);
           }
           if (body.type === "drag" && body.phase === "end") {
             while (queue.length >= 12) {
@@ -1324,6 +1373,10 @@ enum RemotePage {
       }
       function closeSheet() {
         const current = sheetStack.pop();
+        if (current?.id === "present-sheet") {
+          stopPresenting();
+          if (statusKind === "presenter") status("");
+        }
         $$(".scrim").forEach((x) => x.classList.remove("open"));
         const previous = sheetStack.at(-1);
         if (previous && (!locked || previous.id === "help-sheet")) $("#" + previous.id).classList.add("open");
@@ -1333,6 +1386,95 @@ enum RemotePage {
         else if (activeOverlay()) activeOverlay().querySelector("button,input,a")?.focus();
         else $("#settings-open").focus();
       }
+      let presentMode = "laser", presentPointer = null, presentUsed = false, presentKeyboardDown = false, presentHeartbeat = 0;
+      let presentX = 0.5, presentY = 0.5;
+      const presentPad = $("#present-pad"), presentDot = $("#present-dot"), presentDisplay = $("#present-display");
+      function presenter(action, values = {}, urgent = false) {
+        return command({ type: "presenter", action, ...values }, urgent);
+      }
+      function stopPresenting() {
+        presentPointer = null; presentKeyboardDown = false; presentDot.hidden = true;
+        clearInterval(presentHeartbeat); presentHeartbeat = 0;
+        if (presentUsed) {
+          presentUsed = false;
+          dropQueuedMotion();
+          // Preserve ordering with any in-flight start. An abort could let that start
+          // arrive after stop; the Mac also expires disconnected overlays.
+          presenter("stop");
+        }
+      }
+      function markPosition(x, y) {
+        presentX = Math.max(0, Math.min(1, x)); presentY = Math.max(0, Math.min(1, y));
+        presentDot.style.left = `${presentX * 100}%`; presentDot.style.top = `${presentY * 100}%`;
+        presentDot.hidden = false;
+      }
+      function pointFromEvent(e) {
+        const r = presentPad.getBoundingClientRect();
+        if (!r.width || !r.height) return false;
+        markPosition((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+        return true;
+      }
+      function startPresentPoint() {
+        if (!presentDisplay.value || locked || !key) { status("Choose a connected presentation display.", true); return; }
+        presentUsed = true;
+        if (!presentHeartbeat) presentHeartbeat = setInterval(() => {
+          if (presentUsed && !document.hidden && $("#present-sheet").classList.contains("open")) presenter("heartbeat");
+        }, 10000);
+        presenter("start", { mode: presentMode, display: presentDisplay.value, x: presentX, y: presentY });
+      }
+      function endPresentPoint() { if (presentUsed) presenter("end"); }
+      presentPad.addEventListener("pointerdown", (e) => {
+        if (presentPointer !== null || e.button !== 0 || locked || !key || !pointFromEvent(e)) return;
+        e.preventDefault(); presentPointer = e.pointerId; presentPad.setPointerCapture(e.pointerId); startPresentPoint();
+      });
+      presentPad.addEventListener("pointermove", (e) => {
+        if (presentPointer !== e.pointerId || !pointFromEvent(e)) return;
+        e.preventDefault(); if (presentUsed) presenter("move", { x: presentX, y: presentY });
+      });
+      function liftPresentPoint(e) {
+        if (presentPointer !== e.pointerId) return;
+        presentPointer = null; endPresentPoint();
+        if (presentMode === "laser") presentDot.hidden = true;
+      }
+      presentPad.addEventListener("pointerup", liftPresentPoint);
+      presentPad.addEventListener("pointercancel", liftPresentPoint);
+      presentPad.addEventListener("lostpointercapture", liftPresentPoint);
+      presentPad.addEventListener("keydown", (e) => {
+        if (locked || !key || e.altKey || e.ctrlKey || e.metaKey) return;
+        const movement = { ArrowLeft: [-0.02, 0], ArrowRight: [0.02, 0], ArrowUp: [0, -0.02], ArrowDown: [0, 0.02] }[e.key];
+        if (movement) {
+          e.preventDefault(); markPosition(presentX + movement[0], presentY + movement[1]);
+          if (presentKeyboardDown && presentUsed) presenter("move", { x: presentX, y: presentY });
+        } else if (e.key === " " && !e.repeat && !presentKeyboardDown) {
+          e.preventDefault(); presentKeyboardDown = true; markPosition(presentX, presentY); startPresentPoint();
+        }
+      });
+      presentPad.addEventListener("keyup", (e) => {
+        if (e.key === " " && presentKeyboardDown) { e.preventDefault(); presentKeyboardDown = false; endPresentPoint(); if (presentMode === "laser") presentDot.hidden = true; }
+      });
+      presentPad.addEventListener("blur", () => { if (presentKeyboardDown) { presentKeyboardDown = false; endPresentPoint(); } });
+      for (const mode of ["laser", "pen"]) $("#present-" + mode).onclick = () => {
+        if (presentPointer !== null || presentKeyboardDown) return;
+        presentMode = mode;
+        for (const item of ["laser", "pen"]) $("#present-" + item).setAttribute("aria-pressed", String(item === mode));
+      };
+      presentDisplay.onchange = () => stopPresenting();
+      function presentMarks(action) {
+        if (!presentUsed) return;
+        presentPointer = null; presentKeyboardDown = false; presentDot.hidden = true;
+        dropQueuedMotion();
+        presenter(action);
+      }
+      $("#present-undo").onclick = () => presentMarks("undo");
+      $("#present-clear").onclick = () => presentMarks("clear");
+      function presentSlide(key) {
+        presentMarks("clear");
+        command({ type: "key", key, modifiers: [] });
+      }
+      $("#present-previous").onclick = () => presentSlide("left");
+      $("#present-next").onclick = () => presentSlide("right");
+      $("#present-exit").onclick = () => { stopPresenting(); command({ type: "key", key: "escape", modifiers: [] }); };
+      $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); };
       $("#keyboard-open").onclick = (e) => sheet("keyboard-sheet", e.currentTarget);
       $("#shortcuts-open").onclick = (e) => sheet("shortcuts-sheet", e.currentTarget);
       $("#settings-open").onclick = (e) => {
@@ -1354,7 +1496,7 @@ enum RemotePage {
           e.preventDefault(); closeSheet(); return;
         }
         if (e.key !== "Tab") return;
-        const focusable = [...overlay.querySelectorAll("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary")]
+        const focusable = [...overlay.querySelectorAll("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,[tabindex]:not([tabindex='-1'])")]
           .filter((x) => {
             if (!x.getClientRects().length || x.closest("[inert]")) return false;
             for (let parent = x.parentElement; parent; parent = parent.parentElement) {
@@ -1527,6 +1669,7 @@ enum RemotePage {
             locked = !!s.sessionLocked;
             if (locked) {
               fingers.clear();
+              stopPresenting();
               drag = false;
               clearInterval(dragHeartbeat);
               dragHeartbeat = 0;
@@ -1571,6 +1714,13 @@ enum RemotePage {
               }
               select.value = currentDisplay;
               select.disabled = !select.options.length;
+              const previousPresentDisplay = presentDisplay.value;
+              presentDisplay.replaceChildren();
+              for (const d of s.displays || []) {
+                const option = document.createElement("option"); option.value = d.id; option.textContent = d.name; presentDisplay.append(option);
+              }
+              presentDisplay.value = [...presentDisplay.options].some((o) => o.value === previousPresentDisplay) ? previousPresentDisplay : currentDisplay;
+              presentDisplay.disabled = !presentDisplay.options.length;
             }
             $("#awake").checked = !!s.keepAwake;
             return true;
@@ -1594,12 +1744,14 @@ enum RemotePage {
         if (document.visibilityState === "visible") refresh();
         else {
           fingers.clear();
+          stopPresenting();
           dropQueuedMotion();
           endDrag();
         }
       });
       window.addEventListener("pagehide", () => {
         fingers.clear();
+        stopPresenting();
         dropQueuedMotion();
         endDrag();
       });

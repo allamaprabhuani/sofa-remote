@@ -47,6 +47,23 @@ import Testing
         #expect(await server.respond(to: action).status == "401 Unauthorized")
     }
 
+    @Test func presenterEndpointRequiresPairingAndSharesCommandRateLimit() async throws {
+        let folder = try temporaryFolder(); defer { try? FileManager.default.removeItem(at: folder) }
+        let store = PairingStore(folder: folder)
+        let phone = try store.issue(name: "Phone")
+        var calls = 0
+        let server = RemoteServer(store: store, html: { "" }, state: { [:] }, route: { _ in
+            calls += 1; return .json(["ok": true])
+        }, limits: .init(maxConnections: 16, requestSeconds: 9, commandsPerSecond: 0, commandBurst: 2))
+        #expect(await server.respond(to: try request("POST", "/presenter")).status == "401 Unauthorized")
+        #expect(await server.respond(to: try request("POST", "/presenter", token: phone.token)).status == "200 OK")
+        #expect(await server.respond(to: try request("POST", "/command", token: phone.token)).status == "200 OK")
+        #expect(await server.respond(to: try request("POST", "/presenter", token: phone.token)).status == "429 Too Many Requests")
+        #expect(calls == 2)
+        try store.revoke(id: phone.deviceID)
+        #expect(await server.respond(to: try request("POST", "/presenter", token: phone.token)).status == "401 Unauthorized")
+    }
+
     @Test func revocationNotifiesInputOwnerOnlyAfterAuthorization() async throws {
         let folder = try temporaryFolder(); defer { try? FileManager.default.removeItem(at: folder) }
         let store = PairingStore(folder: folder)

@@ -24,6 +24,12 @@ In **About & Help → Setup and connection help**, open the disposable practice 
 
 In iPhone Safari, choose **Share → Add to Home Screen**. Keep that shortcut to return to the remote. If the Mac's network address changes, open a fresh QR link from the Mac instead of the old shortcut, then save the new link if necessary.
 
+## Present a slideshow
+
+Start your slideshow on the Mac in Keynote, PowerPoint or Google Slides, and keep the slideshow as the active app. On the phone, choose **Present**. Previous and Next send the Mac's left and right arrow keys; **End slideshow** sends Escape. Animated builds may consume a press before the slide changes.
+
+Choose the display showing your audience's slides. Select **Laser** or **Pen**, then touch and move on the phone's presentation pad. The pad is a control surface: it does not show or stream the slide. The laser disappears when you lift your finger. Pen marks are temporary, are not saved to the presentation, and clear when you change slides, close Present, or lose connection for 30 seconds. Undo and Clear remove marks. The overlay may not be included when sharing only an app window; share the display if your meeting software supports it. Full-screen stacking and display configurations vary, so try it with your setup before a presentation.
+
 ## Find the Mac controls again
 
 Choose the cursor icon in the Mac menu bar. If you hid it, open **Applications → Sofa Remote** again; its setup window reopens. Restore **Show menu bar icon** if you want. Hiding the icon or closing the setup window keeps sharing running. **Stop sharing** closes the listener; **Quit** exits the helper.

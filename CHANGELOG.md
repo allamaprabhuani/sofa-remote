@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — build 13
+
+- Add a presenter control surface with previous/next, end slideshow, and an ephemeral laser/pen overlay on a chosen display.
+- Keep presenter traffic authenticated, bounded and rate limited; temporary marks clear on exit, slide navigation and connection loss.
+- Presenter overlay and slideshow behavior need physical testing across supported applications and display configurations.
+
 ## Certificate preview beta 6 — build 12
 
 - Require stable certificate signing for normal local builds and check update identity across all architectures. Reject ad-hoc updates, changed signers, modified signatures and weakened requirements.

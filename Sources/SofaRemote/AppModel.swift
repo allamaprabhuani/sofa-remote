@@ -15,6 +15,10 @@ import ServiceManagement
     let store: PairingStore
     private let preferences: Preferences?
     private let input: InputController
+    private let presenter = PresenterOverlay()
+    private var presenterOwner: String?
+    private var presenterLastActivity: TimeInterval = 0
+    private var presenterGuard: Timer?
     private let awake = AwakeAssertion()
     private var server: RemoteServer?
     private var observers: [NSObjectProtocol] = []
@@ -49,7 +53,7 @@ import ServiceManagement
         if let failure { message = failure }
         let center = NSWorkspace.shared.notificationCenter
         observers.append(center.addObserver(forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.screenSleeping = true; self?.input.reset() }
+            MainActor.assumeIsolated { self?.screenSleeping = true; self?.invalidateInput() }
         })
         observers.append(center.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.screenSleeping = false }
@@ -128,7 +132,23 @@ import ServiceManagement
         do { try store.revoke(id: id); invalidateInput(); objectWillChange.send() }
         catch { message = "Could not save device removal." }
     }
-    private func invalidateInput() { controlGeneration += 1; input.reset() }
+    private func stopPresenter() {
+        presenterGuard?.invalidate(); presenterGuard = nil
+        presenter.stop(); presenterOwner = nil
+    }
+    private func guardPresenter() {
+        guard presenterGuard == nil else { return }
+        presenterGuard = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if !self.sharing || self.inputPaused || !self.accessibilityAllowed || !self.presenter.isVisible {
+                    self.stopPresenter()
+                }
+            }
+        }
+        presenterGuard?.tolerance = 0.2
+    }
+    private func invalidateInput() { controlGeneration += 1; input.reset(); stopPresenter() }
     func setKeepAwake(_ value: Bool) throws {
         guard let preferences else { throw RemoteError("Settings are unavailable.") }
         try preferences.update { $0.keepAwake = value }
@@ -140,7 +160,8 @@ import ServiceManagement
         objectWillChange.send()
     }
     func state() -> [String: Any] {
-        ["name": Host.current().localizedName ?? "Mac", "sharing": sharing,
+        if inputPaused || !accessibilityAllowed { stopPresenter() }
+        return ["name": Host.current().localizedName ?? "Mac", "sharing": sharing,
          "appVersion": SupportInfo.version, "appBuild": SupportInfo.build,
          "macOSVersion": SupportInfo.macOSVersion, "signingStatus": SigningStatus.current.rawValue,
          "accessibility": accessibilityAllowed, "sessionLocked": inputPaused, "screenSleeping": screenSleeping,
@@ -154,13 +175,57 @@ import ServiceManagement
         guard request.method == "POST" else { return nil }
         guard sharing, !Task.isCancelled else { return .json(["error": "Sharing stopped or request cancelled."], status: "409 Conflict") }
         if inputPaused {
-            input.reset()
+            input.reset(); stopPresenter()
             guard request.path == "/command", body["type"] as? String == "action", body["action"] as? String == "screenOn" else {
                 return .json(["error": "Input is paused. Unlock the Mac, then use Resume input in Sofa Remote on the Mac if needed."], status: "403 Forbidden")
             }
         }
         do {
             switch request.path {
+            case "/presenter":
+                guard accessibilityAllowed, !input.secureInput else {
+                    stopPresenter()
+                    throw RemoteError("Allow Accessibility access and leave secure input before presenting.")
+                }
+                guard let device = store.authenticate(request.headers["x-sofa-key"]) else {
+                    throw RemoteError("Pair with the Mac first.")
+                }
+                let command = try PresenterCommand(json: body)
+                let now = ProcessInfo.processInfo.systemUptime
+                if presenterOwner != nil && now - presenterLastActivity >= 30 {
+                    stopPresenter()
+                }
+                if let owner = presenterOwner, owner != device.id {
+                    throw RemoteError("Another paired device is using the presenter tools.")
+                }
+                switch command.action {
+                case .start:
+                    let mode: PresenterOverlay.Mode = command.mode == .laser ? .laser : .pen
+                    guard presenter.begin(displayID: command.display!, mode: mode, x: command.x!, y: command.y!) else {
+                        throw RemoteError("Presenter tool is unavailable. Check the display and finish the previous gesture.")
+                    }
+                    presenterOwner = device.id; guardPresenter()
+                case .move:
+                    guard presenterOwner == device.id, presenter.move(x: command.x!, y: command.y!) else {
+                        throw RemoteError("Presenter gesture ended. Touch the pad again.")
+                    }
+                case .end:
+                    guard presenterOwner == device.id else { throw RemoteError("Start a presenter gesture first.") }
+                    presenter.end()
+                case .clear:
+                    guard presenterOwner == device.id else { throw RemoteError("Start a presenter gesture first.") }
+                    presenter.clear()
+                case .undo:
+                    guard presenterOwner == device.id else { throw RemoteError("Start a presenter gesture first.") }
+                    presenter.undo()
+                case .heartbeat:
+                    guard presenterOwner == device.id, presenter.keepAlive() else {
+                        stopPresenter(); throw RemoteError("Presenter tools timed out. Touch the pad to start again.")
+                    }
+                case .stop:
+                    stopPresenter()
+                }
+                presenterLastActivity = now
             case "/command":
                 let command = try RemoteCommand(json: body)
                 var measuredMotionStart: TimeInterval?
@@ -260,10 +325,10 @@ import ServiceManagement
             try Task.checkCancellation()
             // Pointer/key commands change the desktop, not this native setup view.
             // Avoid scheduling a SwiftUI redraw for every high-frequency input packet.
-            if request.path != "/command" { objectWillChange.send() }
+            if request.path != "/command" && request.path != "/presenter" { objectWillChange.send() }
             return .json(["ok": true])
         } catch is CancellationError {
-            input.reset()
+            input.reset(); stopPresenter()
             return .json(["error": "The operation was cancelled."], status: "409 Conflict")
         } catch let error as RemoteError {
             return .json(["error": error.localizedDescription], status: "400 Bad Request")

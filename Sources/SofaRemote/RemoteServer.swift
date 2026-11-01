@@ -222,7 +222,7 @@ final class RemoteServer {
         guard let device = store.authenticate(request.headers["x-sofa-key"]) else {
             return .json(["error": "Pair with the Mac first."], status: "401 Unauthorized")
         }
-        if request.method == "POST", request.path == "/command", !consumeCommand(device.id) {
+        if request.method == "POST", ["/command", "/presenter"].contains(request.path), !consumeCommand(device.id) {
             return .json(["error": "Too many commands. Try again shortly."], status: "429 Too Many Requests")
         }
         switch (request.method, request.path) {
