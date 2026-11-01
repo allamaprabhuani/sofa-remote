@@ -6,14 +6,14 @@ Control your Mac from your phone.
 
 A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen streaming, Screen Recording permission, accounts, ads, analytics, subscriptions or cloud relay. Keep using your existing browser, Finder and player.
 
-[Website](https://allamaprabhuani.github.io/sofa-remote/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.3) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
+[Website](https://allamaprabhuani.github.io/sofa-remote/) · [**Download the public beta**](https://github.com/allamaprabhuani/sofa-remote/releases/tag/v0.1.0-beta.4) · [Setup guide](docs/SETUP.md) · [Get help](SUPPORT.md) · [Known issues](KNOWN_ISSUES.md)
 
 **Beta software, macOS 14 or later, Apple silicon and Intel.** Downloads are ad-hoc signed, **not Developer ID notarised**; macOS may block first launch. See the [installation guide](docs/SETUP.md). Direct LAN HTTP is **unencrypted**: use a trusted private network or your own Tailscale connection. Never forward its port to the internet. See [security](SECURITY.md) and [privacy](docs/PRIVACY.md).
 
 ## What it does
 
 - Touchpad movement, click, right/double click, drag and two-finger scrolling. Clear local SVG icons and accessible labels.
-- Four phone themes: Imperial blue, Light, Ocean and a custom colour picker. Preferences stay in your phone browser.
+- Seven phone themes: Dark, Black, Light, Ivory, Plum, Ocean and a custom colour picker. Preferences stay in your phone browser.
 - Unicode text, keyboard shortcuts, app switcher, Spotlight, media keys, volume and mute.
 - Open websites in installed Brave, falling back to your default browser; save and reorder app/website shortcuts.
 - Open Downloads in Finder and control IINA's existing playback/subtitle tools with mouse and keyboard input.

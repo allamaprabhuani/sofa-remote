@@ -313,6 +313,7 @@ p { margin: 0 0 1em; }
 
 /* Phone */
 .phone {
+  --remote-bg: #1f1f1f; --remote-card: #292929; --remote-pad: #181818; --remote-line: #777; --remote-ink: #ededed; --remote-muted: #b8b8b8;
   width: 260px;
   flex-shrink: 0;
   background: #0a0a0a;
@@ -326,29 +327,29 @@ p { margin: 0 0 1em; }
   margin: 2px auto 6px;
 }
 .phone-screen {
-  background: var(--white);
+  background: var(--remote-bg); color: var(--remote-ink);
   border-radius: 28px;
   padding: 16px 12px 12px;
   display: flex; flex-direction: column; gap: 10px;
 }
 .phone-top {
-  font-size: 11px; color: var(--muted); text-align: center; margin: 0;
+  font-size: 11px; color: var(--remote-muted); text-align: center; margin: 0;
   letter-spacing: .08em;
   text-transform: uppercase;
   font-weight: 600;
 }
 .touchpad {
-  background: var(--paper);
-  border: 1px solid var(--rule);
+  background: var(--remote-pad);
+  border: 1px solid var(--remote-line);
   border-radius: 14px;
   min-height: 160px;
   display: flex; align-items: center; justify-content: center;
   touch-action: none;
   cursor: grab;
 }
-.touchpad:active, .touchpad.active { cursor: grabbing; background: #ecf0f7; }
+.touchpad:active, .touchpad.active { cursor: grabbing; background: #383838; }
 .touchpad .hint {
-  font-size: 12px; color: var(--muted);
+  font-size: 12px; color: var(--remote-muted);
   user-select: none; pointer-events: none;
   letter-spacing: .04em;
 }
@@ -356,27 +357,27 @@ p { margin: 0 0 1em; }
 .pad-btn {
   flex: 1;
   min-height: 44px;
-  background: var(--ink); color: #fff;
-  border: none; border-radius: 10px;
+  background: var(--remote-card); color: var(--remote-ink);
+  border: 1px solid var(--remote-line); border-radius: 10px;
   font-size: 13px; font-weight: 500;
   cursor: pointer;
   font-family: inherit;
 }
-.pad-btn:hover { background: #000; }
-.pad-btn.ghost-btn { background: #fff; color: var(--ink); border: 1px solid var(--rule); }
-.pad-btn.ghost-btn:hover { background: var(--paper); }
+.pad-btn:hover { background: #383838; }
+.pad-btn.ghost-btn { background: var(--remote-card); color: var(--remote-ink); border: 1px solid var(--remote-line); }
+.pad-btn.ghost-btn:hover { background: var(--remote-pad); }
 .media-btn {
   flex: 1;
   min-height: 44px; min-width: 44px;
-  background: #fff; color: var(--ink);
-  border: 1px solid var(--rule); border-radius: 10px;
+  background: var(--remote-card); color: var(--remote-ink);
+  border: 1px solid var(--remote-line); border-radius: 10px;
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer; padding: 0;
 }
-.media-btn:hover { background: var(--paper); }
+.media-btn:hover { background: var(--remote-pad); }
 .media-btn svg { width: 18px; height: 18px; }
 .phone-status {
-  font-size: 11px; color: var(--muted); text-align: center; margin: 2px 0 0;
+  font-size: 11px; color: var(--remote-muted); text-align: center; margin: 2px 0 0;
 }
 
 /* What (jobs) — full-width list, no boxes */
@@ -584,3 +585,7 @@ ul.plain.links .muted { color: var(--muted); font-weight: 400; margin-left: 8px;
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+.theme-previews summary { cursor: pointer; padding: 10px 0; min-height: 44px; }
+.theme-links { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 6px; }
+.theme-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; border: 1px solid currentColor; border-radius: 999px; }

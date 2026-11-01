@@ -47,3 +47,7 @@ For power/lock checks, get explicit consent and a working physical recovery meth
 Run `./scripts/test.sh` and `./build.sh`, then the release packaging checks in [RELEASE.md](RELEASE.md). Swift tests cover pairing, persistence, loopback transport/deadlines, finite command bounds, geometry and fake-sink event sequencing. Browser tests use a mocked backend at six portrait/landscape sizes and test transport order, gestures and UI states. Diagnostic tests must use deliberately private-looking sentinel strings to establish that only allowlisted fields are copied.
 
 For a disposable local fixture, launch a locally built app with `--input-fixture`. `SOFA_REMOTE_DATA_DIR=/absolute/test/folder` isolates settings; close other copies first. The flag does not grant permissions. Keep test files in the established scratch location, never Documents/iCloud. Do not post app-data files, logs containing secrets, private screenshots or raw browser storage.
+
+## Beta 4 theme and help checks
+
+On 1 November 2026, 33 Swift tests and the browser/transport suites passed for the compact help controls, seven neutral/warm phone themes, saved theme migration, custom-colour validation, text/secondary-text/control-boundary contrast, 44px controls, six viewport sizes and collapsed diagnostic keyboard navigation. Theme preview images use a mocked Mac and contain no user data. Native iPhone Safari appearance and double-tap acceptance remain manual checks. No input timing, gain, authentication or listener changes were made for this UI update.

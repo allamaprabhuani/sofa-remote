@@ -8,7 +8,7 @@ enum RemotePage {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="theme-color" content="#003e74" />
+    <meta name="theme-color" content="#1f1f1f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/png" href="/icon-192.png" />
@@ -17,19 +17,19 @@ enum RemotePage {
     <style>
       :root {
         color-scheme: dark;
-        --bg: #003e74;
-        --card: #0b4a80;
-        --line: #7596b6;
-        --muted: #d3e5f6;
-        --accent: #d4ebff;
-        --ink: #ffffff;
-        --pad: #00335f;
-        --sheet: #002e58;
-        --pressed: #245e91;
-        --selection: #dcecff;
-        --selection-ink: #003e74;
-        --danger: #ffd7d7;
-        --error: #ffaaa7;
+        --bg: #1f1f1f;
+        --card: #292929;
+        --line: #777777;
+        --muted: #b8b8b8;
+        --accent: #a9cdf5;
+        --ink: #ededed;
+        --pad: #181818;
+        --sheet: #1f1f1f;
+        --pressed: #383838;
+        --selection: #ededed;
+        --selection-ink: #1f1f1f;
+        --danger: #ffb4ab;
+        --error: #ffb4ab;
       }
       * {
         box-sizing: border-box;
@@ -68,7 +68,7 @@ enum RemotePage {
       .control-icon { width: 22px; height: 22px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
       button[data-icon] { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
       button.icon-caption { flex-direction: column; gap: 4px; padding: 7px 4px; }
-      .icon-caption > span { font-size: 0.6875rem; line-height: 1.2; }
+      .icon-caption > span { font-size: 0.75rem; font-weight: 600; line-height: 1.2; }
       button:focus-visible,
       input:focus-visible,
       select:focus-visible,
@@ -92,6 +92,8 @@ enum RemotePage {
         gap: 10px;
       }
       header h1 {
+        font-family: ui-rounded, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        font-weight: 700;
         font-size: 1.1875rem;
         letter-spacing: -0.02em;
         margin: 0;
@@ -101,7 +103,7 @@ enum RemotePage {
       }
       header small {
         display: block;
-        font-size: 0.6875rem;
+        font-size: 0.75rem;
         color: var(--muted);
         font-weight: 500;
       }
@@ -127,7 +129,8 @@ enum RemotePage {
         width: 44px;
         padding: 0;
       }
-      .icon.toolbar-caption { width: 62px; }
+      .icon.toolbar-caption { width: auto; min-width: 70px; flex-shrink: 0; padding-inline: 6px; }
+      .toolbar-caption > span { white-space: nowrap; }
       .address {
         display: flex;
         gap: 7px;
@@ -401,34 +404,56 @@ enum RemotePage {
   </head>
   <body>
     <svg class="icon-definitions" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-      <symbol id="icon-mute" viewBox="0 0 24 24"><path d="M10 5 5 9H2v6h3l5 4V5m6 4 6 6m0-6-6 6"/></symbol>
-      <symbol id="icon-shortcuts" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
-      <symbol id="icon-settings" viewBox="0 0 24 24"><path d="m9 3-.6 2.4-2 .9L4 5.5 2 9l1.8 1.6v2.8L2 15l2 3.5 2.4-.8 2 .9L9 21h4l.6-2.4 2-.9 2.4.8 2-3.5-1.8-1.6v-2.8L20 9l-2-3.5-2.4.8-2-.9L13 3Z"/><circle cx="11" cy="12" r="3"/></symbol>
+      <symbol id="icon-mute" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM17.78 9.22a.75.75 0 1 0-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 1 0 1.06-1.06L20.56 12l1.72-1.72a.75.75 0 1 0-1.06-1.06l-1.72 1.72-1.72-1.72Z" />
+</g></symbol>
+      <symbol id="icon-shortcuts" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M3 6a3 3 0 0 1 3-3h2.25a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Zm9.75 0a3 3 0 0 1 3-3H18a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3h-2.25a3 3 0 0 1-3-3V6ZM3 15.75a3 3 0 0 1 3-3h2.25a3 3 0 0 1 3 3V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-2.25Zm9.75 0a3 3 0 0 1 3-3H18a3 3 0 0 1 3 3V18a3 3 0 0 1-3 3h-2.25a3 3 0 0 1-3-3v-2.25Z" clip-rule="evenodd" />
+</g></symbol>
+      <symbol id="icon-settings" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd" />
+</g></symbol>
       <symbol id="icon-right-click" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 2v8h6m-6 0H6"/><path d="M13 4h2l1 2v2h-3Z" fill="currentColor" stroke="none"/></symbol>
-      <symbol id="icon-double-click" viewBox="0 0 24 24"><path d="m3 2 2 15 4-4 4 7 3-2-4-7 6-1Z"/><path d="M15 3V1m4 5 2-1m-1 5h3"/></symbol>
-      <symbol id="icon-drag" viewBox="0 0 24 24"><path d="M8 12V5a2 2 0 0 1 4 0v6-1a2 2 0 0 1 4 0v1a2 2 0 0 1 4 0v5c0 4-3 6-6 6h-2c-2 0-3-1-4-3l-4-6a2 2 0 0 1 3-2l1 1Z"/></symbol>
-      <symbol id="icon-previous" viewBox="0 0 24 24"><path d="M5 5v14m14-14L8 12l11 7Z"/></symbol>
-      <symbol id="icon-play-pause" viewBox="0 0 24 24"><path d="m3 4 10 8-10 8Zm13 0v16m5-16v16"/></symbol>
-      <symbol id="icon-next" viewBox="0 0 24 24"><path d="M19 5v14M5 5l11 7-11 7Z"/></symbol>
+      <symbol id="icon-double-click" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M12 1.5a.75.75 0 0 1 .75.75V4.5a.75.75 0 0 1-1.5 0V2.25A.75.75 0 0 1 12 1.5ZM5.636 4.136a.75.75 0 0 1 1.06 0l1.592 1.591a.75.75 0 0 1-1.061 1.06l-1.591-1.59a.75.75 0 0 1 0-1.061Zm12.728 0a.75.75 0 0 1 0 1.06l-1.591 1.592a.75.75 0 0 1-1.06-1.061l1.59-1.591a.75.75 0 0 1 1.061 0Zm-6.816 4.496a.75.75 0 0 1 .82.311l5.228 7.917a.75.75 0 0 1-.777 1.148l-2.097-.43 1.045 3.9a.75.75 0 0 1-1.45.388l-1.044-3.899-1.601 1.42a.75.75 0 0 1-1.247-.606l.569-9.47a.75.75 0 0 1 .554-.68ZM3 10.5a.75.75 0 0 1 .75-.75H6a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 10.5Zm14.25 0a.75.75 0 0 1 .75-.75h2.25a.75.75 0 0 1 0 1.5H18a.75.75 0 0 1-.75-.75Zm-8.962 3.712a.75.75 0 0 1 0 1.061l-1.591 1.591a.75.75 0 1 1-1.061-1.06l1.591-1.592a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+</g></symbol>
+      <symbol id="icon-drag" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M10.5 1.875a1.125 1.125 0 0 1 2.25 0v8.219c.517.162 1.02.382 1.5.659V3.375a1.125 1.125 0 0 1 2.25 0v10.937a4.505 4.505 0 0 0-3.25 2.373 8.963 8.963 0 0 1 4-.935A.75.75 0 0 0 18 15v-2.266a3.368 3.368 0 0 1 .988-2.37 1.125 1.125 0 0 1 1.591 1.59 1.118 1.118 0 0 0-.329.79v3.006h-.005a6 6 0 0 1-1.752 4.007l-1.736 1.736a6 6 0 0 1-4.242 1.757H10.5a7.5 7.5 0 0 1-7.5-7.5V6.375a1.125 1.125 0 0 1 2.25 0v5.519c.46-.452.965-.832 1.5-1.141V3.375a1.125 1.125 0 0 1 2.25 0v6.526c.495-.1.997-.151 1.5-.151V1.875Z" />
+</g></symbol>
+      <symbol id="icon-previous" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M9.195 18.44c1.25.714 2.805-.189 2.805-1.629v-2.34l6.945 3.968c1.25.715 2.805-.188 2.805-1.628V8.69c0-1.44-1.555-2.343-2.805-1.628L12 11.029v-2.34c0-1.44-1.555-2.343-2.805-1.628l-7.108 4.061c-1.26.72-1.26 2.536 0 3.256l7.108 4.061Z" />
+</g></symbol>
+      <symbol id="icon-play-pause" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M15 6.75a.75.75 0 0 0-.75.75V18a.75.75 0 0 0 .75.75h.75a.75.75 0 0 0 .75-.75V7.5a.75.75 0 0 0-.75-.75H15ZM20.25 6.75a.75.75 0 0 0-.75.75V18c0 .414.336.75.75.75H21a.75.75 0 0 0 .75-.75V7.5a.75.75 0 0 0-.75-.75h-.75ZM5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256L5.055 7.061Z" />
+</g></symbol>
+      <symbol id="icon-next" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z" />
+</g></symbol>
       <symbol id="icon-volume-down" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5m5 7h6"/></symbol>
       <symbol id="icon-volume-up" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5m5 7h6m-3-3v6"/></symbol>
       <symbol id="icon-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></symbol>
       <symbol id="icon-apps" viewBox="0 0 24 24"><rect x="2" y="6" width="15" height="15" rx="2"/><path d="M7 6V3h15v15h-5M2 11h15"/></symbol>
       <symbol id="icon-fullscreen" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
       <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></symbol>
-      <symbol id="icon-desktop" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></symbol>
-      <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M2 8V4h7l3 3h10v13H2V8Zm0 0h20"/></symbol>
+      <symbol id="icon-desktop" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd" />
+</g></symbol>
+      <symbol id="icon-folder" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
+</g></symbol>
       <symbol id="icon-screen-off" viewBox="0 0 24 24"><path d="M2 3h20v14H2Zm6 18h8m-4-4v4m-6-9 12-6"/></symbol>
       <symbol id="icon-wake" viewBox="0 0 24 24"><path d="M12 2v8m-5-6a9 9 0 1 0 10 0"/></symbol>
-      <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v3"/></symbol>
-      <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 8a3 3 0 0 1 6 0c0 2-3 2-3 5m0 4h.01"/></symbol>
-      <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></symbol>
-      <symbol id="icon-bug" viewBox="0 0 24 24"><path d="M8 8h8v9a4 4 0 0 1-8 0ZM9 8V6a3 3 0 0 1 6 0v2M4 9l4 2M4 16h4M20 9l-4 2M20 16h-4M12 9v11"/></symbol>
-      <symbol id="icon-idea" viewBox="0 0 24 24"><path d="M8 15a7 7 0 1 1 8 0l-1 3H9ZM9 21h6"/></symbol>
-      <symbol id="icon-chat" viewBox="0 0 24 24"><path d="M3 4h15v11H8l-5 4ZM18 9h3v12l-5-3h-5v-3"/></symbol>
-      <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></symbol>
-      <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M12 21 3 12C-3 4 7 0 12 7 17 0 27 4 21 12Z"/></symbol>
-      <symbol id="icon-updates" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v12M7 13l5 5 5-5"/></symbol>
+      <symbol id="icon-lock" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
+</g></symbol>
+      <symbol id="icon-help" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm11.378-3.917c-.89-.777-2.366-.777-3.255 0a.75.75 0 0 1-.988-1.129c1.454-1.272 3.776-1.272 5.23 0 1.513 1.324 1.513 3.518 0 4.842a3.75 3.75 0 0 1-.837.552c-.676.328-1.028.774-1.028 1.152v.75a.75.75 0 0 1-1.5 0v-.75c0-1.279 1.06-2.107 1.875-2.502.182-.088.351-.199.503-.331.83-.727.83-1.857 0-2.584ZM12 18a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+</g></symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M7.5 3.375c0-1.036.84-1.875 1.875-1.875h.375a3.75 3.75 0 0 1 3.75 3.75v1.875C13.5 8.161 14.34 9 15.375 9h1.875A3.75 3.75 0 0 1 21 12.75v3.375C21 17.16 20.16 18 19.125 18h-9.75A1.875 1.875 0 0 1 7.5 16.125V3.375Z" />
+  <path d="M15 5.25a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 17.25 7.5h-1.875A.375.375 0 0 1 15 7.125V5.25ZM4.875 6H6v10.125A3.375 3.375 0 0 0 9.375 19.5H16.5v1.125c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 0 1 3 20.625V7.875C3 6.839 3.84 6 4.875 6Z" />
+</g></symbol>
+      <symbol id="icon-bug" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M8.478 1.6a.75.75 0 0 1 .273 1.026 3.72 3.72 0 0 0-.425 1.121c.058.058.118.114.18.168A4.491 4.491 0 0 1 12 2.25c1.413 0 2.673.651 3.497 1.668.06-.054.12-.11.178-.167a3.717 3.717 0 0 0-.426-1.125.75.75 0 1 1 1.298-.752 5.22 5.22 0 0 1 .671 2.046.75.75 0 0 1-.187.582c-.241.27-.505.52-.787.749a4.494 4.494 0 0 1 .216 2.1c-.106.792-.753 1.295-1.417 1.403-.182.03-.364.057-.547.081.152.227.273.476.359.742a23.122 23.122 0 0 0 3.832-.803 23.241 23.241 0 0 0-.345-2.634.75.75 0 0 1 1.474-.28c.21 1.115.348 2.256.404 3.418a.75.75 0 0 1-.516.75c-1.527.499-3.119.854-4.76 1.049-.074.38-.22.735-.423 1.05 2.066.209 4.058.672 5.943 1.358a.75.75 0 0 1 .492.75 24.665 24.665 0 0 1-1.189 6.25.75.75 0 0 1-1.425-.47 23.14 23.14 0 0 0 1.077-5.306c-.5-.169-1.009-.32-1.524-.455.068.234.104.484.104.746 0 3.956-2.521 7.5-6 7.5-3.478 0-6-3.544-6-7.5 0-.262.037-.511.104-.746-.514.135-1.022.286-1.522.455.154 1.838.52 3.616 1.077 5.307a.75.75 0 1 1-1.425.468 24.662 24.662 0 0 1-1.19-6.25.75.75 0 0 1 .493-.749 24.586 24.586 0 0 1 4.964-1.24h.01c.321-.046.644-.085.969-.118a2.983 2.983 0 0 1-.424-1.05 24.614 24.614 0 0 1-4.76-1.05.75.75 0 0 1-.516-.75c.057-1.16.194-2.302.405-3.417a.75.75 0 0 1 1.474.28c-.164.862-.28 1.74-.345 2.634 1.237.371 2.517.642 3.832.803.085-.266.207-.515.359-.742a18.698 18.698 0 0 1-.547-.08c-.664-.11-1.311-.612-1.417-1.404a4.535 4.535 0 0 1 .217-2.103 6.788 6.788 0 0 1-.788-.751.75.75 0 0 1-.187-.583 5.22 5.22 0 0 1 .67-2.04.75.75 0 0 1 1.026-.273Z" clip-rule="evenodd" />
+</g></symbol>
+      <symbol id="icon-idea" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M12 .75a8.25 8.25 0 0 0-4.135 15.39c.686.398 1.115 1.008 1.134 1.623a.75.75 0 0 0 .577.706c.352.083.71.148 1.074.195.323.041.6-.218.6-.544v-4.661a6.714 6.714 0 0 1-.937-.171.75.75 0 1 1 .374-1.453 5.261 5.261 0 0 0 2.626 0 .75.75 0 1 1 .374 1.452 6.712 6.712 0 0 1-.937.172v4.66c0 .327.277.586.6.545.364-.047.722-.112 1.074-.195a.75.75 0 0 0 .577-.706c.02-.615.448-1.225 1.134-1.623A8.25 8.25 0 0 0 12 .75Z" />
+  <path fill-rule="evenodd" d="M9.013 19.9a.75.75 0 0 1 .877-.597 11.319 11.319 0 0 0 4.22 0 .75.75 0 1 1 .28 1.473 12.819 12.819 0 0 1-4.78 0 .75.75 0 0 1-.597-.876ZM9.754 22.344a.75.75 0 0 1 .824-.668 13.682 13.682 0 0 0 2.844 0 .75.75 0 1 1 .156 1.492 15.156 15.156 0 0 1-3.156 0 .75.75 0 0 1-.668-.824Z" clip-rule="evenodd" />
+</g></symbol>
+      <symbol id="icon-chat" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 0 0-1.032-.211 50.89 50.89 0 0 0-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 0 0 2.433 3.984L7.28 21.53A.75.75 0 0 1 6 21v-4.03a48.527 48.527 0 0 1-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979Z" />
+  <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 0 0 1.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0 0 15.75 7.5Z" />
+</g></symbol>
+      <symbol id="icon-globe" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M21.721 12.752a9.711 9.711 0 0 0-.945-5.003 12.754 12.754 0 0 1-4.339 2.708 18.991 18.991 0 0 1-.214 4.772 17.165 17.165 0 0 0 5.498-2.477ZM14.634 15.55a17.324 17.324 0 0 0 .332-4.647c-.952.227-1.945.347-2.966.347-1.021 0-2.014-.12-2.966-.347a17.515 17.515 0 0 0 .332 4.647 17.385 17.385 0 0 0 5.268 0ZM9.772 17.119a18.963 18.963 0 0 0 4.456 0A17.182 17.182 0 0 1 12 21.724a17.18 17.18 0 0 1-2.228-4.605ZM7.777 15.23a18.87 18.87 0 0 1-.214-4.774 12.753 12.753 0 0 1-4.34-2.708 9.711 9.711 0 0 0-.944 5.004 17.165 17.165 0 0 0 5.498 2.477ZM21.356 14.752a9.765 9.765 0 0 1-7.478 6.817 18.64 18.64 0 0 0 1.988-4.718 18.627 18.627 0 0 0 5.49-2.098ZM2.644 14.752c1.682.971 3.53 1.688 5.49 2.099a18.64 18.64 0 0 0 1.988 4.718 9.765 9.765 0 0 1-7.478-6.816ZM13.878 2.43a9.755 9.755 0 0 1 6.116 3.986 11.267 11.267 0 0 1-3.746 2.504 18.63 18.63 0 0 0-2.37-6.49ZM12 2.276a17.152 17.152 0 0 1 2.805 7.121c-.897.23-1.837.353-2.805.353-.968 0-1.908-.122-2.805-.353A17.151 17.151 0 0 1 12 2.276ZM10.122 2.43a18.629 18.629 0 0 0-2.37 6.49 11.266 11.266 0 0 1-3.746-2.504 9.754 9.754 0 0 1 6.116-3.985Z" />
+</g></symbol>
+      <symbol id="icon-heart" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+</g></symbol>
+      <symbol id="icon-updates" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-.53 14.03a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V8.25a.75.75 0 0 0-1.5 0v5.69l-1.72-1.72a.75.75 0 0 0-1.06 1.06l3 3Z" clip-rule="evenodd" />
+</g></symbol>
     </svg>
     <main>
       <header>
@@ -563,8 +588,8 @@ enum RemotePage {
           <button data-close>Done</button>
         </div>
         <div class="theme-controls">
-          <label for="theme">Appearance<select class="field" id="theme"><option value="imperial">Imperial blue</option><option value="light">Light</option><option value="ocean">Ocean</option><option value="custom">Custom</option></select></label>
-          <label for="custom-colour">Custom background colour<input class="field" type="color" id="custom-colour" value="#003e74" disabled /></label>
+          <label for="theme">Appearance<select class="field" id="theme"><option value="dark">Dark</option><option value="black">Black</option><option value="light">Light</option><option value="ivory">Ivory · brown</option><option value="plum">Ivory · plum</option><option value="ocean">Ocean</option><option value="custom">Custom</option></select></label>
+          <label for="custom-colour">Custom background colour<input class="field" type="color" id="custom-colour" value="#1f1f1f" disabled /></label>
         </div>
         <p>Appearance is saved only in this phone browser. Custom colours get automatic high-contrast text.</p>
         <a href="https://github.com/allamaprabhuani/sofa-remote/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">Report a bug</a>
@@ -687,12 +712,17 @@ enum RemotePage {
         svg.append(use);
         button.prepend(svg);
       });
+      // Neutral surfaces inspired by VS Code's built-in modern themes.
+      // Stronger control borders keep the phone touch targets distinguishable.
       const themes = {
-        imperial: { bg: "#003e74", card: "#0b4a80", pad: "#00335f", sheet: "#002e58", line: "#7596b6", muted: "#d3e5f6", accent: "#d4ebff", ink: "#ffffff", pressed: "#245e91", selection: "#dcecff", "selection-ink": "#003e74", danger: "#ffd7d7", error: "#ffaaa7" },
-        light: { bg: "#f4f7fc", card: "#ffffff", pad: "#e7eef7", sheet: "#ffffff", line: "#72869d", muted: "#3c526b", accent: "#003e7d", ink: "#003e74", pressed: "#dee8f5", selection: "#003e74", "selection-ink": "#ffffff", danger: "#9d1e2c", error: "#a51627" },
-        ocean: { bg: "#062d35", card: "#103c45", pad: "#0b343d", sheet: "#0b343d", line: "#517780", muted: "#bcd8dd", accent: "#a1e9ee", ink: "#f4ffff", pressed: "#244e57", selection: "#c5f4f5", "selection-ink": "#062d35", danger: "#ffb8b8", error: "#ffaaa7" },
+        dark: { bg: "#1f1f1f", card: "#292929", pad: "#181818", sheet: "#1f1f1f", line: "#777777", muted: "#b8b8b8", accent: "#a9cdf5", ink: "#ededed", pressed: "#383838", selection: "#ededed", "selection-ink": "#1f1f1f", danger: "#ffb4ab", error: "#ffb4ab" },
+        black: { bg: "#000000", card: "#000000", pad: "#000000", sheet: "#000000", line: "#737373", muted: "#bdbdbd", accent: "#c7dcf5", ink: "#f5f5f5", pressed: "#222222", selection: "#f5f5f5", "selection-ink": "#000000", danger: "#ffb4ab", error: "#ffb4ab" },
+        ivory: { bg: "#f6f1e7", card: "#fffaf0", pad: "#eee7da", sheet: "#fffaf0", line: "#99836c", muted: "#645141", accent: "#754726", ink: "#35261c", pressed: "#e4d8c7", selection: "#754726", "selection-ink": "#fffaf0", danger: "#962e2e", error: "#962e2e" },
+        plum: { bg: "#f8f2ed", card: "#fff9f5", pad: "#efe4ec", sheet: "#fff9f5", line: "#9b7f99", muted: "#685369", accent: "#704381", ink: "#38233c", pressed: "#e7d9e5", selection: "#704381", "selection-ink": "#fff9f5", danger: "#952d49", error: "#952d49" },
+        ocean: { bg: "#062d35", card: "#103c45", pad: "#0b343d", sheet: "#0b343d", line: "#75949a", muted: "#bcd8dd", accent: "#a1e9ee", ink: "#f4ffff", pressed: "#244e57", selection: "#c5f4f5", "selection-ink": "#062d35", danger: "#ffb8b8", error: "#ffb8b8" },
+        light: { bg: "#f8f8f8", card: "#ffffff", pad: "#f0f0f0", sheet: "#ffffff", line: "#767676", muted: "#555555", accent: "#005fb8", ink: "#242424", pressed: "#e5e5e5", selection: "#242424", "selection-ink": "#ffffff", danger: "#9d1e2c", error: "#a51627" },
       };
-      const safeColour = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : "#003e74";
+      const safeColour = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : "#1f1f1f";
       function luminance(hex) {
         const channels = [1, 3, 5].map((n) => {
           const value = parseInt(hex.slice(n, n + 2), 16) / 255;
@@ -720,10 +750,10 @@ enum RemotePage {
         return { bg, card, pad, sheet: card, line, muted: ink, accent: ink, ink,
           pressed: mixColour(bg, shade, 0.2), selection: ink, "selection-ink": bg, danger: ink, error: ink };
       }
-      let themeState = { name: "imperial", colour: "#003e74" };
+      let themeState = { name: "dark", colour: "#1f1f1f" };
       function applyTheme(name, colour) {
-        const requested = name === "oxford" ? "imperial" : name;
-        const known = ["imperial", "light", "ocean", "custom"].includes(requested) ? requested : "imperial";
+        const requested = ({ oxford: "dark", imperial: "dark" })[name] || name;
+        const known = ["dark", "black", "light", "ivory", "plum", "ocean", "custom"].includes(requested) ? requested : "dark";
         themeState = { name: known, colour: safeColour(colour) };
         const palette = known === "custom" ? customTheme(themeState.colour) : themes[known];
         Object.entries(palette).forEach(([key, value]) => document.documentElement.style.setProperty("--" + key, value));
@@ -737,7 +767,7 @@ enum RemotePage {
         try { localStorage.setItem("sofaTheme", themeState.name); localStorage.setItem("sofaColour", themeState.colour); } catch {}
       }
       try { applyTheme(localStorage.getItem("sofaTheme"), localStorage.getItem("sofaColour")); }
-      catch { applyTheme("imperial", "#003e74"); }
+      catch { applyTheme("dark", "#1f1f1f"); }
       $("#theme").onchange = (e) => { applyTheme(e.target.value, themeState.colour); saveTheme(); };
       $("#custom-colour").oninput = (e) => applyTheme("custom", e.target.value);
       $("#custom-colour").onchange = saveTheme;

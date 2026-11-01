@@ -327,12 +327,12 @@ private struct AboutHelpView: View {
                     SetupInstructions(showPractice: showPractice).padding(.top, 8)
                 }
                 HStack(spacing: 12) {
-                    helpLink("Report a bug", symbol: "ladybug", destination: SupportInfo.bugReport)
-                    helpLink("Suggest a feature", symbol: "lightbulb", destination: SupportInfo.featureRequest)
-                    helpLink("Questions and developer contact", symbol: "bubble.left.and.bubble.right", destination: SupportInfo.discussions)
-                    helpLink("Project website", symbol: "globe", destination: SupportInfo.website)
-                    helpLink("Support this project", symbol: "heart", destination: SupportInfo.supportProject)
-                    helpLink("Check for updates and release notes", symbol: "arrow.down.circle", destination: SupportInfo.releases)
+                    helpLink("Report a bug", symbol: "ladybug.fill", destination: SupportInfo.bugReport)
+                    helpLink("Suggest a feature", symbol: "lightbulb.fill", destination: SupportInfo.featureRequest)
+                    helpLink("Questions and developer contact", symbol: "bubble.left.and.bubble.right.fill", destination: SupportInfo.discussions)
+                    helpLink("Project website", symbol: "globe.americas.fill", destination: SupportInfo.website)
+                    helpLink("Support this project", symbol: "heart.fill", destination: SupportInfo.supportProject)
+                    helpLink("Check for updates and release notes", symbol: "arrow.down.circle.fill", destination: SupportInfo.releases)
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 DisclosureGroup("Diagnostic summary", isExpanded: $diagnosticsExpanded) {
                     VStack(alignment: .leading, spacing: 10) {
