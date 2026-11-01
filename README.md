@@ -15,7 +15,7 @@ A free, MIT-licensed Mac menu-bar helper and phone-browser remote. No screen str
 - Touchpad movement, click, right/double click, drag and two-finger scrolling. Clear local SVG icons and accessible labels.
 - A large phone touchpad with borderless, accessible controls and three selectable appearances.
 - Unicode text, keyboard shortcuts, app switcher, Spotlight, media keys, volume and mute.
-- Presenter controls for previous/next and ending a slideshow, plus a laser, pen and disappearing highlighter in four colours on a chosen display. Start the slideshow on the Mac first; marks are not saved to slides.
+- Presenter controls for previous/next and ending a slideshow, plus a laser, pen and disappearing highlighter in four colours on a chosen display. Start and black-screen shortcuts are available for Keynote, PowerPoint and the active browser; for Google Slides, select the presentation tab first. Use the in-app connection check before presenting. Marks are not saved to slides.
 - Open websites in installed Brave, falling back to your default browser; save and reorder app/website shortcuts.
 - Open Downloads in Finder and control IINA's existing playback/subtitle tools with mouse and keyboard input.
 - Move the pointer across connected displays. Jump to a chosen display or explicitly move the front window there.

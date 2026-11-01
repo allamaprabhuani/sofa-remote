@@ -253,6 +253,7 @@ enum RemotePage {
       #present-sheet .sheet-status:not(:empty) { position: sticky; top: 0; z-index: 2; margin: 0; padding: 10px 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; }
       #present-sheet .sheet-status.error { color: var(--error); }
       .present-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+      .present-tools[hidden] { display: none; }
       .present-tools button { flex: 1 1 auto; min-height: 56px; }
       .present-mode, .present-colours { display: grid; gap: 7px; }
       .present-mode { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); }
@@ -665,12 +666,14 @@ enum RemotePage {
     <div class="scrim" id="present-sheet">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Presenter controls">
         <div class="sheet-head"><h2>Present</h2><button data-close data-icon="close" aria-label="Close" title="Close"></button></div>
-        <p>Start your slideshow on the Mac. Previous and Next send arrow keys to the active app.</p>
+        <p id="present-app">Open your presentation on the Mac.</p>
+        <div class="present-tools" id="present-app-actions" hidden><button id="present-start" data-icon="present" aria-label="Start slideshow" title="Start slideshow"></button><button id="present-black" data-icon="desktop" aria-label="Black screen" title="Black screen"></button></div>
+        <details class="help-disclosure"><summary>Check connection</summary><p id="present-check" role="status">Checking…</p><button id="present-check-again" data-icon="retry" aria-label="Check again" title="Check again"></button><p>Direct Wi-Fi is unencrypted. For encrypted transport, connect both devices to your own Tailscale network and use the Mac’s Tailscale address.</p></details>
         <div class="present-nav"><button id="present-previous" data-icon="slide-previous" aria-label="Previous slide" title="Previous slide"></button><button id="present-next" data-icon="slide-next" aria-label="Next slide" title="Next slide"></button></div>
         <div class="present-tools"><button id="present-exit" data-icon="stop" aria-label="End slideshow" title="End slideshow"></button></div>
         <label for="present-display">Presentation display</label><select class="field" id="present-display" aria-label="Presentation display"></select>
         <p>Choose the screen showing your slides. Changing display clears marks.</p>
-        <details class="help-disclosure"><summary>About presenter icons</summary><p>Top row: previous slide, next slide, end slideshow. Tools: laser, pen, highlight; then red, blue, green and yellow. Below the pad: undo and clear marks.</p></details>
+        <details class="help-disclosure"><summary>About presenter icons</summary><p>Start and black screen appear for supported apps. In a browser, first select your Google Slides tab; the Mac cannot identify it. Black screen works during a slideshow. Next row: previous slide, next slide, end slideshow. Tools: laser, pen, highlight; then red, blue, green and yellow. Below the pad: undo and clear marks.</p></details>
         <div class="present-mode" role="group" aria-label="Pointer and annotation tools">
           <button id="present-laser" data-icon="laser" aria-label="Laser" title="Laser" aria-pressed="true"></button><button id="present-pen" data-icon="pen" aria-label="Pen" title="Pen" aria-pressed="false"></button><button id="present-highlight" data-icon="highlight" aria-label="Highlight" title="Highlight" aria-pressed="false"></button>
         </div>
@@ -1598,6 +1601,29 @@ enum RemotePage {
       }
       $("#present-undo").onclick = () => presentMarks("undo");
       $("#present-clear").onclick = () => presentMarks("clear");
+      let presenterApp = "";
+      function updatePresenterApp(s) {
+        presenterApp = typeof s.presenterApp === "string" ? s.presenterApp : "";
+        const names = { keynote: "Keynote", powerpoint: "PowerPoint", browser: "Browser · select Google Slides tab" };
+        $("#present-app").textContent = names[presenterApp] || "Open Keynote, PowerPoint or Google Slides on your Mac.";
+        $("#present-app-actions").hidden = !names[presenterApp];
+        const check = !s.sharing ? "Sharing is stopped on the Mac." : !s.accessibility ? "Allow Accessibility on your Mac." : s.sessionLocked ? "Unlock the Mac and resume input." : "Connected · Accessibility ready. Check the slide display before presenting.";
+        $("#present-check").textContent = check;
+      }
+      $("#present-check-again").onclick = async () => {
+        $("#present-check").textContent = "Checking…";
+        if (!await refresh(true)) $("#present-check").textContent = "Cannot reach the Mac. Check sharing and your network, then retry.";
+      };
+      function appPresentationKey(key, modifiers = []) {
+        if (!["keynote", "powerpoint", "browser"].includes(presenterApp)) return;
+        command({ type: "key", key, modifiers, presenterTarget: presenterApp });
+      }
+      $("#present-start").onclick = () => {
+        if (presenterApp === "keynote") appPresentationKey("p", ["option", "command"]);
+        else if (presenterApp === "powerpoint") appPresentationKey("enter", ["shift", "command"]);
+        else if (presenterApp === "browser") appPresentationKey("enter", ["command"]);
+      };
+      $("#present-black").onclick = () => appPresentationKey("b");
       function presentSlide(key) {
         presentMarks("clear");
         command({ type: "key", key, modifiers: [] });
@@ -1605,7 +1631,7 @@ enum RemotePage {
       $("#present-previous").onclick = () => presentSlide("left");
       $("#present-next").onclick = () => presentSlide("right");
       $("#present-exit").onclick = () => { stopPresenting(); command({ type: "key", key: "escape", modifiers: [] }); };
-      $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); };
+      $("#present-open").onclick = (e) => { presentDisplay.value = currentDisplay; sheet("present-sheet", e.currentTarget); refresh(true); };
       $("#keyboard-open").onclick = (e) => sheet("keyboard-sheet", e.currentTarget);
       $("#shortcuts-open").onclick = (e) => sheet("shortcuts-sheet", e.currentTarget);
       $("#settings-open").onclick = (e) => {
@@ -1819,6 +1845,7 @@ enum RemotePage {
           try {
             const s = await request("/state");
             if (generation !== stateSerial) return false;
+            updatePresenterApp(s);
             supportState = {
               appVersion: s.appVersion, appBuild: s.appBuild, macOSVersion: s.macOSVersion, signingStatus: s.signingStatus,
               accessibility: s.accessibility, sharing: s.sharing, sessionLocked: s.sessionLocked,

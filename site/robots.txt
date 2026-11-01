@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sofa-remote.doublehoney1.chatgpt.site/sitemap.xml

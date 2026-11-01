@@ -146,6 +146,27 @@ async function main() {
   assert.deepEqual(presenterUI.calls.filter(c=>c.path==='/command').map(c=>c.body.key),['right','left','escape','right','escape']);
   assert.ok(presenterUI.calls.filter(c=>c.path==='/command').every(c=>c.body.modifiers.length===0));
   console.log('PASS presenter slides, authenticated ordered pen gestures, display selection and cleanup');
+  const appActions=await evaluate(`(async()=>{
+    const pause=ms=>new Promise(r=>setTimeout(r,ms));
+    const result=[];
+    for(const app of ['keynote','powerpoint','browser','']) {
+      testState.presenterApp=app; await refresh(true); calls.length=0;
+      const hidden=document.querySelector('#present-app-actions').hidden;
+      if(app){document.querySelector('#present-start').click(); document.querySelector('#present-black').click(); await pause(40);}
+      result.push({app,hidden,commands:calls.filter(c=>c.path==='/command').map(c=>c.body)});
+    }
+    testState.presenterApp='';await refresh(true);return result;
+  })()`);
+  assert.deepEqual(appActions.map(x=>x.hidden),[false,false,false,true]);
+  assert.deepEqual(appActions.slice(0,3).map(x=>x.commands[0]),[
+    {type:'key',key:'p',modifiers:['option','command'],presenterTarget:'keynote'},
+    {type:'key',key:'enter',modifiers:['shift','command'],presenterTarget:'powerpoint'},
+    {type:'key',key:'enter',modifiers:['command'],presenterTarget:'browser'}]);
+  assert.ok(appActions.slice(0,3).every(x=>x.commands[1].key==='b' && x.commands[1].presenterTarget===x.app));
+  const check=await evaluate(`(async()=>{testState.accessibility=false;await refresh(true);const denied=document.querySelector('#present-check').textContent;testState.accessibility=true;await refresh(true);return [denied,document.querySelector('#present-check').textContent]})()`);
+  assert.match(check[0],/Accessibility/);assert.match(check[1],/ready/);
+  console.log('PASS presentation shortcuts, active-app selection and readiness');
+
   await evaluate(`document.querySelector('#present-open').click();document.querySelector('#present-options').open=false;document.querySelector('#present-options summary').focus();calls.length=0`);
   await cdp('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
   await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9});
@@ -244,7 +265,7 @@ async function main() {
     assert.ok(geometry.pad.h>=150,`${width}x${height} usable touchpad`);
     assert.ok(geometry.keys.every(([w,h])=>w>=44&&h>=44),`${width}x${height} 44px controls`);
     assert.ok(geometry.scroll<=geometry.viewport+1,`${width}x${height} no horizontal overflow`);
-    const presentGeometry=await evaluate(`(()=>{document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const sizes=[...sheet.querySelectorAll('button,select')].map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]});const r={sizes,scroll:sheet.scrollWidth,client:sheet.clientWidth};closeSheet();return r})()`);
+    const presentGeometry=await evaluate(`(()=>{document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const sizes=[...sheet.querySelectorAll('button,select')].filter(b=>b.getClientRects().length).map(x=>{const q=x.getBoundingClientRect();return [q.width,q.height]});const r={sizes,scroll:sheet.scrollWidth,client:sheet.clientWidth};closeSheet();return r})()`);
     assert.ok(presentGeometry.sizes.every(([w,h])=>w>=44&&h>=44),`${width}x${height} presenter touch targets`);
     assert.ok(presentGeometry.scroll<=presentGeometry.client+1,`${width}x${height} presenter has no horizontal overflow`);
     if(width===390&&height===844&&process.env.SOFA_TEST_SCREENSHOT){const shot=await cdp('Page.captureScreenshot',{format:'png'});fs.writeFileSync(process.env.SOFA_TEST_SCREENSHOT,Buffer.from(shot.data,'base64'))}
@@ -361,7 +382,7 @@ async function main() {
   await cdp('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true});
   const largeText=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#settings-open').click();document.querySelector('#settings-sheet [data-help]').click();const result={scroll:document.documentElement.scrollWidth,viewport:innerWidth,help:document.querySelector('#help-sheet .sheet').getBoundingClientRect().width};closeSheet();closeSheet();document.documentElement.style.fontSize='';return result})()`);
   assert.ok(largeText.scroll<=largeText.viewport+1,'200% text has no horizontal page overflow');assert.ok(largeText.help<=largeText.viewport+1,'200% help remains within viewport');
-  const largePresenter=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const r={scroll:sheet.scrollWidth,client:sheet.clientWidth,controls:[...sheet.querySelectorAll('button,select')].map(b=>{const q=b.getBoundingClientRect();return [q.width,q.height]})};closeSheet();document.documentElement.style.fontSize='';return r})()`);
+  const largePresenter=await evaluate(`(()=>{document.documentElement.style.fontSize='200%';document.querySelector('#present-open').click();const sheet=document.querySelector('#present-sheet .sheet');const r={scroll:sheet.scrollWidth,client:sheet.clientWidth,controls:[...sheet.querySelectorAll('button,select')].filter(b=>b.getClientRects().length).map(b=>{const q=b.getBoundingClientRect();return [q.width,q.height]})};closeSheet();document.documentElement.style.fontSize='';return r})()`);
   assert.ok(largePresenter.scroll<=largePresenter.client+1,'200% presenter text has no horizontal overflow');
   assert.ok(largePresenter.controls.every(([w,h])=>w>=44&&h>=44),'200% presenter controls stay usable');
   const keyboardPointer=await evaluate(`(async()=>{
