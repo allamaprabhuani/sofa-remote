@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — build 18
+## Certificate preview beta 7 — build 18
 
 - Add presenter controls with previous/next, end slideshow, a laser, coloured pen and automatically disappearing highlighter on a chosen display.
 - Add optional smoothing and correction for simple hand-drawn shapes.
