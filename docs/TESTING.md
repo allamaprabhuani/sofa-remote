@@ -55,3 +55,9 @@ For a disposable local fixture, launch a locally built app with `--input-fixture
 ## Beta 4 theme and help checks
 
 On 1 November 2026, 33 Swift tests and the browser/transport suites passed for the compact help controls, seven neutral/warm phone themes, saved theme migration, custom-colour validation, text/secondary-text/control-boundary contrast, 44px controls, six viewport sizes and collapsed diagnostic keyboard navigation. Theme preview images use a mocked Mac and contain no user data. Native iPhone Safari appearance and double-tap acceptance remain manual checks. No input timing, gain, authentication or listener changes were made for this UI update.
+
+### Persistent identity check — 1 November 2026
+
+On the development Mac, the owner manually approved the first certificate-signed build 11 once. The installer then replaced that closed app with build 12 using the same default certificate-backed designated requirement. After relaunch, build 12 reported **Input ready** without removing, re-adding or toggling its Accessibility entry. The paired phone and preferences remained present. This establishes permission retention for that local upgrade, not all macOS versions or a change to a different publisher certificate.
+
+The integrated suite passed 38 Swift tests, browser/loopback transport checks and six disposable signing checks. Signing fixtures reject a different certificate, ad-hoc code, a weakened custom requirement, tampered resources and a self-signed certificate presented as Developer ID. They also verify two distinct universal builds with the same identity.
